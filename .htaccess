@@ -1,0 +1,40 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Force HTTPS
+    RewriteCond %{HTTPS} !=on
+    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+    # Remove www
+    RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
+    RewriteRule ^ https://%1%{REQUEST_URI} [L,R=301]
+
+    # Protect .env
+    RewriteRule ^\.env$ - [F,L]
+
+    # Admin routes: /admin/action/id
+    RewriteRule ^admin/([a-zA-Z0-9_-]+)/([0-9]+)$ index.php?module=admin&action=$1&id=$2 [QSA,L]
+    RewriteRule ^admin/([a-zA-Z0-9_-]+)$ index.php?module=admin&action=$1 [QSA,L]
+    RewriteRule ^admin/?$ index.php?module=admin&action=home [QSA,L]
+
+    # Auth routes
+    RewriteRule ^auth/([a-zA-Z0-9_-]+)$ index.php?module=auth&action=$1 [QSA,L]
+
+    # User routes: /action/id
+    RewriteRule ^([a-zA-Z0-9_-]+)/([0-9]+)$ index.php?module=user&action=$1&id=$2 [QSA,L]
+    RewriteRule ^([a-zA-Z0-9_-]+)$ index.php?module=user&action=$1 [QSA,L]
+
+    # Home
+    RewriteRule ^$ index.php?module=user&action=inbox [QSA,L]
+
+    # AJAX routes
+    RewriteRule ^ajaxs/([a-zA-Z0-9_-]+)/([a-zA-Z0-9_-]+)\.php$ ajaxs/$1/$2.php [QSA,L]
+</IfModule>
+
+# Security headers
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set X-XSS-Protection "1; mode=block"
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
