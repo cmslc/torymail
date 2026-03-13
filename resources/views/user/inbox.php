@@ -94,151 +94,197 @@ $folderIcons = [
 ];
 ?>
 
-<div class="tm-card">
-    <!-- Mailbox selector (if multiple) -->
-    <?php if (count($userMailboxes) > 1): ?>
-    <div class="px-3 pt-3 pb-0">
-        <div class="d-flex align-items-center gap-2">
-            <label class="text-muted" style="font-size:13px;white-space:nowrap;">Mailbox:</label>
-            <select id="mailboxSelector" class="form-select form-select-sm" style="max-width:280px;border-radius:8px;">
-                <option value="">All Mailboxes</option>
-                <?php foreach ($userMailboxes as $mb): ?>
-                <option value="<?= $mb['id']; ?>" <?= $mailboxFilter == $mb['id'] ? 'selected' : ''; ?>>
-                    <?= htmlspecialchars($mb['email']); ?>
-                </option>
-                <?php endforeach; ?>
-            </select>
+<!-- Breadcrumb -->
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0"><?= ucfirst($folder); ?></h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="<?= base_url('inbox'); ?>">Home</a></li>
+                    <li class="breadcrumb-item active"><?= ucfirst($folder); ?></li>
+                </ol>
+            </div>
         </div>
     </div>
-    <?php endif; ?>
+</div>
+
+<div class="card">
+    <div class="card-header border-bottom-dashed">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <h5 class="card-title mb-0">
+                <i class="<?= $folderIcons[$folder] ?? 'ri-inbox-line'; ?> me-1 align-bottom"></i>
+                <?= ucfirst($folder); ?>
+            </h5>
+            <div class="d-flex align-items-center gap-2">
+                <?php if (count($userMailboxes) > 1): ?>
+                <select id="mailboxSelector" class="form-select form-select-sm" style="width:220px;">
+                    <option value="">All Mailboxes</option>
+                    <?php foreach ($userMailboxes as $mb): ?>
+                    <option value="<?= $mb['id']; ?>" <?= $mailboxFilter == $mb['id'] ? 'selected' : ''; ?>>
+                        <?= htmlspecialchars($mb['email']); ?>
+                    </option>
+                    <?php endforeach; ?>
+                </select>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
 
     <!-- Folder Tabs -->
-    <div class="tm-folder-tabs">
-        <?php foreach ($validFolders as $f): ?>
-        <a href="<?= base_url('inbox?folder=' . $f . ($mailboxFilter ? '&mailbox=' . $mailboxFilter : '')); ?>"
-           class="<?= $folder === $f ? 'active' : ''; ?>">
-            <i class="<?= $folderIcons[$f]; ?> me-1"></i>
-            <?= ucfirst($f); ?>
-        </a>
-        <?php endforeach; ?>
+    <div class="card-header p-0 border-bottom-0">
+        <ul class="nav nav-tabs nav-tabs-custom" role="tablist">
+            <?php foreach ($validFolders as $f): ?>
+            <li class="nav-item">
+                <a class="nav-link <?= $folder === $f ? 'active' : ''; ?>"
+                   href="<?= base_url('inbox?folder=' . $f . ($mailboxFilter ? '&mailbox=' . $mailboxFilter : '')); ?>">
+                    <i class="<?= $folderIcons[$f]; ?> me-1"></i>
+                    <?= ucfirst($f); ?>
+                </a>
+            </li>
+            <?php endforeach; ?>
+        </ul>
     </div>
 
     <!-- Toolbar -->
-    <div class="tm-toolbar">
-        <div class="form-check" style="margin-right:4px;">
-            <input class="form-check-input" type="checkbox" id="selectAll">
-        </div>
-        <button class="btn-toolbar" onclick="refreshInbox()" title="Refresh">
-            <i class="ri-refresh-line"></i>
-        </button>
-        <button class="btn-toolbar" onclick="bulkAction('read')" title="Mark as read">
-            <i class="ri-mail-open-line"></i>
-        </button>
-        <button class="btn-toolbar" onclick="bulkAction('unread')" title="Mark as unread">
-            <i class="ri-mail-unread-line"></i>
-        </button>
-        <button class="btn-toolbar" onclick="bulkAction('archive')" title="Archive">
-            <i class="ri-archive-line"></i>
-        </button>
-        <button class="btn-toolbar" onclick="bulkAction('delete')" title="Delete">
-            <i class="ri-delete-bin-line"></i>
-        </button>
-
-        <!-- Move to folder dropdown -->
-        <div class="dropdown">
-            <button class="btn-toolbar dropdown-toggle" data-bs-toggle="dropdown">
-                <i class="ri-folder-transfer-line"></i>
-                <span class="d-none d-sm-inline">Move</span>
+    <div class="card-header border-bottom-dashed py-2">
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            <div class="form-check fs-15">
+                <input class="form-check-input" type="checkbox" id="selectAll">
+            </div>
+            <button class="btn btn-soft-secondary btn-sm" onclick="refreshInbox()" title="Refresh">
+                <i class="ri-refresh-line"></i>
             </button>
-            <ul class="dropdown-menu">
-                <?php foreach (['inbox', 'archive', 'spam', 'trash'] as $mf): ?>
-                <li><a class="dropdown-item" href="#" onclick="bulkAction('move','<?= $mf; ?>');return false;">
-                    <i class="<?= $folderIcons[$mf]; ?> me-2"></i> <?= ucfirst($mf); ?>
-                </a></li>
-                <?php endforeach; ?>
-            </ul>
-        </div>
+            <button class="btn btn-soft-secondary btn-sm" onclick="bulkAction('read')" title="Mark as read">
+                <i class="ri-mail-open-line"></i>
+            </button>
+            <button class="btn btn-soft-secondary btn-sm" onclick="bulkAction('unread')" title="Mark as unread">
+                <i class="ri-mail-unread-line"></i>
+            </button>
+            <button class="btn btn-soft-secondary btn-sm" onclick="bulkAction('archive')" title="Archive">
+                <i class="ri-archive-line"></i>
+            </button>
+            <button class="btn btn-soft-danger btn-sm" onclick="bulkAction('delete')" title="Delete">
+                <i class="ri-delete-bin-line"></i>
+            </button>
 
-        <div class="ms-auto d-flex align-items-center gap-2">
-            <?php if ($search): ?>
-            <span class="badge bg-light text-dark border" style="font-size:12px;">
-                Search: "<?= htmlspecialchars($search); ?>"
-                <a href="<?= base_url('inbox?folder=' . $folder); ?>" class="text-danger ms-1"><i class="ri-close-line"></i></a>
-            </span>
-            <?php endif; ?>
-            <span style="font-size:12px;color:#9ca3af;">
-                <?= ($offset + 1); ?>-<?= min($offset + $perPage, $totalEmails); ?> of <?= $totalEmails; ?>
-            </span>
+            <!-- Move dropdown -->
+            <div class="dropdown">
+                <button class="btn btn-soft-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown">
+                    <i class="ri-folder-transfer-line me-1"></i> Move
+                </button>
+                <ul class="dropdown-menu">
+                    <?php foreach (['inbox', 'archive', 'spam', 'trash'] as $mf): ?>
+                    <li><a class="dropdown-item" href="#" onclick="bulkAction('move','<?= $mf; ?>');return false;">
+                        <i class="<?= $folderIcons[$mf]; ?> me-2 align-bottom"></i> <?= ucfirst($mf); ?>
+                    </a></li>
+                    <?php endforeach; ?>
+                </ul>
+            </div>
+
+            <div class="ms-auto d-flex align-items-center gap-2">
+                <?php if ($search): ?>
+                <span class="badge bg-primary-subtle text-primary">
+                    Search: "<?= htmlspecialchars($search); ?>"
+                    <a href="<?= base_url('inbox?folder=' . $folder); ?>" class="text-danger ms-1"><i class="ri-close-line"></i></a>
+                </span>
+                <?php endif; ?>
+                <span class="text-muted fs-13">
+                    <?= ($offset + 1); ?>-<?= min($offset + $perPage, $totalEmails); ?> of <?= $totalEmails; ?>
+                </span>
+            </div>
         </div>
     </div>
 
-    <!-- Email List -->
-    <div class="tm-email-list">
+    <div class="card-body p-0">
         <?php if (empty($emails)): ?>
         <div class="text-center py-5">
-            <i class="ri-inbox-line" style="font-size:48px;color:#d1d5db;"></i>
-            <p class="text-muted mt-3 mb-0">No emails in <?= $folder; ?></p>
+            <div class="avatar-lg mx-auto mb-3">
+                <div class="avatar-title bg-primary-subtle text-primary rounded-circle fs-24">
+                    <i class="<?= $folderIcons[$folder] ?? 'ri-inbox-line'; ?>"></i>
+                </div>
+            </div>
+            <h5 class="fs-16 text-muted">No emails in <?= $folder; ?></h5>
         </div>
         <?php else: ?>
-        <?php foreach ($emails as $email): ?>
-        <div class="tm-email-row <?= !$email['is_read'] ? 'unread' : ''; ?>" data-id="<?= $email['id']; ?>">
-            <div class="email-checkbox" onclick="event.stopPropagation();">
-                <input type="checkbox" class="form-check-input email-check" value="<?= $email['id']; ?>">
-            </div>
-            <div class="email-star <?= $email['is_starred'] ? 'starred' : ''; ?>"
-                 onclick="event.stopPropagation();toggleStar(<?= $email['id']; ?>, this);"
-                 title="<?= $email['is_starred'] ? 'Unstar' : 'Star'; ?>">
-                <i class="<?= $email['is_starred'] ? 'ri-star-fill' : 'ri-star-line'; ?>"></i>
-            </div>
-            <a href="<?= base_url('read/' . $email['id']); ?>" class="d-flex align-items-center flex-fill text-decoration-none" style="gap:12px;min-width:0;color:inherit;">
-                <div class="email-from"><?= htmlspecialchars($email['from_name'] ?: $email['from_email']); ?></div>
-                <div class="email-content">
-                    <span class="email-subject"><?= htmlspecialchars($email['subject'] ?: '(No subject)'); ?></span>
-                    <span class="email-preview">- <?= htmlspecialchars(str_truncate($email['body_text'] ?? '', 80)); ?></span>
-                </div>
-                <div class="email-meta">
-                    <?php if ($email['attachment_count'] > 0): ?>
-                    <span class="email-attachment" title="<?= $email['attachment_count']; ?> attachment(s)">
-                        <i class="ri-attachment-2"></i>
-                    </span>
-                    <?php endif; ?>
-                    <span class="email-date"><?= format_date($email['created_at'], 'M j'); ?></span>
-                </div>
-            </a>
+        <div class="table-responsive">
+            <table class="table table-hover table-nowrap align-middle mb-0">
+                <tbody>
+                    <?php foreach ($emails as $email): ?>
+                    <tr class="<?= !$email['is_read'] ? 'fw-semibold' : ''; ?>" style="cursor:pointer;">
+                        <td style="width:40px;" onclick="event.stopPropagation();">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input email-check" value="<?= $email['id']; ?>">
+                            </div>
+                        </td>
+                        <td style="width:40px;" onclick="event.stopPropagation();">
+                            <span class="email-star <?= $email['is_starred'] ? 'text-warning' : 'text-muted'; ?>" style="cursor:pointer;font-size:18px;"
+                                  onclick="toggleStar(<?= $email['id']; ?>, this);">
+                                <i class="<?= $email['is_starred'] ? 'ri-star-fill' : 'ri-star-line'; ?>"></i>
+                            </span>
+                        </td>
+                        <td style="width:180px;" onclick="window.location='<?= base_url('read/' . $email['id']); ?>'">
+                            <span class="text-truncate d-inline-block" style="max-width:170px;">
+                                <?= htmlspecialchars($email['from_name'] ?: $email['from_email']); ?>
+                            </span>
+                        </td>
+                        <td onclick="window.location='<?= base_url('read/' . $email['id']); ?>'">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="text-truncate d-inline-block <?= !$email['is_read'] ? 'text-body' : 'text-muted'; ?>" style="max-width:350px;">
+                                    <?= htmlspecialchars($email['subject'] ?: '(No subject)'); ?>
+                                </span>
+                                <span class="text-muted fw-normal text-truncate d-none d-lg-inline-block" style="max-width:250px;">
+                                    - <?= htmlspecialchars(str_truncate($email['body_text'] ?? '', 80)); ?>
+                                </span>
+                            </div>
+                        </td>
+                        <td style="width:30px;" onclick="window.location='<?= base_url('read/' . $email['id']); ?>'">
+                            <?php if ($email['attachment_count'] > 0): ?>
+                            <i class="ri-attachment-2 text-muted fs-16" title="<?= $email['attachment_count']; ?> attachment(s)"></i>
+                            <?php endif; ?>
+                        </td>
+                        <td style="width:80px;" onclick="window.location='<?= base_url('read/' . $email['id']); ?>'">
+                            <span class="text-muted fs-12"><?= format_date($email['created_at'], 'M j'); ?></span>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
         </div>
-        <?php endforeach; ?>
         <?php endif; ?>
     </div>
 
     <!-- Pagination -->
     <?php if ($totalPages > 1): ?>
-    <div class="d-flex justify-content-center py-3">
-        <?php
-        $paginationBase = base_url('inbox') . '?folder=' . $folder
-            . ($mailboxFilter ? '&mailbox=' . $mailboxFilter : '')
-            . ($search ? '&search=' . urlencode($search) : '')
-            . ($labelFilter ? '&label=' . $labelFilter : '')
-            . '&page=';
-        ?>
-        <nav>
-            <ul class="pagination pagination-sm mb-0">
-                <li class="page-item <?= $page <= 1 ? 'disabled' : ''; ?>">
-                    <a class="page-link" href="<?= $paginationBase . ($page - 1); ?>">&laquo;</a>
-                </li>
-                <?php
-                $startPage = max(1, $page - 2);
-                $endPage = min($totalPages, $page + 2);
-                for ($p = $startPage; $p <= $endPage; $p++):
-                ?>
-                <li class="page-item <?= $p === $page ? 'active' : ''; ?>">
-                    <a class="page-link" href="<?= $paginationBase . $p; ?>"><?= $p; ?></a>
-                </li>
-                <?php endfor; ?>
-                <li class="page-item <?= $page >= $totalPages ? 'disabled' : ''; ?>">
-                    <a class="page-link" href="<?= $paginationBase . ($page + 1); ?>">&raquo;</a>
-                </li>
-            </ul>
-        </nav>
+    <div class="card-footer">
+        <div class="d-flex justify-content-center">
+            <?php
+            $paginationBase = base_url('inbox') . '?folder=' . $folder
+                . ($mailboxFilter ? '&mailbox=' . $mailboxFilter : '')
+                . ($search ? '&search=' . urlencode($search) : '')
+                . ($labelFilter ? '&label=' . $labelFilter : '')
+                . '&page=';
+            ?>
+            <nav>
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item <?= $page <= 1 ? 'disabled' : ''; ?>">
+                        <a class="page-link" href="<?= $paginationBase . ($page - 1); ?>">&laquo;</a>
+                    </li>
+                    <?php
+                    $startPage = max(1, $page - 2);
+                    $endPage = min($totalPages, $page + 2);
+                    for ($p = $startPage; $p <= $endPage; $p++):
+                    ?>
+                    <li class="page-item <?= $p === $page ? 'active' : ''; ?>">
+                        <a class="page-link" href="<?= $paginationBase . $p; ?>"><?= $p; ?></a>
+                    </li>
+                    <?php endfor; ?>
+                    <li class="page-item <?= $page >= $totalPages ? 'disabled' : ''; ?>">
+                        <a class="page-link" href="<?= $paginationBase . ($page + 1); ?>">&raquo;</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
     </div>
     <?php endif; ?>
 </div>
@@ -265,7 +311,7 @@ function toggleStar(emailId, el) {
     }, function(res) {
         if (res.success) {
             var $el = $(el);
-            $el.toggleClass('starred');
+            $el.toggleClass('text-warning text-muted');
             $el.find('i').toggleClass('ri-star-line ri-star-fill');
         }
     }, 'json');

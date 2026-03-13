@@ -48,79 +48,102 @@ $actionTypes = [
 ];
 ?>
 
-<div class="tm-card">
-    <div class="tm-card-header">
-        <h5 class="mb-0 fw-semibold" style="font-size:18px;">
-            <i class="ri-filter-3-line me-2 text-primary"></i> Email Filters
-            <span class="badge bg-light text-muted ms-2" style="font-size:12px;"><?= count($filters); ?></span>
-        </h5>
-        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#filterModal" onclick="resetFilterForm()">
-            <i class="ri-add-line me-1"></i> Add Filter
-        </button>
+<!-- Breadcrumb -->
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">Filters</h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="<?= base_url('inbox'); ?>">Home</a></li>
+                    <li class="breadcrumb-item active">Filters</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header border-bottom-dashed">
+        <div class="d-flex align-items-center justify-content-between">
+            <h5 class="card-title mb-0">
+                <i class="ri-filter-line me-1 align-bottom text-primary"></i> Email Filters
+                <span class="badge bg-primary-subtle text-primary ms-1"><?= count($filters); ?></span>
+            </h5>
+            <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#filterModal" onclick="resetFilterForm()">
+                <i class="ri-add-line me-1"></i> Add Filter
+            </button>
+        </div>
     </div>
 
-    <?php if (empty($filters)): ?>
-    <div class="text-center py-5">
-        <i class="ri-filter-3-line" style="font-size:48px;color:#d1d5db;"></i>
-        <p class="text-muted mt-3 mb-1">No filters configured</p>
-        <p class="text-muted" style="font-size:13px;">Create filters to automatically organize incoming emails.</p>
+    <div class="card-body p-0">
+        <?php if (empty($filters)): ?>
+        <div class="text-center py-5">
+            <div class="avatar-lg mx-auto mb-3">
+                <div class="avatar-title bg-primary-subtle text-primary rounded-circle fs-24">
+                    <i class="ri-filter-line"></i>
+                </div>
+            </div>
+            <h5 class="fs-16 text-muted">No filters configured</h5>
+            <p class="text-muted fs-13">Create filters to automatically organize incoming emails.</p>
+        </div>
+        <?php else: ?>
+        <div class="table-responsive">
+            <table class="table table-hover table-nowrap align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width:50px;">#</th>
+                        <th>Name</th>
+                        <th>Condition</th>
+                        <th>Action</th>
+                        <th class="text-center">Active</th>
+                        <th style="width:120px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($filters as $i => $filter): ?>
+                    <?php
+                    $conditionLabel = $conditionTypes[$filter['condition_type']] ?? $filter['condition_type'];
+                    $actionLabel = $actionTypes[$filter['action_type']] ?? $filter['action_type'];
+                    ?>
+                    <tr>
+                        <td class="text-muted"><?= $i + 1; ?></td>
+                        <td class="fw-medium"><?= htmlspecialchars($filter['name'] ?? 'Filter #' . ($i + 1)); ?></td>
+                        <td>
+                            <span class="text-muted"><?= $conditionLabel; ?></span>
+                            <?php if ($filter['condition_type'] !== 'has_attachment'): ?>
+                            <code class="fs-12"><?= htmlspecialchars(str_truncate($filter['condition_value'] ?? '', 40)); ?></code>
+                            <?php endif; ?>
+                        </td>
+                        <td>
+                            <span class="badge bg-primary-subtle text-primary"><?= $actionLabel; ?></span>
+                            <?php if (!empty($filter['action_value'])): ?>
+                            <span class="text-muted fs-12">: <?= htmlspecialchars(str_truncate($filter['action_value'], 30)); ?></span>
+                            <?php endif; ?>
+                        </td>
+                        <td class="text-center">
+                            <div class="form-check form-switch d-inline-block mb-0">
+                                <input class="form-check-input" type="checkbox" <?= ($filter['is_active'] ?? 1) ? 'checked' : ''; ?>
+                                       onchange="toggleFilter(<?= $filter['id']; ?>, this.checked)">
+                            </div>
+                        </td>
+                        <td>
+                            <div class="d-flex gap-1">
+                                <button class="btn btn-soft-primary btn-sm" onclick="editFilter(<?= htmlspecialchars(json_encode($filter)); ?>)" title="Edit">
+                                    <i class="ri-pencil-line"></i>
+                                </button>
+                                <button class="btn btn-soft-danger btn-sm" onclick="deleteFilter(<?= $filter['id']; ?>)" title="Delete">
+                                    <i class="ri-delete-bin-line"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+        <?php endif; ?>
     </div>
-    <?php else: ?>
-    <div class="table-responsive">
-        <table class="table table-hover mb-0" style="font-size:14px;">
-            <thead class="table-light">
-                <tr>
-                    <th style="width:50px;">#</th>
-                    <th>Name</th>
-                    <th>Condition</th>
-                    <th>Action</th>
-                    <th class="text-center">Active</th>
-                    <th style="width:120px;">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($filters as $i => $filter): ?>
-                <?php
-                $conditionLabel = $conditionTypes[$filter['condition_type']] ?? $filter['condition_type'];
-                $actionLabel = $actionTypes[$filter['action_type']] ?? $filter['action_type'];
-                ?>
-                <tr>
-                    <td class="text-muted"><?= $i + 1; ?></td>
-                    <td class="fw-medium"><?= htmlspecialchars($filter['name'] ?? 'Filter #' . ($i + 1)); ?></td>
-                    <td>
-                        <span class="text-muted"><?= $conditionLabel; ?></span>
-                        <?php if ($filter['condition_type'] !== 'has_attachment'): ?>
-                        <code style="font-size:12px;"><?= htmlspecialchars(str_truncate($filter['condition_value'] ?? '', 40)); ?></code>
-                        <?php endif; ?>
-                    </td>
-                    <td>
-                        <span class="badge bg-light text-dark"><?= $actionLabel; ?></span>
-                        <?php if (!empty($filter['action_value'])): ?>
-                        <span class="text-muted" style="font-size:12px;">: <?= htmlspecialchars(str_truncate($filter['action_value'], 30)); ?></span>
-                        <?php endif; ?>
-                    </td>
-                    <td class="text-center">
-                        <div class="form-check form-switch d-inline-block mb-0">
-                            <input class="form-check-input" type="checkbox" <?= ($filter['is_active'] ?? 1) ? 'checked' : ''; ?>
-                                   onchange="toggleFilter(<?= $filter['id']; ?>, this.checked)">
-                        </div>
-                    </td>
-                    <td>
-                        <div class="d-flex gap-1">
-                            <button class="btn btn-sm btn-light" onclick="editFilter(<?= htmlspecialchars(json_encode($filter)); ?>)" title="Edit">
-                                <i class="ri-pencil-line"></i>
-                            </button>
-                            <button class="btn btn-sm btn-light text-danger" onclick="deleteFilter(<?= $filter['id']; ?>)" title="Delete">
-                                <i class="ri-delete-bin-line"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
-    </div>
-    <?php endif; ?>
 </div>
 
 <!-- Filter Modal -->
@@ -140,42 +163,45 @@ $actionTypes = [
                         <input type="text" name="name" id="filterName" class="form-control" placeholder="e.g., Move newsletters">
                     </div>
 
-                    <h6 class="fw-semibold text-muted mb-2" style="font-size:13px;">CONDITION</h6>
-                    <div class="border rounded-3 p-3 mb-3 bg-light">
-                        <div class="mb-2">
-                            <label class="form-label">When</label>
-                            <select name="condition_type" id="filterCondType" class="form-select">
-                                <?php foreach ($conditionTypes as $key => $label): ?>
-                                <option value="<?= $key; ?>"><?= $label; ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div class="mb-0" id="condValueGroup">
-                            <label class="form-label">Value</label>
-                            <input type="text" name="condition_value" id="filterCondValue" class="form-control" placeholder="e.g., newsletter@example.com">
+                    <h6 class="fw-semibold text-muted mb-2 fs-13 text-uppercase">Condition</h6>
+                    <div class="card border mb-3">
+                        <div class="card-body">
+                            <div class="mb-2">
+                                <label class="form-label">When</label>
+                                <select name="condition_type" id="filterCondType" class="form-select">
+                                    <?php foreach ($conditionTypes as $key => $label): ?>
+                                    <option value="<?= $key; ?>"><?= $label; ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="mb-0" id="condValueGroup">
+                                <label class="form-label">Value</label>
+                                <input type="text" name="condition_value" id="filterCondValue" class="form-control" placeholder="e.g., newsletter@example.com">
+                            </div>
                         </div>
                     </div>
 
-                    <h6 class="fw-semibold text-muted mb-2" style="font-size:13px;">ACTION</h6>
-                    <div class="border rounded-3 p-3 mb-3 bg-light">
-                        <div class="mb-2">
-                            <label class="form-label">Then</label>
-                            <select name="action_type" id="filterActType" class="form-select">
-                                <?php foreach ($actionTypes as $key => $label): ?>
-                                <option value="<?= $key; ?>"><?= $label; ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div class="mb-0" id="actValueGroup">
-                            <label class="form-label" id="actValueLabel">Folder</label>
-                            <!-- Dynamic: folder select or label select or text input -->
-                            <select name="action_value" id="filterActValue" class="form-select">
-                                <option value="inbox">Inbox</option>
-                                <option value="archive">Archive</option>
-                                <option value="spam">Spam</option>
-                                <option value="trash">Trash</option>
-                            </select>
-                            <input type="text" name="action_value_text" id="filterActValueText" class="form-control d-none" placeholder="Enter value">
+                    <h6 class="fw-semibold text-muted mb-2 fs-13 text-uppercase">Action</h6>
+                    <div class="card border mb-3">
+                        <div class="card-body">
+                            <div class="mb-2">
+                                <label class="form-label">Then</label>
+                                <select name="action_type" id="filterActType" class="form-select">
+                                    <?php foreach ($actionTypes as $key => $label): ?>
+                                    <option value="<?= $key; ?>"><?= $label; ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="mb-0" id="actValueGroup">
+                                <label class="form-label" id="actValueLabel">Folder</label>
+                                <select name="action_value" id="filterActValue" class="form-select">
+                                    <option value="inbox">Inbox</option>
+                                    <option value="archive">Archive</option>
+                                    <option value="spam">Spam</option>
+                                    <option value="trash">Trash</option>
+                                </select>
+                                <input type="text" name="action_value_text" id="filterActValueText" class="form-control d-none" placeholder="Enter value">
+                            </div>
                         </div>
                     </div>
 
@@ -186,7 +212,7 @@ $actionTypes = [
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-ghost-secondary" data-bs-dismiss="modal">Cancel</button>
                 <button type="button" class="btn btn-primary" id="saveFilterBtn">Save Filter</button>
             </div>
         </div>
@@ -196,7 +222,6 @@ $actionTypes = [
 <script>
 var labelsData = <?= json_encode($userLabels); ?>;
 
-// Toggle condition value visibility
 $('#filterCondType').on('change', function() {
     if ($(this).val() === 'has_attachment') {
         $('#condValueGroup').hide();
@@ -205,7 +230,6 @@ $('#filterCondType').on('change', function() {
     }
 });
 
-// Toggle action value type
 $('#filterActType').on('change', function() {
     var act = $(this).val();
     var $select = $('#filterActValue');
@@ -231,7 +255,6 @@ $('#filterActType').on('change', function() {
         $('#actValueLabel').text('Email');
         $('#actValueGroup').show();
     } else {
-        // mark_read, mark_starred, delete: no value needed
         $('#actValueGroup').hide();
     }
 });
@@ -253,7 +276,6 @@ function editFilter(filter) {
     $('#filterActType').val(filter.action_type).trigger('change');
     $('#filterPriority').val(filter.priority || 10);
 
-    // Set action value
     setTimeout(function() {
         if (filter.action_type === 'forward_to') {
             $('#filterActValueText').val(filter.action_value || '');
@@ -275,7 +297,6 @@ $('#saveFilterBtn').on('click', function() {
     data.action_type = $('#filterActType').val();
     data.priority = $('#filterPriority').val();
 
-    // Get action value from the right input
     if (data.action_type === 'forward_to') {
         data.action_value = $('#filterActValueText').val();
     } else if (['mark_read','mark_starred','delete'].indexOf(data.action_type) !== -1) {

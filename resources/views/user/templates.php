@@ -21,59 +21,82 @@ $templates = $ToryMail->get_list_safe("
 ", [$getUser['id']]);
 ?>
 
-<div class="tm-card">
-    <div class="tm-card-header">
-        <h5 class="mb-0 fw-semibold" style="font-size:18px;">
-            <i class="ri-file-copy-line me-2 text-primary"></i> Email Templates
-            <span class="badge bg-light text-muted ms-2" style="font-size:12px;"><?= count($templates); ?></span>
-        </h5>
-        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#templateModal" onclick="resetTemplateForm()">
-            <i class="ri-add-line me-1"></i> Add Template
-        </button>
+<!-- Breadcrumb -->
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">Templates</h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="<?= base_url('inbox'); ?>">Home</a></li>
+                    <li class="breadcrumb-item active">Templates</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header border-bottom-dashed">
+        <div class="d-flex align-items-center justify-content-between">
+            <h5 class="card-title mb-0">
+                <i class="ri-file-copy-line me-1 align-bottom text-primary"></i> Email Templates
+                <span class="badge bg-primary-subtle text-primary ms-1"><?= count($templates); ?></span>
+            </h5>
+            <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#templateModal" onclick="resetTemplateForm()">
+                <i class="ri-add-line me-1"></i> Add Template
+            </button>
+        </div>
     </div>
 
-    <?php if (empty($templates)): ?>
-    <div class="text-center py-5">
-        <i class="ri-file-copy-line" style="font-size:48px;color:#d1d5db;"></i>
-        <p class="text-muted mt-3 mb-1">No templates yet</p>
-        <p class="text-muted" style="font-size:13px;">Create reusable email templates to save time composing emails.</p>
+    <div class="card-body p-0">
+        <?php if (empty($templates)): ?>
+        <div class="text-center py-5">
+            <div class="avatar-lg mx-auto mb-3">
+                <div class="avatar-title bg-primary-subtle text-primary rounded-circle fs-24">
+                    <i class="ri-file-copy-line"></i>
+                </div>
+            </div>
+            <h5 class="fs-16 text-muted">No templates yet</h5>
+            <p class="text-muted fs-13">Create reusable email templates to save time composing emails.</p>
+        </div>
+        <?php else: ?>
+        <div class="table-responsive">
+            <table class="table table-hover table-nowrap align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Template Name</th>
+                        <th>Subject</th>
+                        <th>Last Updated</th>
+                        <th style="width:140px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($templates as $tpl): ?>
+                    <tr>
+                        <td class="fw-medium"><?= htmlspecialchars($tpl['name']); ?></td>
+                        <td class="text-muted"><?= htmlspecialchars(str_truncate($tpl['subject'] ?? '', 60)); ?></td>
+                        <td class="text-muted fs-12"><?= time_ago($tpl['updated_at']); ?></td>
+                        <td>
+                            <div class="d-flex gap-1">
+                                <a href="<?= base_url('compose?template=' . $tpl['id']); ?>" class="btn btn-soft-success btn-sm" title="Use template">
+                                    <i class="ri-mail-send-line"></i>
+                                </a>
+                                <button class="btn btn-soft-primary btn-sm" onclick="editTemplate(<?= htmlspecialchars(json_encode($tpl)); ?>)" title="Edit">
+                                    <i class="ri-pencil-line"></i>
+                                </button>
+                                <button class="btn btn-soft-danger btn-sm" onclick="deleteTemplate(<?= $tpl['id']; ?>)" title="Delete">
+                                    <i class="ri-delete-bin-line"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+        <?php endif; ?>
     </div>
-    <?php else: ?>
-    <div class="table-responsive">
-        <table class="table table-hover mb-0" style="font-size:14px;">
-            <thead class="table-light">
-                <tr>
-                    <th>Template Name</th>
-                    <th>Subject</th>
-                    <th>Last Updated</th>
-                    <th style="width:140px;">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($templates as $tpl): ?>
-                <tr>
-                    <td class="fw-medium"><?= htmlspecialchars($tpl['name']); ?></td>
-                    <td class="text-muted"><?= htmlspecialchars(str_truncate($tpl['subject'] ?? '', 60)); ?></td>
-                    <td class="text-muted" style="font-size:12px;"><?= time_ago($tpl['updated_at']); ?></td>
-                    <td>
-                        <div class="d-flex gap-1">
-                            <a href="<?= base_url('compose?template=' . $tpl['id']); ?>" class="btn btn-sm btn-light" title="Use template">
-                                <i class="ri-mail-send-line"></i>
-                            </a>
-                            <button class="btn btn-sm btn-light" onclick="editTemplate(<?= htmlspecialchars(json_encode($tpl)); ?>)" title="Edit">
-                                <i class="ri-pencil-line"></i>
-                            </button>
-                            <button class="btn btn-sm btn-light text-danger" onclick="deleteTemplate(<?= $tpl['id']; ?>)" title="Delete">
-                                <i class="ri-delete-bin-line"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
-    </div>
-    <?php endif; ?>
 </div>
 
 <!-- Template Modal -->
@@ -97,12 +120,11 @@ $templates = $ToryMail->get_list_safe("
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Body (HTML)</label>
-                        <!-- Mini toolbar -->
                         <div class="border rounded-top px-2 py-1 bg-light d-flex gap-1">
-                            <button type="button" class="btn btn-sm btn-light" onclick="tplExecCmd('bold')"><i class="ri-bold"></i></button>
-                            <button type="button" class="btn btn-sm btn-light" onclick="tplExecCmd('italic')"><i class="ri-italic"></i></button>
-                            <button type="button" class="btn btn-sm btn-light" onclick="tplExecCmd('underline')"><i class="ri-underline"></i></button>
-                            <button type="button" class="btn btn-sm btn-light" onclick="tplExecCmd('insertUnorderedList')"><i class="ri-list-unordered"></i></button>
+                            <button type="button" class="btn btn-soft-secondary btn-sm" onclick="tplExecCmd('bold')"><i class="ri-bold"></i></button>
+                            <button type="button" class="btn btn-soft-secondary btn-sm" onclick="tplExecCmd('italic')"><i class="ri-italic"></i></button>
+                            <button type="button" class="btn btn-soft-secondary btn-sm" onclick="tplExecCmd('underline')"><i class="ri-underline"></i></button>
+                            <button type="button" class="btn btn-soft-secondary btn-sm" onclick="tplExecCmd('insertUnorderedList')"><i class="ri-list-unordered"></i></button>
                         </div>
                         <div id="tplBody" contenteditable="true"
                              class="form-control rounded-top-0"
@@ -112,7 +134,7 @@ $templates = $ToryMail->get_list_safe("
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-ghost-secondary" data-bs-dismiss="modal">Cancel</button>
                 <button type="button" class="btn btn-primary" id="saveTemplateBtn">Save Template</button>
             </div>
         </div>

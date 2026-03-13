@@ -1,0 +1,17 @@
+# Environment
+.env
+.env.backup
+
+# Claude Code
+.claude/
+
+# Storage (user data)
+storage/attachments/*
+storage/tmp/*
+!storage/attachments/.gitkeep
+!storage/tmp/.gitkeep
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini

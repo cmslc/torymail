@@ -1,5 +1,11 @@
-<?php
-$body = ['title' => 'Mailboxes'];
+<?php if (!defined('IN_SITE')) {
+    die('The Request Not Found');
+}
+$body = [
+    'title' => 'Mailboxes',
+    'header' => '',
+    'footer' => '',
+];
 
 // Get all mailboxes with domain and owner info
 $mailboxes = $ToryMail->get_list_safe("
@@ -10,77 +16,99 @@ $mailboxes = $ToryMail->get_list_safe("
     ORDER BY m.id DESC
 ");
 
-require_once __DIR__ . '/header.php';
-require_once __DIR__ . '/sidebar.php';
+require_once(__DIR__.'/header.php');
+require_once(__DIR__.'/sidebar.php');
 ?>
 
-<div class="admin-content">
-    <div class="page-header">
-        <h4><i class="ri-mail-settings-line me-2"></i> Mailboxes</h4>
+<!-- Page Title -->
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">Mailboxes</h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="<?= admin_url('home'); ?>">Admin</a></li>
+                    <li class="breadcrumb-item active">Mailboxes</li>
+                </ol>
+            </div>
+        </div>
     </div>
+</div>
 
-    <div class="card-custom">
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover mb-0" id="mailboxesTable">
-                    <thead>
-                        <tr>
-                            <th>Email Address</th>
-                            <th>Domain</th>
-                            <th>Owner</th>
-                            <th>Storage</th>
-                            <th>Status</th>
-                            <th>Created</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($mailboxes as $mb): ?>
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">All Mailboxes</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table id="datatable" class="table table-bordered table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>Email</th>
+                                <th>Domain</th>
+                                <th>Owner</th>
+                                <th>Used / Quota</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($mailboxes as $mb): ?>
                             <?php $pct = $mb['quota'] > 0 ? round(($mb['used_space'] / $mb['quota']) * 100) : 0; ?>
                             <tr>
-                                <td class="fw-semibold"><?= sanitize($mb['email_address']) ?></td>
-                                <td><?= sanitize($mb['domain_name']) ?></td>
+                                <td class="fw-semibold"><?= sanitize($mb['email_address']); ?></td>
+                                <td><?= sanitize($mb['domain_name']); ?></td>
                                 <td>
-                                    <a href="<?= admin_url('user-edit&id=' . $mb['user_id']) ?>" class="text-decoration-none">
-                                        <?= sanitize($mb['owner_name']) ?>
+                                    <a href="<?= admin_url('user-edit&id=' . $mb['user_id']); ?>" class="text-decoration-none">
+                                        <?= sanitize($mb['owner_name']); ?>
                                     </a>
                                 </td>
                                 <td style="min-width:180px;">
                                     <div class="d-flex align-items-center gap-2">
-                                        <div class="progress progress-quota flex-grow-1">
-                                            <div class="progress-bar bg-<?= $pct > 90 ? 'danger' : ($pct > 70 ? 'warning' : 'primary') ?>" style="width:<?= $pct ?>%"></div>
+                                        <div class="progress progress-sm flex-grow-1" style="height:6px;">
+                                            <div class="progress-bar bg-<?= $pct > 90 ? 'danger' : ($pct > 70 ? 'warning' : 'primary'); ?>" style="width:<?= $pct; ?>%"></div>
                                         </div>
-                                        <small class="text-muted text-nowrap"><?= $pct ?>%</small>
+                                        <small class="text-muted text-nowrap"><?= $pct; ?>%</small>
                                     </div>
-                                    <small class="text-muted"><?= format_email_size($mb['used_space']) ?> / <?= format_email_size($mb['quota']) ?></small>
+                                    <small class="text-muted"><?= format_email_size($mb['used_space']); ?> / <?= format_email_size($mb['quota']); ?></small>
                                 </td>
                                 <td>
-                                    <span class="badge badge-<?= $mb['status'] ?>"><?= ucfirst($mb['status']) ?></span>
+                                    <?php if ($mb['status'] === 'active'): ?>
+                                        <span class="badge bg-success-subtle text-success">Active</span>
+                                    <?php elseif ($mb['status'] === 'disabled'): ?>
+                                        <span class="badge bg-danger-subtle text-danger">Disabled</span>
+                                    <?php else: ?>
+                                        <span class="badge bg-warning-subtle text-warning"><?= ucfirst($mb['status']); ?></span>
+                                    <?php endif; ?>
                                 </td>
-                                <td><small><?= format_date($mb['created_at']) ?></small></td>
+                                <td><small><?= format_date($mb['created_at']); ?></small></td>
                                 <td>
                                     <div class="d-flex gap-1">
                                         <?php if ($mb['status'] === 'disabled'): ?>
-                                            <button class="btn btn-sm btn-outline-success btn-toggle-mailbox" data-id="<?= $mb['id'] ?>" data-action="enable" title="Enable">
+                                            <button class="btn btn-sm btn-soft-success btn-toggle-mailbox" data-id="<?= $mb['id']; ?>" data-action="enable" title="Enable">
                                                 <i class="ri-check-line"></i>
                                             </button>
                                         <?php else: ?>
-                                            <button class="btn btn-sm btn-outline-warning btn-toggle-mailbox" data-id="<?= $mb['id'] ?>" data-action="disable" title="Disable">
+                                            <button class="btn btn-sm btn-soft-warning btn-toggle-mailbox" data-id="<?= $mb['id']; ?>" data-action="disable" title="Disable">
                                                 <i class="ri-forbid-line"></i>
                                             </button>
                                         <?php endif; ?>
-                                        <button class="btn btn-sm btn-outline-secondary btn-reset-password" data-id="<?= $mb['id'] ?>" data-email="<?= sanitize($mb['email_address']) ?>" title="Reset Password">
+                                        <button class="btn btn-sm btn-soft-secondary btn-reset-password" data-id="<?= $mb['id']; ?>" data-email="<?= sanitize($mb['email_address']); ?>" title="Reset Password">
                                             <i class="ri-key-line"></i>
                                         </button>
-                                        <button class="btn btn-sm btn-outline-danger btn-delete-mailbox" data-id="<?= $mb['id'] ?>" title="Delete">
+                                        <button class="btn btn-sm btn-soft-danger btn-delete-mailbox" data-id="<?= $mb['id']; ?>" title="Delete">
                                             <i class="ri-delete-bin-line"></i>
                                         </button>
                                     </div>
                                 </td>
                             </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -104,7 +132,7 @@ require_once __DIR__ . '/sidebar.php';
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn btn-primary">
                         <i class="ri-save-line me-1"></i> Reset
                     </button>
@@ -114,17 +142,10 @@ require_once __DIR__ . '/sidebar.php';
     </div>
 </div>
 
+<?php require_once(__DIR__.'/footer.php'); ?>
+
 <script>
 $(document).ready(function() {
-    $('#mailboxesTable').DataTable({
-        pageLength: 25,
-        order: [[0, 'asc']],
-        language: {
-            search: "Search:",
-            emptyTable: "No mailboxes found"
-        }
-    });
-
     // Enable/Disable mailbox
     $(document).on('click', '.btn-toggle-mailbox', function() {
         var mbId = $(this).data('id');
@@ -133,7 +154,7 @@ $(document).ready(function() {
 
         confirmAction(label, '', function() {
             $.ajax({
-                url: '<?= base_url("ajaxs/admin/mailboxes.php?action=toggle_status") ?>',
+                url: '<?= base_url("ajaxs/admin/mailboxes.php?action=toggle_status"); ?>',
                 method: 'POST',
                 data: { mailbox_id: mbId, mb_action: action },
                 dataType: 'json',
@@ -163,7 +184,7 @@ $(document).ready(function() {
         btn.prop('disabled', true).html('<i class="ri-loader-4-line ri-spin"></i> Resetting...');
 
         $.ajax({
-            url: '<?= base_url("ajaxs/admin/mailboxes.php?action=reset_password") ?>',
+            url: '<?= base_url("ajaxs/admin/mailboxes.php?action=reset_password"); ?>',
             method: 'POST',
             data: $(this).serialize(),
             dataType: 'json',
@@ -189,7 +210,7 @@ $(document).ready(function() {
 
         confirmAction('Delete Mailbox?', 'This will permanently delete the mailbox and all its emails.', function() {
             $.ajax({
-                url: '<?= base_url("ajaxs/admin/mailboxes.php?action=delete") ?>',
+                url: '<?= base_url("ajaxs/admin/mailboxes.php?action=delete"); ?>',
                 method: 'POST',
                 data: { mailbox_id: mbId },
                 dataType: 'json',
@@ -206,5 +227,3 @@ $(document).ready(function() {
     });
 });
 </script>
-
-<?php require_once __DIR__ . '/footer.php'; ?>

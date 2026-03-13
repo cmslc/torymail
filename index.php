@@ -1,5 +1,13 @@
 <?php
+// Session security (must be set before session_start)
+ini_set('session.cookie_httponly', 1);
+ini_set('session.cookie_secure', 0);
+ini_set('session.use_strict_mode', 1);
+ini_set('session.cookie_samesite', 'Lax');
+
 session_start();
+
+define('IN_SITE', true);
 
 // Load environment
 $envFile = __DIR__ . '/.env';
@@ -34,12 +42,6 @@ if ($settingsRows) {
         $settings[$row['setting_key']] = $row['setting_value'];
     }
 }
-
-// Session security
-ini_set('session.cookie_httponly', 1);
-ini_set('session.cookie_secure', 1);
-ini_set('session.use_strict_mode', 1);
-ini_set('session.cookie_samesite', 'Lax');
 
 // Route handling
 $module = isset($_GET['module']) ? preg_replace('/[^a-zA-Z0-9_-]/', '', $_GET['module']) : 'user';

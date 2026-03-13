@@ -3,15 +3,8 @@ if (!defined('IN_SITE')) {
     die('The Request Not Found');
 }
 
-$currentAction = $_GET['action'] ?? '';
+$currentAction = $action ?? ($_GET['action'] ?? '');
 $currentFolder = $_GET['folder'] ?? 'inbox';
-
-// Fetch user's labels
-$userLabels = $ToryMail->get_list_safe("
-    SELECT * FROM `labels`
-    WHERE `user_id` = ?
-    ORDER BY `name` ASC
-", [$getUser['id']]);
 
 // Folder counts
 $folderCounts = [];
@@ -33,264 +26,215 @@ $unreadInbox = $folderCounts['inbox'] ?? ($getUser['unread_count'] ?? 0);
 $unreadSpam = $folderCounts['spam'] ?? 0;
 
 // Helper to check active state
-if (!function_exists('tm_sidebar_active')) {
-    function tm_sidebar_active($action, $folder = null) {
-        $currentAction = $_GET['action'] ?? '';
-        $currentFolder = $_GET['folder'] ?? 'inbox';
-        if ($folder !== null) {
-            return ($currentAction === 'inbox' || $currentAction === '') && $currentFolder === $folder ? 'active' : '';
-        }
-        return $currentAction === $action ? 'active' : '';
+if (!function_exists('tm_active')) {
+    function tm_active($actions) {
+        $current = $GLOBALS['currentAction'] ?? ($_GET['action'] ?? '');
+        if (!is_array($actions)) $actions = [$actions];
+        return in_array($current, $actions) ? 'active' : '';
     }
 }
+if (!function_exists('tm_folder_active')) {
+    function tm_folder_active($folder) {
+        $currentAction = $GLOBALS['currentAction'] ?? ($_GET['action'] ?? '');
+        $currentFolder = $_GET['folder'] ?? 'inbox';
+        return ($currentAction === 'inbox' || $currentAction === '') && $currentFolder === $folder ? 'active' : '';
+    }
+}
+
+// Fetch user's labels for sidebar
+$sidebarLabels = $ToryMail->get_list_safe("
+    SELECT * FROM `labels`
+    WHERE `user_id` = ?
+    ORDER BY `name` ASC
+", [$getUser['id']]);
 ?>
+<body>
+    <!-- Begin page -->
+    <div id="layout-wrapper">
 
-<!-- Sidebar -->
-<div class="tm-sidebar">
-    <!-- Compose Button -->
-    <div class="px-3 mb-3">
-        <a href="<?= base_url('compose'); ?>" class="btn btn-primary w-100 d-flex align-items-center justify-content-center gap-2" style="padding:10px;border-radius:8px;font-weight:500;">
-            <i class="ri-edit-line fs-18"></i>
-            <span>Compose</span>
-        </a>
-    </div>
+        <?php require_once(__DIR__.'/nav.php'); ?>
 
-    <ul class="list-unstyled px-2 mb-0">
-        <!-- Inbox -->
-        <li>
-            <a href="<?= base_url('inbox'); ?>" class="tm-sidebar-link <?= tm_sidebar_active('inbox', 'inbox'); ?>">
-                <i class="ri-inbox-line"></i>
-                <span>Inbox</span>
-                <?php if ($unreadInbox > 0): ?>
-                <span class="tm-sidebar-badge"><?= $unreadInbox; ?></span>
-                <?php endif; ?>
-            </a>
-        </li>
+        <!-- Two Column Menu (required by app.js) -->
+        <div id="two-column-menu"></div>
 
-        <!-- Starred -->
-        <li>
-            <a href="<?= base_url('inbox?folder=starred'); ?>" class="tm-sidebar-link <?= tm_sidebar_active('inbox', 'starred'); ?>">
-                <i class="ri-star-line"></i>
-                <span>Starred</span>
-            </a>
-        </li>
+        <!-- ========== App Menu ========== -->
+        <div class="app-menu navbar-menu">
+            <!-- LOGO -->
+            <div class="navbar-brand-box">
+                <a href="<?= base_url('inbox'); ?>" class="logo logo-dark">
+                    <span class="logo-sm"><i class="ri-mail-line fs-22 text-primary"></i></span>
+                    <span class="logo-lg"><i class="ri-mail-line me-1 text-primary fs-20"></i> <span class="fw-bold fs-16">Torymail</span></span>
+                </a>
+                <a href="<?= base_url('inbox'); ?>" class="logo logo-light">
+                    <span class="logo-sm"><i class="ri-mail-line fs-22"></i></span>
+                    <span class="logo-lg"><i class="ri-mail-line me-1 fs-20"></i> <span class="fw-bold fs-16">Torymail</span></span>
+                </a>
+                <button type="button" class="btn btn-sm p-0 fs-20 header-item float-end btn-vertical-sm-hover" id="vertical-hover">
+                    <i class="ri-record-circle-line"></i>
+                </button>
+            </div>
 
-        <!-- Sent -->
-        <li>
-            <a href="<?= base_url('inbox?folder=sent'); ?>" class="tm-sidebar-link <?= tm_sidebar_active('inbox', 'sent'); ?>">
-                <i class="ri-send-plane-line"></i>
-                <span>Sent</span>
-            </a>
-        </li>
+            <div id="scrollbar" data-simplebar>
+                <div class="container-fluid">
+                    <ul class="navbar-nav" id="navbar-nav">
 
-        <!-- Drafts -->
-        <li>
-            <a href="<?= base_url('inbox?folder=drafts'); ?>" class="tm-sidebar-link <?= tm_sidebar_active('inbox', 'drafts'); ?>">
-                <i class="ri-draft-line"></i>
-                <span>Drafts</span>
-                <?php if ($draftCount > 0): ?>
-                <span class="tm-sidebar-badge bg-secondary"><?= $draftCount; ?></span>
-                <?php endif; ?>
-            </a>
-        </li>
+                        <li class="menu-title"><span>Menu</span></li>
 
-        <!-- Spam -->
-        <li>
-            <a href="<?= base_url('inbox?folder=spam'); ?>" class="tm-sidebar-link <?= tm_sidebar_active('inbox', 'spam'); ?>">
-                <i class="ri-spam-2-line"></i>
-                <span>Spam</span>
-                <?php if ($unreadSpam > 0): ?>
-                <span class="tm-sidebar-badge bg-warning"><?= $unreadSpam; ?></span>
-                <?php endif; ?>
-            </a>
-        </li>
+                        <!-- Compose -->
+                        <li class="nav-item">
+                            <a href="<?= base_url('compose'); ?>" class="nav-link menu-link <?= tm_active(['compose']); ?>">
+                                <i class="ri-edit-2-line"></i>
+                                <span>Compose</span>
+                            </a>
+                        </li>
 
-        <!-- Trash -->
-        <li>
-            <a href="<?= base_url('inbox?folder=trash'); ?>" class="tm-sidebar-link <?= tm_sidebar_active('inbox', 'trash'); ?>">
-                <i class="ri-delete-bin-line"></i>
-                <span>Trash</span>
-            </a>
-        </li>
+                        <li class="menu-title"><span>Mailbox</span></li>
 
-        <!-- Archive -->
-        <li>
-            <a href="<?= base_url('inbox?folder=archive'); ?>" class="tm-sidebar-link <?= tm_sidebar_active('inbox', 'archive'); ?>">
-                <i class="ri-archive-line"></i>
-                <span>Archive</span>
-            </a>
-        </li>
-    </ul>
+                        <!-- Inbox -->
+                        <li class="nav-item">
+                            <a href="<?= base_url('inbox'); ?>" class="nav-link menu-link <?= tm_folder_active('inbox'); ?>">
+                                <i class="ri-inbox-line"></i>
+                                <span>Inbox</span>
+                                <?php if ($unreadInbox > 0): ?>
+                                <span class="badge badge-center rounded-pill bg-danger ms-auto"><?= $unreadInbox; ?></span>
+                                <?php endif; ?>
+                            </a>
+                        </li>
 
-    <!-- Separator -->
-    <div class="tm-sidebar-separator"></div>
+                        <!-- Starred -->
+                        <li class="nav-item">
+                            <a href="<?= base_url('inbox?folder=starred'); ?>" class="nav-link menu-link <?= tm_folder_active('starred'); ?>">
+                                <i class="ri-star-line"></i>
+                                <span>Starred</span>
+                            </a>
+                        </li>
 
-    <!-- Labels Section -->
-    <div class="px-3 mb-2 d-flex align-items-center justify-content-between">
-        <span class="tm-sidebar-section-title">Labels</span>
-        <a href="<?= base_url('labels'); ?>" class="tm-sidebar-section-action" title="Manage labels">
-            <i class="ri-add-line"></i>
-        </a>
-    </div>
-    <ul class="list-unstyled px-2 mb-0">
-        <?php if (empty($userLabels)): ?>
-        <li class="px-3 py-2" style="font-size:12px;color:#6b7280;">No labels yet</li>
-        <?php else: ?>
-        <?php foreach ($userLabels as $label): ?>
-        <li>
-            <a href="<?= base_url('inbox?label=' . urlencode($label['id'])); ?>" class="tm-sidebar-link">
-                <span class="label-dot" style="background:<?= htmlspecialchars($label['color'] ?? '#6b7280'); ?>;"></span>
-                <span><?= htmlspecialchars($label['name']); ?></span>
-            </a>
-        </li>
-        <?php endforeach; ?>
-        <?php endif; ?>
-    </ul>
+                        <!-- Sent -->
+                        <li class="nav-item">
+                            <a href="<?= base_url('inbox?folder=sent'); ?>" class="nav-link menu-link <?= tm_folder_active('sent'); ?>">
+                                <i class="ri-send-plane-line"></i>
+                                <span>Sent</span>
+                            </a>
+                        </li>
 
-    <!-- Separator -->
-    <div class="tm-sidebar-separator"></div>
+                        <!-- Drafts -->
+                        <li class="nav-item">
+                            <a href="<?= base_url('inbox?folder=drafts'); ?>" class="nav-link menu-link <?= tm_folder_active('drafts'); ?>">
+                                <i class="ri-draft-line"></i>
+                                <span>Drafts</span>
+                                <?php if ($draftCount > 0): ?>
+                                <span class="badge badge-center rounded-pill bg-secondary ms-auto"><?= $draftCount; ?></span>
+                                <?php endif; ?>
+                            </a>
+                        </li>
 
-    <!-- Management Section -->
-    <ul class="list-unstyled px-2 mb-0">
-        <li>
-            <a href="<?= base_url('domains'); ?>" class="tm-sidebar-link <?= tm_sidebar_active('domains'); ?>">
-                <i class="ri-global-line"></i>
-                <span>Domains</span>
-            </a>
-        </li>
-        <li>
-            <a href="<?= base_url('mailboxes'); ?>" class="tm-sidebar-link <?= tm_sidebar_active('mailboxes'); ?>">
-                <i class="ri-inbox-2-line"></i>
-                <span>Mailboxes</span>
-            </a>
-        </li>
-        <li>
-            <a href="<?= base_url('contacts'); ?>" class="tm-sidebar-link <?= tm_sidebar_active('contacts'); ?>">
-                <i class="ri-contacts-line"></i>
-                <span>Contacts</span>
-            </a>
-        </li>
-        <li>
-            <a href="<?= base_url('templates'); ?>" class="tm-sidebar-link <?= tm_sidebar_active('templates'); ?>">
-                <i class="ri-file-copy-line"></i>
-                <span>Templates</span>
-            </a>
-        </li>
-        <li>
-            <a href="<?= base_url('filters'); ?>" class="tm-sidebar-link <?= tm_sidebar_active('filters'); ?>">
-                <i class="ri-filter-3-line"></i>
-                <span>Filters</span>
-            </a>
-        </li>
-        <li>
-            <a href="<?= base_url('settings'); ?>" class="tm-sidebar-link <?= tm_sidebar_active('settings'); ?>">
-                <i class="ri-settings-3-line"></i>
-                <span>Settings</span>
-            </a>
-        </li>
-    </ul>
-</div>
+                        <!-- Spam -->
+                        <li class="nav-item">
+                            <a href="<?= base_url('inbox?folder=spam'); ?>" class="nav-link menu-link <?= tm_folder_active('spam'); ?>">
+                                <i class="ri-spam-2-line"></i>
+                                <span>Spam</span>
+                                <?php if ($unreadSpam > 0): ?>
+                                <span class="badge badge-center rounded-pill bg-warning ms-auto"><?= $unreadSpam; ?></span>
+                                <?php endif; ?>
+                            </a>
+                        </li>
 
-<!-- Sidebar overlay for mobile -->
-<div class="tm-sidebar-overlay d-lg-none" onclick="document.querySelector('.tm-sidebar').classList.remove('show');this.style.display='none';"></div>
+                        <!-- Trash -->
+                        <li class="nav-item">
+                            <a href="<?= base_url('inbox?folder=trash'); ?>" class="nav-link menu-link <?= tm_folder_active('trash'); ?>">
+                                <i class="ri-delete-bin-line"></i>
+                                <span>Trash</span>
+                            </a>
+                        </li>
 
-<style>
-.tm-sidebar-link {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 9px 14px;
-    border-radius: 8px;
-    color: var(--tm-sidebar-text);
-    text-decoration: none;
-    font-size: 14px;
-    transition: all 0.15s;
-    margin-bottom: 2px;
-}
+                        <!-- Archive -->
+                        <li class="nav-item">
+                            <a href="<?= base_url('inbox?folder=archive'); ?>" class="nav-link menu-link <?= tm_folder_active('archive'); ?>">
+                                <i class="ri-archive-line"></i>
+                                <span>Archive</span>
+                            </a>
+                        </li>
 
-.tm-sidebar-link:hover {
-    background: rgba(255,255,255,0.06);
-    color: #e5e7eb;
-}
+                        <!-- Labels -->
+                        <?php if (!empty($sidebarLabels)): ?>
+                        <li class="menu-title"><span>Labels</span></li>
+                        <?php foreach ($sidebarLabels as $sl): ?>
+                        <li class="nav-item">
+                            <a href="<?= base_url('inbox?label=' . urlencode($sl['id'])); ?>" class="nav-link menu-link">
+                                <i class="ri-circle-fill fs-8" style="color:<?= htmlspecialchars($sl['color'] ?? '#878a99'); ?>;"></i>
+                                <span><?= htmlspecialchars($sl['name']); ?></span>
+                            </a>
+                        </li>
+                        <?php endforeach; ?>
+                        <?php endif; ?>
 
-.tm-sidebar-link.active {
-    background: var(--tm-sidebar-active);
-    color: #fff;
-}
+                        <li class="menu-title"><span>Management</span></li>
 
-.tm-sidebar-link i {
-    font-size: 18px;
-    width: 20px;
-    text-align: center;
-    flex-shrink: 0;
-}
+                        <!-- Domains -->
+                        <li class="nav-item">
+                            <a href="<?= base_url('domains'); ?>" class="nav-link menu-link <?= tm_active(['domains']); ?>">
+                                <i class="ri-global-line"></i>
+                                <span>Domains</span>
+                            </a>
+                        </li>
 
-.tm-sidebar-badge {
-    margin-left: auto;
-    background: var(--tm-primary);
-    color: #fff;
-    font-size: 11px;
-    font-weight: 600;
-    min-width: 20px;
-    height: 20px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0 6px;
-}
+                        <!-- Mailboxes -->
+                        <li class="nav-item">
+                            <a href="<?= base_url('mailboxes'); ?>" class="nav-link menu-link <?= tm_active(['mailboxes']); ?>">
+                                <i class="ri-mail-settings-line"></i>
+                                <span>Mailboxes</span>
+                            </a>
+                        </li>
 
-.tm-sidebar-badge.bg-secondary { background: #6b7280 !important; }
-.tm-sidebar-badge.bg-warning { background: #f59e0b !important; }
+                        <!-- Contacts -->
+                        <li class="nav-item">
+                            <a href="<?= base_url('contacts'); ?>" class="nav-link menu-link <?= tm_active(['contacts']); ?>">
+                                <i class="ri-contacts-line"></i>
+                                <span>Contacts</span>
+                            </a>
+                        </li>
 
-.tm-sidebar-separator {
-    height: 1px;
-    background: rgba(255,255,255,0.08);
-    margin: 12px 16px;
-}
+                        <!-- Templates -->
+                        <li class="nav-item">
+                            <a href="<?= base_url('templates'); ?>" class="nav-link menu-link <?= tm_active(['templates']); ?>">
+                                <i class="ri-file-copy-line"></i>
+                                <span>Templates</span>
+                            </a>
+                        </li>
 
-.tm-sidebar-section-title {
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: #6b7280;
-}
+                        <!-- Filters -->
+                        <li class="nav-item">
+                            <a href="<?= base_url('filters'); ?>" class="nav-link menu-link <?= tm_active(['filters']); ?>">
+                                <i class="ri-filter-line"></i>
+                                <span>Filters</span>
+                            </a>
+                        </li>
 
-.tm-sidebar-section-action {
-    color: #6b7280;
-    font-size: 16px;
-    text-decoration: none;
-    transition: color 0.2s;
-}
+                        <!-- Labels -->
+                        <li class="nav-item">
+                            <a href="<?= base_url('labels'); ?>" class="nav-link menu-link <?= tm_active(['labels']); ?>">
+                                <i class="ri-price-tag-3-line"></i>
+                                <span>Labels</span>
+                            </a>
+                        </li>
 
-.tm-sidebar-section-action:hover {
-    color: #fff;
-}
+                        <li class="menu-title"><span>&nbsp;</span></li>
 
-.tm-sidebar-link .label-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    flex-shrink: 0;
-}
+                        <!-- Settings -->
+                        <li class="nav-item">
+                            <a href="<?= base_url('settings'); ?>" class="nav-link menu-link <?= tm_active(['settings']); ?>">
+                                <i class="ri-settings-3-line"></i>
+                                <span>Settings</span>
+                            </a>
+                        </li>
 
-.tm-sidebar-overlay {
-    display: none;
-    position: fixed;
-    top: 60px;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0,0,0,0.4);
-    z-index: 1029;
-}
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <!-- Sidebar overlay -->
+        <div class="vertical-overlay"></div>
 
-.tm-sidebar.show ~ .tm-sidebar-overlay,
-.tm-sidebar.show + .tm-sidebar-overlay {
-    display: block;
-}
-</style>
-
-<!-- Main Content Wrapper Start -->
-<div class="tm-main">
+        <div class="main-content">
+            <div class="page-content">
+                <div class="container-fluid">

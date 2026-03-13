@@ -1,5 +1,11 @@
-<?php
-$body = ['title' => 'Users'];
+<?php if (!defined('IN_SITE')) {
+    die('The Request Not Found');
+}
+$body = [
+    'title' => 'Users',
+    'header' => '',
+    'footer' => '',
+];
 
 // Get all users with counts
 $users = $ToryMail->get_list_safe("
@@ -10,110 +16,123 @@ $users = $ToryMail->get_list_safe("
     ORDER BY u.id DESC
 ");
 
-require_once __DIR__ . '/header.php';
-require_once __DIR__ . '/sidebar.php';
+require_once(__DIR__.'/header.php');
+require_once(__DIR__.'/sidebar.php');
 ?>
 
-<div class="admin-content">
-    <div class="page-header">
-        <h4><i class="ri-group-line me-2"></i> Users</h4>
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
-            <i class="ri-user-add-line me-1"></i> Add User
-        </button>
-    </div>
-
-    <!-- Filters -->
-    <div class="card-custom mb-3">
-        <div class="card-body py-2">
-            <div class="row align-items-center g-2">
-                <div class="col-auto">
-                    <select id="filterRole" class="form-select form-select-sm">
-                        <option value="">All Roles</option>
-                        <option value="admin">Admin</option>
-                        <option value="user">User</option>
-                    </select>
-                </div>
-                <div class="col-auto">
-                    <select id="filterStatus" class="form-select form-select-sm">
-                        <option value="">All Status</option>
-                        <option value="active">Active</option>
-                        <option value="banned">Banned</option>
-                        <option value="inactive">Inactive</option>
-                    </select>
-                </div>
+<!-- Page Title -->
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">Users</h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="<?= admin_url('home'); ?>">Admin</a></li>
+                    <li class="breadcrumb-item active">Users</li>
+                </ol>
             </div>
         </div>
     </div>
+</div>
 
-    <div class="card-custom">
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover mb-0" id="usersTable">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th>Role</th>
-                            <th>Domains</th>
-                            <th>Mailboxes</th>
-                            <th>Storage</th>
-                            <th>Status</th>
-                            <th>Last Activity</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($users as $user): ?>
-                            <tr data-role="<?= $user['role'] ?>" data-status="<?= $user['status'] ?>">
-                                <td><?= $user['id'] ?></td>
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <h5 class="card-title mb-0">All Users</h5>
+                <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                    <i class="ri-user-add-line me-1"></i> Add User
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table id="datatable" class="table table-bordered table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Domains</th>
+                                <th>Mailboxes</th>
+                                <th>Storage</th>
+                                <th>Status</th>
+                                <th>Last Activity</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($users as $user): ?>
+                            <tr>
+                                <td><?= $user['id']; ?></td>
                                 <td>
-                                    <a href="<?= admin_url('user-edit&id=' . $user['id']) ?>" class="fw-semibold text-decoration-none">
-                                        <?= sanitize($user['fullname']) ?>
+                                    <a href="<?= admin_url('user-edit&id=' . $user['id']); ?>" class="fw-semibold text-decoration-none">
+                                        <?= sanitize($user['fullname']); ?>
                                     </a>
                                 </td>
-                                <td><?= sanitize($user['email']) ?></td>
+                                <td><?= sanitize($user['email']); ?></td>
                                 <td>
                                     <?php if ($user['role'] === 'admin'): ?>
-                                        <span class="badge bg-primary"><?= $user['role'] ?></span>
+                                        <span class="badge bg-primary-subtle text-primary">Admin</span>
                                     <?php else: ?>
-                                        <span class="badge bg-secondary"><?= $user['role'] ?></span>
+                                        <span class="badge bg-info-subtle text-info">User</span>
                                     <?php endif; ?>
                                 </td>
-                                <td><?= $user['domains_count'] ?></td>
-                                <td><?= $user['mailboxes_count'] ?></td>
+                                <td><?= $user['domains_count']; ?></td>
+                                <td><?= $user['mailboxes_count']; ?></td>
                                 <td>
-                                    <small><?= format_email_size($user['storage_used']) ?> / <?= format_email_size($user['storage_quota']) ?></small>
+                                    <small><?= format_email_size($user['storage_used']); ?> / <?= format_email_size($user['storage_quota']); ?></small>
                                 </td>
                                 <td>
-                                    <span class="badge badge-<?= $user['status'] ?>"><?= ucfirst($user['status']) ?></span>
+                                    <?php if ($user['status'] === 'active'): ?>
+                                        <span class="badge bg-success-subtle text-success">Active</span>
+                                    <?php elseif ($user['status'] === 'banned'): ?>
+                                        <span class="badge bg-danger-subtle text-danger">Banned</span>
+                                    <?php else: ?>
+                                        <span class="badge bg-warning-subtle text-warning"><?= ucfirst($user['status']); ?></span>
+                                    <?php endif; ?>
                                 </td>
                                 <td>
-                                    <small class="text-muted"><?= $user['last_activity'] ? time_ago($user['last_activity']) : 'Never' ?></small>
+                                    <small class="text-muted"><?= $user['last_activity'] ? time_ago($user['last_activity']) : 'Never'; ?></small>
                                 </td>
                                 <td>
-                                    <div class="d-flex gap-1">
-                                        <a href="<?= admin_url('user-edit&id=' . $user['id']) ?>" class="btn btn-sm btn-outline-primary" title="Edit">
-                                            <i class="ri-edit-line"></i>
-                                        </a>
-                                        <?php if ($user['status'] === 'banned'): ?>
-                                            <button class="btn btn-sm btn-outline-success btn-toggle-ban" data-id="<?= $user['id'] ?>" data-action="unban" title="Unban">
-                                                <i class="ri-lock-unlock-line"></i>
-                                            </button>
-                                        <?php else: ?>
-                                            <button class="btn btn-sm btn-outline-warning btn-toggle-ban" data-id="<?= $user['id'] ?>" data-action="ban" title="Ban">
-                                                <i class="ri-forbid-line"></i>
-                                            </button>
-                                        <?php endif; ?>
-                                        <button class="btn btn-sm btn-outline-danger btn-delete-user" data-id="<?= $user['id'] ?>" title="Delete">
-                                            <i class="ri-delete-bin-line"></i>
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-soft-secondary" data-bs-toggle="dropdown">
+                                            <i class="ri-more-fill"></i>
                                         </button>
+                                        <ul class="dropdown-menu dropdown-menu-end">
+                                            <li>
+                                                <a class="dropdown-item" href="<?= admin_url('user-edit&id=' . $user['id']); ?>">
+                                                    <i class="ri-edit-line me-2"></i> Edit
+                                                </a>
+                                            </li>
+                                            <?php if ($user['status'] === 'banned'): ?>
+                                                <li>
+                                                    <a class="dropdown-item btn-toggle-ban" href="javascript:void(0);" data-id="<?= $user['id']; ?>" data-action="unban">
+                                                        <i class="ri-lock-unlock-line me-2"></i> Unban
+                                                    </a>
+                                                </li>
+                                            <?php else: ?>
+                                                <li>
+                                                    <a class="dropdown-item btn-toggle-ban" href="javascript:void(0);" data-id="<?= $user['id']; ?>" data-action="ban">
+                                                        <i class="ri-forbid-line me-2"></i> Ban
+                                                    </a>
+                                                </li>
+                                            <?php endif; ?>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li>
+                                                <a class="dropdown-item text-danger btn-delete-user" href="javascript:void(0);" data-id="<?= $user['id']; ?>">
+                                                    <i class="ri-delete-bin-line me-2"></i> Delete
+                                                </a>
+                                            </li>
+                                        </ul>
                                     </div>
                                 </td>
                             </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -160,7 +179,7 @@ require_once __DIR__ . '/sidebar.php';
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn btn-primary">
                         <i class="ri-save-line me-1"></i> Create User
                     </button>
@@ -170,30 +189,10 @@ require_once __DIR__ . '/sidebar.php';
     </div>
 </div>
 
+<?php require_once(__DIR__.'/footer.php'); ?>
+
 <script>
 $(document).ready(function() {
-    var table = $('#usersTable').DataTable({
-        pageLength: 25,
-        order: [[0, 'desc']],
-        language: {
-            search: "Search:",
-            emptyTable: "No users found",
-            zeroRecords: "No matching users"
-        }
-    });
-
-    // Filter by role
-    $('#filterRole').on('change', function() {
-        var role = $(this).val();
-        table.column(3).search(role).draw();
-    });
-
-    // Filter by status
-    $('#filterStatus').on('change', function() {
-        var status = $(this).val();
-        table.column(7).search(status).draw();
-    });
-
     // Add user
     $('#addUserForm').on('submit', function(e) {
         e.preventDefault();
@@ -201,7 +200,7 @@ $(document).ready(function() {
         btn.prop('disabled', true).html('<i class="ri-loader-4-line ri-spin"></i> Creating...');
 
         $.ajax({
-            url: '<?= base_url("ajaxs/admin/users.php?action=add") ?>',
+            url: '<?= base_url("ajaxs/admin/users.php?action=add"); ?>',
             method: 'POST',
             data: $(this).serialize(),
             dataType: 'json',
@@ -229,7 +228,7 @@ $(document).ready(function() {
 
         confirmAction(label, 'This will change the user\'s access.', function() {
             $.ajax({
-                url: '<?= base_url("ajaxs/admin/users.php?action=toggle_ban") ?>',
+                url: '<?= base_url("ajaxs/admin/users.php?action=toggle_ban"); ?>',
                 method: 'POST',
                 data: { user_id: userId, ban_action: action },
                 dataType: 'json',
@@ -251,7 +250,7 @@ $(document).ready(function() {
 
         confirmAction('Delete User?', 'This action cannot be undone. All user data will be permanently deleted.', function() {
             $.ajax({
-                url: '<?= base_url("ajaxs/admin/users.php?action=delete") ?>',
+                url: '<?= base_url("ajaxs/admin/users.php?action=delete"); ?>',
                 method: 'POST',
                 data: { user_id: userId },
                 dataType: 'json',
@@ -268,5 +267,3 @@ $(document).ready(function() {
     });
 });
 </script>
-
-<?php require_once __DIR__ . '/footer.php'; ?>

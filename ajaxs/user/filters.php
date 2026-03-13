@@ -1,34 +1,5 @@
 <?php
-session_start();
-
-// Load environment
-$envFile = __DIR__ . '/../../.env';
-if (!file_exists($envFile)) {
-    http_response_code(500);
-    echo json_encode(['status' => 'error', 'message' => 'System not configured']);
-    exit;
-}
-$envLines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-foreach ($envLines as $line) {
-    if (strpos(trim($line), '#') === 0) continue;
-    if (strpos($line, '=') === false) continue;
-    list($key, $value) = explode('=', $line, 2);
-    $_ENV[trim($key)] = trim($value);
-    putenv(trim($key) . '=' . trim($value));
-}
-
-require_once __DIR__ . '/../../libs/db.php';
-require_once __DIR__ . '/../../libs/helper.php';
-
-$ToryMail = new DB();
-
-$settings = [];
-$settingsRows = $ToryMail->get_list_safe("SELECT * FROM settings", []);
-if ($settingsRows) {
-    foreach ($settingsRows as $row) {
-        $settings[$row['setting_key']] = $row['setting_value'];
-    }
-}
+require_once __DIR__ . "/../bootstrap.php";
 
 // Auth check
 $token = $_SESSION['user_login'] ?? $_COOKIE['torymail_token'] ?? null;

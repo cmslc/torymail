@@ -1,35 +1,5 @@
 <?php
-session_start();
-
-// Load environment
-$envFile = __DIR__ . '/../../.env';
-if (!file_exists($envFile)) {
-    http_response_code(500);
-    echo json_encode(['status' => 'error', 'message' => 'System not configured']);
-    exit;
-}
-$envLines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-foreach ($envLines as $line) {
-    if (strpos(trim($line), '#') === 0) continue;
-    if (strpos($line, '=') === false) continue;
-    list($key, $value) = explode('=', $line, 2);
-    $_ENV[trim($key)] = trim($value);
-    putenv(trim($key) . '=' . trim($value));
-}
-
-require_once __DIR__ . '/../../libs/db.php';
-require_once __DIR__ . '/../../libs/helper.php';
-
-$ToryMail = new DB();
-
-// Load settings
-$settings = [];
-$settingsRows = $ToryMail->get_list_safe("SELECT * FROM settings", []);
-if ($settingsRows) {
-    foreach ($settingsRows as $row) {
-        $settings[$row['setting_key']] = $row['setting_value'];
-    }
-}
+require_once __DIR__ . '/../bootstrap.php';
 
 $action = isset($_GET['action']) ? preg_replace('/[^a-zA-Z0-9_-]/', '', $_GET['action']) : '';
 
@@ -86,13 +56,12 @@ switch ($action) {
         ], 'id = ?', [$user['id']]);
 
         $_SESSION['user_login'] = $token;
+        $expiry = $remember ? time() + (30 * 24 * 60 * 60) : 0;
+        setcookie('torymail_token', $token, $expiry, '/', '', true, true);
+
         if ($user['role'] === 'admin') {
             $_SESSION['admin_login'] = $token;
-        }
-
-        if ($remember) {
-            $cookieName = ($user['role'] === 'admin') ? 'torymail_admin_token' : 'torymail_token';
-            setcookie($cookieName, $token, time() + (30 * 24 * 60 * 60), '/', '', true, true);
+            setcookie('torymail_admin_token', $token, $expiry, '/', '', true, true);
         }
 
         // Log activity
@@ -106,7 +75,7 @@ switch ($action) {
         ]);
 
         success_response('Login successful', [
-            'redirect' => ($user['role'] === 'admin') ? base_url('admin/dashboard') : base_url('user/inbox'),
+            'redirect' => ($user['role'] === 'admin') ? base_url('admin') : base_url('inbox'),
         ]);
         break;
 

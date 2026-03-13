@@ -25,53 +25,77 @@ $labels = $ToryMail->get_list_safe("
 $defaultColors = ['#4F46E5', '#EF4444', '#F59E0B', '#10B981', '#3B82F6', '#8B5CF6', '#EC4899', '#06B6D4', '#F97316', '#6366F1'];
 ?>
 
-<div class="tm-card">
-    <div class="tm-card-header">
-        <h5 class="mb-0 fw-semibold" style="font-size:18px;">
-            <i class="ri-price-tag-3-line me-2 text-primary"></i> Labels
-            <span class="badge bg-light text-muted ms-2" style="font-size:12px;"><?= count($labels); ?></span>
-        </h5>
-        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#labelModal" onclick="resetLabelForm()">
-            <i class="ri-add-line me-1"></i> Add Label
-        </button>
+<!-- Breadcrumb -->
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">Labels</h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="<?= base_url('inbox'); ?>">Home</a></li>
+                    <li class="breadcrumb-item active">Labels</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header border-bottom-dashed">
+        <div class="d-flex align-items-center justify-content-between">
+            <h5 class="card-title mb-0">
+                <i class="ri-price-tag-3-line me-1 align-bottom text-primary"></i> Labels
+                <span class="badge bg-primary-subtle text-primary ms-1"><?= count($labels); ?></span>
+            </h5>
+            <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#labelModal" onclick="resetLabelForm()">
+                <i class="ri-add-line me-1"></i> Add Label
+            </button>
+        </div>
     </div>
 
-    <?php if (empty($labels)): ?>
-    <div class="text-center py-5">
-        <i class="ri-price-tag-3-line" style="font-size:48px;color:#d1d5db;"></i>
-        <p class="text-muted mt-3 mb-1">No labels yet</p>
-        <p class="text-muted" style="font-size:13px;">Create labels to organize your emails by category.</p>
-    </div>
-    <?php else: ?>
-    <div class="p-3">
+    <div class="card-body">
+        <?php if (empty($labels)): ?>
+        <div class="text-center py-5">
+            <div class="avatar-lg mx-auto mb-3">
+                <div class="avatar-title bg-primary-subtle text-primary rounded-circle fs-24">
+                    <i class="ri-price-tag-3-line"></i>
+                </div>
+            </div>
+            <h5 class="fs-16 text-muted">No labels yet</h5>
+            <p class="text-muted fs-13">Create labels to organize your emails by category.</p>
+        </div>
+        <?php else: ?>
         <div class="row g-3">
             <?php foreach ($labels as $label): ?>
             <div class="col-md-6 col-lg-4">
-                <div class="border rounded-3 p-3 d-flex align-items-center justify-content-between"
-                     style="transition:box-shadow 0.2s;"
-                     onmouseover="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.08)'"
-                     onmouseout="this.style.boxShadow='none'">
-                    <div class="d-flex align-items-center gap-3">
-                        <span style="width:16px;height:16px;border-radius:4px;background:<?= htmlspecialchars($label['color']); ?>;flex-shrink:0;"></span>
-                        <div>
-                            <div class="fw-medium"><?= htmlspecialchars($label['name']); ?></div>
-                            <div class="text-muted" style="font-size:12px;"><?= $label['email_count']; ?> email<?= $label['email_count'] != 1 ? 's' : ''; ?></div>
+                <div class="card border mb-0">
+                    <div class="card-body d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="avatar-xs flex-shrink-0">
+                                <div class="avatar-title rounded-circle" style="background:<?= htmlspecialchars($label['color']); ?>;">
+                                    <i class="ri-price-tag-3-line text-white fs-14"></i>
+                                </div>
+                            </div>
+                            <div>
+                                <h6 class="mb-0 fw-medium"><?= htmlspecialchars($label['name']); ?></h6>
+                                <span class="text-muted fs-12"><?= $label['email_count']; ?> email<?= $label['email_count'] != 1 ? 's' : ''; ?></span>
+                            </div>
                         </div>
-                    </div>
-                    <div class="d-flex gap-1">
-                        <button class="btn btn-sm btn-light" onclick="editLabel(<?= htmlspecialchars(json_encode($label)); ?>)" title="Edit">
-                            <i class="ri-pencil-line"></i>
-                        </button>
-                        <button class="btn btn-sm btn-light text-danger" onclick="deleteLabel(<?= $label['id']; ?>, '<?= htmlspecialchars($label['name']); ?>')" title="Delete">
-                            <i class="ri-delete-bin-line"></i>
-                        </button>
+                        <div class="d-flex gap-1">
+                            <button class="btn btn-soft-primary btn-sm" onclick="editLabel(<?= htmlspecialchars(json_encode($label)); ?>)" title="Edit">
+                                <i class="ri-pencil-line"></i>
+                            </button>
+                            <button class="btn btn-soft-danger btn-sm" onclick="deleteLabel(<?= $label['id']; ?>, '<?= htmlspecialchars($label['name']); ?>')" title="Delete">
+                                <i class="ri-delete-bin-line"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
             <?php endforeach; ?>
         </div>
+        <?php endif; ?>
     </div>
-    <?php endif; ?>
 </div>
 
 <!-- Label Modal -->
@@ -104,7 +128,7 @@ $defaultColors = ['#4F46E5', '#EF4444', '#F59E0B', '#10B981', '#3B82F6', '#8B5CF
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-ghost-secondary" data-bs-dismiss="modal">Cancel</button>
                 <button type="button" class="btn btn-primary" id="saveLabelBtn">Save Label</button>
             </div>
         </div>

@@ -42,43 +42,60 @@ if (!$userPrefs) {
 }
 ?>
 
-<div class="tm-card">
-    <div class="tm-card-header">
-        <h5 class="mb-0 fw-semibold" style="font-size:18px;">
-            <i class="ri-settings-3-line me-2 text-primary"></i> Settings
+<!-- Breadcrumb -->
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">Settings</h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="<?= base_url('inbox'); ?>">Home</a></li>
+                    <li class="breadcrumb-item active">Settings</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <i class="ri-settings-3-line me-1 align-bottom text-primary"></i> Settings
         </h5>
     </div>
 
     <!-- Tabs -->
-    <ul class="nav nav-tabs px-3 pt-2" style="border-bottom:2px solid #f0f0f0;">
-        <li class="nav-item">
-            <a class="nav-link <?= $activeTab === 'profile' ? 'active' : ''; ?>" href="<?= base_url('settings?tab=profile'); ?>">
-                <i class="ri-user-line me-1"></i> Profile
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link <?= $activeTab === 'security' ? 'active' : ''; ?>" href="<?= base_url('settings?tab=security'); ?>">
-                <i class="ri-lock-line me-1"></i> Security
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link <?= $activeTab === 'signature' ? 'active' : ''; ?>" href="<?= base_url('settings?tab=signature'); ?>">
-                <i class="ri-pen-nib-line me-1"></i> Signature
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link <?= $activeTab === 'autoreply' ? 'active' : ''; ?>" href="<?= base_url('settings?tab=autoreply'); ?>">
-                <i class="ri-reply-line me-1"></i> Auto-reply
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link <?= $activeTab === 'display' ? 'active' : ''; ?>" href="<?= base_url('settings?tab=display'); ?>">
-                <i class="ri-palette-line me-1"></i> Display
-            </a>
-        </li>
-    </ul>
+    <div class="card-header p-0 border-bottom-0">
+        <ul class="nav nav-tabs nav-tabs-custom" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link <?= $activeTab === 'profile' ? 'active' : ''; ?>" href="<?= base_url('settings?tab=profile'); ?>">
+                    <i class="ri-user-line me-1 align-bottom"></i> Profile
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link <?= $activeTab === 'security' ? 'active' : ''; ?>" href="<?= base_url('settings?tab=security'); ?>">
+                    <i class="ri-lock-line me-1 align-bottom"></i> Security
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link <?= $activeTab === 'signature' ? 'active' : ''; ?>" href="<?= base_url('settings?tab=signature'); ?>">
+                    <i class="ri-pen-nib-line me-1 align-bottom"></i> Signature
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link <?= $activeTab === 'autoreply' ? 'active' : ''; ?>" href="<?= base_url('settings?tab=autoreply'); ?>">
+                    <i class="ri-reply-line me-1 align-bottom"></i> Auto-reply
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link <?= $activeTab === 'display' ? 'active' : ''; ?>" href="<?= base_url('settings?tab=display'); ?>">
+                    <i class="ri-palette-line me-1 align-bottom"></i> Display
+                </a>
+            </li>
+        </ul>
+    </div>
 
-    <div class="p-4">
+    <div class="card-body">
         <!-- Profile Tab -->
         <?php if ($activeTab === 'profile'): ?>
         <form id="profileForm">
@@ -119,10 +136,12 @@ if (!$userPrefs) {
                     </button>
                 </div>
                 <div class="col-lg-4 text-center">
-                    <div class="tm-user-avatar mx-auto mb-3" style="width:100px;height:100px;font-size:36px;">
-                        <?= strtoupper(substr($getUser['username'] ?? $getUser['email'] ?? 'U', 0, 1)); ?>
+                    <div class="avatar-lg mx-auto mb-3">
+                        <div class="avatar-title bg-primary-subtle text-primary rounded-circle fs-24 fw-semibold">
+                            <?= strtoupper(substr($getUser['username'] ?? $getUser['email'] ?? 'U', 0, 1)); ?>
+                        </div>
                     </div>
-                    <p class="text-muted" style="font-size:13px;">
+                    <p class="text-muted fs-13">
                         <?= htmlspecialchars($getUser['email'] ?? ''); ?>
                     </p>
                 </div>
@@ -155,22 +174,32 @@ if (!$userPrefs) {
             </div>
             <div class="col-lg-6">
                 <h6 class="fw-semibold mb-3">Two-Factor Authentication</h6>
-                <div class="border rounded-3 p-4 text-center">
-                    <?php if ($getUser['two_factor_enabled'] ?? false): ?>
-                    <i class="ri-shield-check-fill text-success" style="font-size:48px;"></i>
-                    <p class="fw-medium mt-2 mb-1">2FA is enabled</p>
-                    <p class="text-muted mb-3" style="font-size:13px;">Your account is protected with two-factor authentication.</p>
-                    <button class="btn btn-outline-danger btn-sm" onclick="toggle2FA('disable')">
-                        <i class="ri-shield-line me-1"></i> Disable 2FA
-                    </button>
-                    <?php else: ?>
-                    <i class="ri-shield-line text-muted" style="font-size:48px;"></i>
-                    <p class="fw-medium mt-2 mb-1">2FA is not enabled</p>
-                    <p class="text-muted mb-3" style="font-size:13px;">Add an extra layer of security to your account.</p>
-                    <button class="btn btn-primary btn-sm" onclick="toggle2FA('enable')">
-                        <i class="ri-shield-check-line me-1"></i> Enable 2FA
-                    </button>
-                    <?php endif; ?>
+                <div class="card border">
+                    <div class="card-body text-center">
+                        <?php if ($getUser['two_factor_enabled'] ?? false): ?>
+                        <div class="avatar-md mx-auto mb-3">
+                            <div class="avatar-title bg-success-subtle text-success rounded-circle fs-24">
+                                <i class="ri-shield-check-fill"></i>
+                            </div>
+                        </div>
+                        <h6 class="fw-semibold">2FA is enabled</h6>
+                        <p class="text-muted fs-13 mb-3">Your account is protected with two-factor authentication.</p>
+                        <button class="btn btn-soft-danger btn-sm" onclick="toggle2FA('disable')">
+                            <i class="ri-shield-line me-1"></i> Disable 2FA
+                        </button>
+                        <?php else: ?>
+                        <div class="avatar-md mx-auto mb-3">
+                            <div class="avatar-title bg-warning-subtle text-warning rounded-circle fs-24">
+                                <i class="ri-shield-line"></i>
+                            </div>
+                        </div>
+                        <h6 class="fw-semibold">2FA is not enabled</h6>
+                        <p class="text-muted fs-13 mb-3">Add an extra layer of security to your account.</p>
+                        <button class="btn btn-primary btn-sm" onclick="toggle2FA('enable')">
+                            <i class="ri-shield-check-line me-1"></i> Enable 2FA
+                        </button>
+                        <?php endif; ?>
+                    </div>
                 </div>
             </div>
         </div>
@@ -286,28 +315,6 @@ if (!$userPrefs) {
         <?php endif; ?>
     </div>
 </div>
-
-<style>
-.nav-tabs .nav-link {
-    color: #6b7280;
-    border: none;
-    padding: 10px 16px;
-    font-size: 14px;
-    font-weight: 500;
-    border-bottom: 2px solid transparent;
-    margin-bottom: -2px;
-}
-.nav-tabs .nav-link.active {
-    color: var(--tm-primary);
-    border-bottom-color: var(--tm-primary);
-    background: transparent;
-}
-.nav-tabs .nav-link:hover {
-    color: var(--tm-primary);
-    border-color: transparent;
-    border-bottom-color: var(--tm-primary);
-}
-</style>
 
 <script>
 function saveSettings(section) {

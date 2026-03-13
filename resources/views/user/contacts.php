@@ -57,27 +57,44 @@ $groups = $ToryMail->get_list_safe("
 ", [$getUser['id']]);
 ?>
 
-<div class="tm-card">
-    <div class="tm-card-header">
-        <h5 class="mb-0 fw-semibold" style="font-size:18px;">
-            <i class="ri-contacts-line me-2 text-primary"></i> Contacts
-            <span class="badge bg-light text-muted ms-2" style="font-size:12px;"><?= $totalContacts; ?></span>
-        </h5>
-        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#contactModal" onclick="resetContactForm()">
-            <i class="ri-add-line me-1"></i> Add Contact
-        </button>
+<!-- Breadcrumb -->
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">Contacts</h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="<?= base_url('inbox'); ?>">Home</a></li>
+                    <li class="breadcrumb-item active">Contacts</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header border-bottom-dashed">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <h5 class="card-title mb-0">
+                <i class="ri-contacts-line me-1 align-bottom text-primary"></i> Contacts
+                <span class="badge bg-primary-subtle text-primary ms-1"><?= $totalContacts; ?></span>
+            </h5>
+            <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#contactModal" onclick="resetContactForm()">
+                <i class="ri-add-line me-1"></i> Add Contact
+            </button>
+        </div>
     </div>
 
     <!-- Filters -->
-    <div class="tm-toolbar">
-        <form class="d-flex align-items-center gap-2 flex-fill flex-wrap" method="GET" action="<?= base_url('contacts'); ?>">
-            <div class="position-relative flex-fill" style="max-width:300px;">
-                <i class="ri-search-line position-absolute" style="left:10px;top:50%;transform:translateY(-50%);color:#9ca3af;"></i>
-                <input type="text" name="search" class="form-control form-control-sm" placeholder="Search contacts..."
-                       value="<?= htmlspecialchars($search); ?>" style="padding-left:32px;border-radius:6px;">
+    <div class="card-header border-bottom-dashed py-2">
+        <form class="d-flex align-items-center gap-2 flex-wrap" method="GET" action="<?= base_url('contacts'); ?>">
+            <div class="search-box" style="min-width:200px;">
+                <input type="text" name="search" class="form-control form-control-sm search" placeholder="Search contacts..."
+                       value="<?= htmlspecialchars($search); ?>">
+                <i class="ri-search-line search-icon"></i>
             </div>
             <?php if (!empty($groups)): ?>
-            <select name="group" class="form-select form-select-sm" style="width:160px;border-radius:6px;">
+            <select name="group" class="form-select form-select-sm" style="width:160px;">
                 <option value="">All Groups</option>
                 <?php foreach ($groups as $g): ?>
                 <option value="<?= htmlspecialchars($g['group_name']); ?>" <?= $group === $g['group_name'] ? 'selected' : ''; ?>>
@@ -86,80 +103,91 @@ $groups = $ToryMail->get_list_safe("
                 <?php endforeach; ?>
             </select>
             <?php endif; ?>
-            <button type="submit" class="btn btn-sm btn-outline-primary">Filter</button>
+            <button type="submit" class="btn btn-soft-primary btn-sm">Filter</button>
         </form>
     </div>
 
-    <!-- Contact List -->
-    <?php if (empty($contacts)): ?>
-    <div class="text-center py-5">
-        <i class="ri-contacts-line" style="font-size:48px;color:#d1d5db;"></i>
-        <p class="text-muted mt-3 mb-0">No contacts found</p>
+    <div class="card-body p-0">
+        <?php if (empty($contacts)): ?>
+        <div class="text-center py-5">
+            <div class="avatar-lg mx-auto mb-3">
+                <div class="avatar-title bg-primary-subtle text-primary rounded-circle fs-24">
+                    <i class="ri-contacts-line"></i>
+                </div>
+            </div>
+            <h5 class="fs-16 text-muted">No contacts found</h5>
+        </div>
+        <?php else: ?>
+        <div class="table-responsive">
+            <table class="table table-hover table-nowrap align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width:50px;"></th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th class="d-none d-md-table-cell">Company</th>
+                        <th class="d-none d-md-table-cell">Group</th>
+                        <th class="d-none d-lg-table-cell">Phone</th>
+                        <th style="width:100px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($contacts as $contact): ?>
+                    <tr>
+                        <td>
+                            <div class="avatar-xs">
+                                <div class="avatar-title bg-primary-subtle text-primary rounded-circle">
+                                    <?= strtoupper(substr($contact['name'] ?: $contact['email'], 0, 1)); ?>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="fw-medium"><?= htmlspecialchars($contact['name'] ?: '-'); ?></td>
+                        <td><span class="text-muted"><?= htmlspecialchars($contact['email']); ?></span></td>
+                        <td class="d-none d-md-table-cell text-muted"><?= htmlspecialchars($contact['company'] ?? '-'); ?></td>
+                        <td class="d-none d-md-table-cell">
+                            <?php if (!empty($contact['group_name'])): ?>
+                            <span class="badge bg-primary-subtle text-primary"><?= htmlspecialchars($contact['group_name']); ?></span>
+                            <?php endif; ?>
+                        </td>
+                        <td class="d-none d-lg-table-cell text-muted"><?= htmlspecialchars($contact['phone'] ?? '-'); ?></td>
+                        <td>
+                            <div class="d-flex gap-1">
+                                <button class="btn btn-soft-primary btn-sm" onclick="editContact(<?= htmlspecialchars(json_encode($contact)); ?>)" title="Edit">
+                                    <i class="ri-pencil-line"></i>
+                                </button>
+                                <button class="btn btn-soft-danger btn-sm" onclick="deleteContact(<?= $contact['id']; ?>)" title="Delete">
+                                    <i class="ri-delete-bin-line"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+        <?php endif; ?>
     </div>
-    <?php else: ?>
-    <div class="table-responsive">
-        <table class="table table-hover mb-0" style="font-size:14px;">
-            <thead class="table-light">
-                <tr>
-                    <th style="width:50px;"></th>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th class="d-none d-md-table-cell">Company</th>
-                    <th class="d-none d-md-table-cell">Group</th>
-                    <th style="width:100px;">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($contacts as $contact): ?>
-                <tr>
-                    <td>
-                        <div class="tm-user-avatar" style="width:34px;height:34px;font-size:13px;">
-                            <?= strtoupper(substr($contact['name'] ?: $contact['email'], 0, 1)); ?>
-                        </div>
-                    </td>
-                    <td class="fw-medium"><?= htmlspecialchars($contact['name'] ?: '-'); ?></td>
-                    <td><span class="text-muted"><?= htmlspecialchars($contact['email']); ?></span></td>
-                    <td class="d-none d-md-table-cell text-muted"><?= htmlspecialchars($contact['company'] ?? '-'); ?></td>
-                    <td class="d-none d-md-table-cell">
-                        <?php if (!empty($contact['group_name'])): ?>
-                        <span class="badge bg-light text-dark"><?= htmlspecialchars($contact['group_name']); ?></span>
-                        <?php endif; ?>
-                    </td>
-                    <td>
-                        <div class="d-flex gap-1">
-                            <button class="btn btn-sm btn-light" onclick="editContact(<?= htmlspecialchars(json_encode($contact)); ?>)" title="Edit">
-                                <i class="ri-pencil-line"></i>
-                            </button>
-                            <button class="btn btn-sm btn-light text-danger" onclick="deleteContact(<?= $contact['id']; ?>)" title="Delete">
-                                <i class="ri-delete-bin-line"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
-    </div>
-    <?php endif; ?>
 
     <!-- Pagination -->
     <?php if ($totalPages > 1): ?>
-    <div class="d-flex justify-content-center py-3">
-        <nav>
-            <ul class="pagination pagination-sm mb-0">
-                <li class="page-item <?= $page <= 1 ? 'disabled' : ''; ?>">
-                    <a class="page-link" href="<?= base_url('contacts?page=' . ($page - 1) . ($search ? '&search=' . urlencode($search) : '') . ($group ? '&group=' . urlencode($group) : '')); ?>">&laquo;</a>
-                </li>
-                <?php for ($p = max(1, $page - 2); $p <= min($totalPages, $page + 2); $p++): ?>
-                <li class="page-item <?= $p === $page ? 'active' : ''; ?>">
-                    <a class="page-link" href="<?= base_url('contacts?page=' . $p . ($search ? '&search=' . urlencode($search) : '') . ($group ? '&group=' . urlencode($group) : '')); ?>"><?= $p; ?></a>
-                </li>
-                <?php endfor; ?>
-                <li class="page-item <?= $page >= $totalPages ? 'disabled' : ''; ?>">
-                    <a class="page-link" href="<?= base_url('contacts?page=' . ($page + 1) . ($search ? '&search=' . urlencode($search) : '') . ($group ? '&group=' . urlencode($group) : '')); ?>">&raquo;</a>
-                </li>
-            </ul>
-        </nav>
+    <div class="card-footer">
+        <div class="d-flex justify-content-center">
+            <nav>
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item <?= $page <= 1 ? 'disabled' : ''; ?>">
+                        <a class="page-link" href="<?= base_url('contacts?page=' . ($page - 1) . ($search ? '&search=' . urlencode($search) : '') . ($group ? '&group=' . urlencode($group) : '')); ?>">&laquo;</a>
+                    </li>
+                    <?php for ($p = max(1, $page - 2); $p <= min($totalPages, $page + 2); $p++): ?>
+                    <li class="page-item <?= $p === $page ? 'active' : ''; ?>">
+                        <a class="page-link" href="<?= base_url('contacts?page=' . $p . ($search ? '&search=' . urlencode($search) : '') . ($group ? '&group=' . urlencode($group) : '')); ?>"><?= $p; ?></a>
+                    </li>
+                    <?php endfor; ?>
+                    <li class="page-item <?= $page >= $totalPages ? 'disabled' : ''; ?>">
+                        <a class="page-link" href="<?= base_url('contacts?page=' . ($page + 1) . ($search ? '&search=' . urlencode($search) : '') . ($group ? '&group=' . urlencode($group) : '')); ?>">&raquo;</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
     </div>
     <?php endif; ?>
 </div>
@@ -202,7 +230,7 @@ $groups = $ToryMail->get_list_safe("
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-ghost-secondary" data-bs-dismiss="modal">Cancel</button>
                 <button type="button" class="btn btn-primary" id="saveContactBtn">Save Contact</button>
             </div>
         </div>
