@@ -11,7 +11,7 @@ $folderCounts = [];
 $countRows = $ToryMail->get_list_safe("
     SELECT `folder`, COUNT(*) as cnt
     FROM `emails`
-    WHERE `user_id` = ? AND `is_read` = 0 AND `folder` IN ('inbox','spam')
+    WHERE `mailbox_id` IN (SELECT id FROM mailboxes WHERE user_id = ?) AND `is_read` = 0 AND `folder` IN ('inbox','spam')
     GROUP BY `folder`
 ", [$getUser['id']]);
 foreach ($countRows as $row) {
@@ -19,7 +19,7 @@ foreach ($countRows as $row) {
 }
 $draftCount = $ToryMail->get_row_safe("
     SELECT COUNT(*) as cnt FROM `emails`
-    WHERE `user_id` = ? AND `folder` = 'drafts'
+    WHERE `mailbox_id` IN (SELECT id FROM mailboxes WHERE user_id = ?) AND `folder` = 'drafts'
 ", [$getUser['id']])['cnt'] ?? 0;
 
 $unreadInbox = $folderCounts['inbox'] ?? ($getUser['unread_count'] ?? 0);
@@ -43,7 +43,7 @@ if (!function_exists('tm_folder_active')) {
 
 // Fetch user's labels for sidebar
 $sidebarLabels = $ToryMail->get_list_safe("
-    SELECT * FROM `labels`
+    SELECT * FROM `email_labels`
     WHERE `user_id` = ?
     ORDER BY `name` ASC
 ", [$getUser['id']]);
@@ -61,13 +61,14 @@ $sidebarLabels = $ToryMail->get_list_safe("
         <div class="app-menu navbar-menu">
             <!-- LOGO -->
             <div class="navbar-brand-box">
+                <?php $siteLogo = get_setting('site_logo', ''); $siteName = get_setting('site_name', 'Torymail'); ?>
                 <a href="<?= base_url('inbox'); ?>" class="logo logo-dark">
-                    <span class="logo-sm"><i class="ri-mail-line fs-22 text-primary"></i></span>
-                    <span class="logo-lg"><i class="ri-mail-line me-1 text-primary fs-20"></i> <span class="fw-bold fs-16">Torymail</span></span>
+                    <span class="logo-sm"><?php if ($siteLogo): ?><img src="<?= base_url($siteLogo); ?>" alt="" height="22"><?php else: ?><i class="ri-mail-line fs-22 text-primary"></i><?php endif; ?></span>
+                    <span class="logo-lg"><?php if ($siteLogo): ?><img src="<?= base_url($siteLogo); ?>" alt="<?= sanitize($siteName); ?>" height="28"><?php else: ?><i class="ri-mail-line me-1 text-primary fs-20"></i> <span class="fw-bold fs-16"><?= sanitize($siteName); ?></span><?php endif; ?></span>
                 </a>
                 <a href="<?= base_url('inbox'); ?>" class="logo logo-light">
-                    <span class="logo-sm"><i class="ri-mail-line fs-22"></i></span>
-                    <span class="logo-lg"><i class="ri-mail-line me-1 fs-20"></i> <span class="fw-bold fs-16">Torymail</span></span>
+                    <span class="logo-sm"><?php if ($siteLogo): ?><img src="<?= base_url($siteLogo); ?>" alt="" height="22"><?php else: ?><i class="ri-mail-line fs-22"></i><?php endif; ?></span>
+                    <span class="logo-lg"><?php if ($siteLogo): ?><img src="<?= base_url($siteLogo); ?>" alt="<?= sanitize($siteName); ?>" height="28"><?php else: ?><i class="ri-mail-line me-1 fs-20"></i> <span class="fw-bold fs-16"><?= sanitize($siteName); ?></span><?php endif; ?></span>
                 </a>
                 <button type="button" class="btn btn-sm p-0 fs-20 header-item float-end btn-vertical-sm-hover" id="vertical-hover">
                     <i class="ri-record-circle-line"></i>
@@ -78,23 +79,23 @@ $sidebarLabels = $ToryMail->get_list_safe("
                 <div class="container-fluid">
                     <ul class="navbar-nav" id="navbar-nav">
 
-                        <li class="menu-title"><span>Menu</span></li>
+                        <li class="menu-title"><span><?= __('menu'); ?></span></li>
 
                         <!-- Compose -->
                         <li class="nav-item">
                             <a href="<?= base_url('compose'); ?>" class="nav-link menu-link <?= tm_active(['compose']); ?>">
                                 <i class="ri-edit-2-line"></i>
-                                <span>Compose</span>
+                                <span><?= __('compose'); ?></span>
                             </a>
                         </li>
 
-                        <li class="menu-title"><span>Mailbox</span></li>
+                        <li class="menu-title"><span><?= __('mailbox'); ?></span></li>
 
                         <!-- Inbox -->
                         <li class="nav-item">
                             <a href="<?= base_url('inbox'); ?>" class="nav-link menu-link <?= tm_folder_active('inbox'); ?>">
                                 <i class="ri-inbox-line"></i>
-                                <span>Inbox</span>
+                                <span><?= __('inbox'); ?></span>
                                 <?php if ($unreadInbox > 0): ?>
                                 <span class="badge badge-center rounded-pill bg-danger ms-auto"><?= $unreadInbox; ?></span>
                                 <?php endif; ?>
@@ -105,7 +106,7 @@ $sidebarLabels = $ToryMail->get_list_safe("
                         <li class="nav-item">
                             <a href="<?= base_url('inbox?folder=starred'); ?>" class="nav-link menu-link <?= tm_folder_active('starred'); ?>">
                                 <i class="ri-star-line"></i>
-                                <span>Starred</span>
+                                <span><?= __('starred'); ?></span>
                             </a>
                         </li>
 
@@ -113,7 +114,7 @@ $sidebarLabels = $ToryMail->get_list_safe("
                         <li class="nav-item">
                             <a href="<?= base_url('inbox?folder=sent'); ?>" class="nav-link menu-link <?= tm_folder_active('sent'); ?>">
                                 <i class="ri-send-plane-line"></i>
-                                <span>Sent</span>
+                                <span><?= __('sent'); ?></span>
                             </a>
                         </li>
 
@@ -121,7 +122,7 @@ $sidebarLabels = $ToryMail->get_list_safe("
                         <li class="nav-item">
                             <a href="<?= base_url('inbox?folder=drafts'); ?>" class="nav-link menu-link <?= tm_folder_active('drafts'); ?>">
                                 <i class="ri-draft-line"></i>
-                                <span>Drafts</span>
+                                <span><?= __('drafts'); ?></span>
                                 <?php if ($draftCount > 0): ?>
                                 <span class="badge badge-center rounded-pill bg-secondary ms-auto"><?= $draftCount; ?></span>
                                 <?php endif; ?>
@@ -132,7 +133,7 @@ $sidebarLabels = $ToryMail->get_list_safe("
                         <li class="nav-item">
                             <a href="<?= base_url('inbox?folder=spam'); ?>" class="nav-link menu-link <?= tm_folder_active('spam'); ?>">
                                 <i class="ri-spam-2-line"></i>
-                                <span>Spam</span>
+                                <span><?= __('spam'); ?></span>
                                 <?php if ($unreadSpam > 0): ?>
                                 <span class="badge badge-center rounded-pill bg-warning ms-auto"><?= $unreadSpam; ?></span>
                                 <?php endif; ?>
@@ -143,7 +144,7 @@ $sidebarLabels = $ToryMail->get_list_safe("
                         <li class="nav-item">
                             <a href="<?= base_url('inbox?folder=trash'); ?>" class="nav-link menu-link <?= tm_folder_active('trash'); ?>">
                                 <i class="ri-delete-bin-line"></i>
-                                <span>Trash</span>
+                                <span><?= __('trash'); ?></span>
                             </a>
                         </li>
 
@@ -151,13 +152,13 @@ $sidebarLabels = $ToryMail->get_list_safe("
                         <li class="nav-item">
                             <a href="<?= base_url('inbox?folder=archive'); ?>" class="nav-link menu-link <?= tm_folder_active('archive'); ?>">
                                 <i class="ri-archive-line"></i>
-                                <span>Archive</span>
+                                <span><?= __('archive'); ?></span>
                             </a>
                         </li>
 
                         <!-- Labels -->
                         <?php if (!empty($sidebarLabels)): ?>
-                        <li class="menu-title"><span>Labels</span></li>
+                        <li class="menu-title"><span><?= __('labels'); ?></span></li>
                         <?php foreach ($sidebarLabels as $sl): ?>
                         <li class="nav-item">
                             <a href="<?= base_url('inbox?label=' . urlencode($sl['id'])); ?>" class="nav-link menu-link">
@@ -168,13 +169,13 @@ $sidebarLabels = $ToryMail->get_list_safe("
                         <?php endforeach; ?>
                         <?php endif; ?>
 
-                        <li class="menu-title"><span>Management</span></li>
+                        <li class="menu-title"><span><?= __('management'); ?></span></li>
 
                         <!-- Domains -->
                         <li class="nav-item">
                             <a href="<?= base_url('domains'); ?>" class="nav-link menu-link <?= tm_active(['domains']); ?>">
                                 <i class="ri-global-line"></i>
-                                <span>Domains</span>
+                                <span><?= __('domains'); ?></span>
                             </a>
                         </li>
 
@@ -182,7 +183,7 @@ $sidebarLabels = $ToryMail->get_list_safe("
                         <li class="nav-item">
                             <a href="<?= base_url('mailboxes'); ?>" class="nav-link menu-link <?= tm_active(['mailboxes']); ?>">
                                 <i class="ri-mail-settings-line"></i>
-                                <span>Mailboxes</span>
+                                <span><?= __('mailboxes'); ?></span>
                             </a>
                         </li>
 
@@ -190,7 +191,7 @@ $sidebarLabels = $ToryMail->get_list_safe("
                         <li class="nav-item">
                             <a href="<?= base_url('contacts'); ?>" class="nav-link menu-link <?= tm_active(['contacts']); ?>">
                                 <i class="ri-contacts-line"></i>
-                                <span>Contacts</span>
+                                <span><?= __('contacts'); ?></span>
                             </a>
                         </li>
 
@@ -198,7 +199,7 @@ $sidebarLabels = $ToryMail->get_list_safe("
                         <li class="nav-item">
                             <a href="<?= base_url('templates'); ?>" class="nav-link menu-link <?= tm_active(['templates']); ?>">
                                 <i class="ri-file-copy-line"></i>
-                                <span>Templates</span>
+                                <span><?= __('templates'); ?></span>
                             </a>
                         </li>
 
@@ -206,7 +207,7 @@ $sidebarLabels = $ToryMail->get_list_safe("
                         <li class="nav-item">
                             <a href="<?= base_url('filters'); ?>" class="nav-link menu-link <?= tm_active(['filters']); ?>">
                                 <i class="ri-filter-line"></i>
-                                <span>Filters</span>
+                                <span><?= __('filters'); ?></span>
                             </a>
                         </li>
 
@@ -214,7 +215,7 @@ $sidebarLabels = $ToryMail->get_list_safe("
                         <li class="nav-item">
                             <a href="<?= base_url('labels'); ?>" class="nav-link menu-link <?= tm_active(['labels']); ?>">
                                 <i class="ri-price-tag-3-line"></i>
-                                <span>Labels</span>
+                                <span><?= __('labels'); ?></span>
                             </a>
                         </li>
 
@@ -224,7 +225,7 @@ $sidebarLabels = $ToryMail->get_list_safe("
                         <li class="nav-item">
                             <a href="<?= base_url('settings'); ?>" class="nav-link menu-link <?= tm_active(['settings']); ?>">
                                 <i class="ri-settings-3-line"></i>
-                                <span>Settings</span>
+                                <span><?= __('settings'); ?></span>
                             </a>
                         </li>
 

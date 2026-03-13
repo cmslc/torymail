@@ -1,8 +1,8 @@
 <?php
-$body = ['title' => 'Quên mật khẩu - Torymail'];
+$body = ['title' => __('forgot_title')];
 ?>
 <!doctype html>
-<html lang="vi" data-bs-theme="light">
+<html lang="<?= current_lang() ?>" data-bs-theme="light">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
@@ -29,7 +29,7 @@ $body = ['title' => 'Quên mật khẩu - Torymail'];
                     <div class="col-lg-12">
                         <div class="text-center mt-sm-5 mb-4 text-white-50">
                             <h3 class="text-white"><i class="ri-mail-line"></i> Torymail</h3>
-                            <p class="mt-2 fs-15 fw-medium">Khôi phục mật khẩu</p>
+                            <p class="mt-2 fs-15 fw-medium"><?= __('forgot_subtitle') ?></p>
                         </div>
                     </div>
                 </div>
@@ -38,26 +38,26 @@ $body = ['title' => 'Quên mật khẩu - Torymail'];
                         <div class="card mt-4">
                             <div class="card-body p-4">
                                 <div class="text-center mt-2">
-                                    <h5 class="text-primary">Quên mật khẩu?</h5>
-                                    <p class="text-muted">Nhập email để nhận link khôi phục mật khẩu.</p>
+                                    <h5 class="text-primary"><?= __('forgot_password') ?></h5>
+                                    <p class="text-muted"><?= __('forgot_desc') ?></p>
                                     <lord-icon class="avatar-xl" src="https://cdn.lordicon.com/rhvddzym.json" trigger="loop" colors="primary:#0ab39c"></lord-icon>
                                 </div>
                                 <div id="alert-box"></div>
                                 <div class="p-2 mt-4">
                                     <form id="forgotForm">
                                         <div class="mb-4">
-                                            <label class="form-label">Email</label>
-                                            <input type="email" name="email" class="form-control" placeholder="Nhập email đăng ký" required>
+                                            <label class="form-label"><?= __('email') ?></label>
+                                            <input type="email" name="email" class="form-control" placeholder="<?= __('forgot_email_placeholder') ?>" required>
                                         </div>
                                         <div class="mt-4">
-                                            <button class="btn btn-primary w-100" type="submit">Gửi link khôi phục</button>
+                                            <button class="btn btn-primary w-100" type="submit"><?= __('send_recovery') ?></button>
                                         </div>
                                     </form>
                                 </div>
                             </div>
                         </div>
                         <div class="mt-4 text-center">
-                            <p class="mb-0">Nhớ mật khẩu rồi? <a href="<?= base_url('auth/login') ?>" class="fw-semibold text-primary text-decoration-underline">Đăng nhập</a></p>
+                            <p class="mb-0"><?= __('remember_password') ?> <a href="<?= base_url('auth/login') ?>" class="fw-semibold text-primary text-decoration-underline"><?= __('login') ?></a></p>
                         </div>
                     </div>
                 </div>

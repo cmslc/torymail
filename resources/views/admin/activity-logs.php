@@ -2,7 +2,7 @@
     die('The Request Not Found');
 }
 $body = [
-    'title' => 'Activity Logs',
+    'title' => __('activity_logs'),
     'header' => '',
     'footer' => '',
 ];
@@ -13,7 +13,7 @@ $filterAction = isset($_GET['filter_action']) ? preg_replace('/[^a-zA-Z0-9_.-]/'
 $filterDateFrom = isset($_GET['date_from']) ? preg_replace('/[^0-9-]/', '', $_GET['date_from']) : '';
 $filterDateTo = isset($_GET['date_to']) ? preg_replace('/[^0-9-]/', '', $_GET['date_to']) : '';
 $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
-$perPage = 50;
+$perPage = 10;
 
 // Build query
 $whereClauses = [];
@@ -69,11 +69,11 @@ require_once(__DIR__.'/sidebar.php');
 <div class="row">
     <div class="col-12">
         <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-            <h4 class="mb-sm-0">Activity Logs</h4>
+            <h4 class="mb-sm-0"><?= __('activity_logs'); ?></h4>
             <div class="page-title-right">
                 <ol class="breadcrumb m-0">
-                    <li class="breadcrumb-item"><a href="<?= admin_url('home'); ?>">Admin</a></li>
-                    <li class="breadcrumb-item active">Activity Logs</li>
+                    <li class="breadcrumb-item"><a href="<?= admin_url('home'); ?>"><?= __('admin'); ?></a></li>
+                    <li class="breadcrumb-item active"><?= __('activity_logs'); ?></li>
                 </ol>
             </div>
         </div>
@@ -84,7 +84,7 @@ require_once(__DIR__.'/sidebar.php');
     <div class="col-12">
         <div class="card">
             <div class="card-header">
-                <h5 class="card-title mb-0"><?= number_format($totalLogs); ?> total entries</h5>
+                <h5 class="card-title mb-0"><?= number_format($totalLogs); ?> <?= __('total_entries'); ?></h5>
             </div>
             <div class="card-body">
                 <!-- Filters Row -->
@@ -93,9 +93,9 @@ require_once(__DIR__.'/sidebar.php');
                     <input type="hidden" name="action" value="activity-logs">
 
                     <div class="col-md-3 col-sm-6">
-                        <label class="form-label form-label-sm mb-1">User</label>
+                        <label class="form-label form-label-sm mb-1"><?= __('user'); ?></label>
                         <select name="user_id" class="form-select form-select-sm">
-                            <option value="">All Users</option>
+                            <option value=""><?= __('all_users'); ?></option>
                             <?php foreach ($allUsers as $u): ?>
                                 <option value="<?= $u['id']; ?>" <?= $filterUser == $u['id'] ? 'selected' : ''; ?>>
                                     <?= sanitize($u['fullname']); ?> (<?= sanitize($u['email']); ?>)
@@ -104,9 +104,9 @@ require_once(__DIR__.'/sidebar.php');
                         </select>
                     </div>
                     <div class="col-md-2 col-sm-6">
-                        <label class="form-label form-label-sm mb-1">Action</label>
+                        <label class="form-label form-label-sm mb-1"><?= __('action'); ?></label>
                         <select name="filter_action" class="form-select form-select-sm">
-                            <option value="">All Actions</option>
+                            <option value=""><?= __('all_actions'); ?></option>
                             <?php foreach ($actionTypes as $at): ?>
                                 <option value="<?= sanitize($at['action']); ?>" <?= $filterAction === $at['action'] ? 'selected' : ''; ?>>
                                     <?= sanitize($at['action']); ?>
@@ -115,19 +115,19 @@ require_once(__DIR__.'/sidebar.php');
                         </select>
                     </div>
                     <div class="col-md-2 col-sm-6">
-                        <label class="form-label form-label-sm mb-1">From</label>
+                        <label class="form-label form-label-sm mb-1"><?= __('date_from'); ?></label>
                         <input type="date" name="date_from" class="form-control form-control-sm" value="<?= $filterDateFrom; ?>">
                     </div>
                     <div class="col-md-2 col-sm-6">
-                        <label class="form-label form-label-sm mb-1">To</label>
+                        <label class="form-label form-label-sm mb-1"><?= __('date_to'); ?></label>
                         <input type="date" name="date_to" class="form-control form-control-sm" value="<?= $filterDateTo; ?>">
                     </div>
                     <div class="col-md-3 col-sm-12">
                         <button type="submit" class="btn btn-sm btn-primary me-1">
-                            <i class="ri-filter-line me-1"></i> Filter
+                            <i class="ri-filter-line me-1"></i> <?= __('filter'); ?>
                         </button>
                         <a href="<?= admin_url('activity-logs'); ?>" class="btn btn-sm btn-soft-secondary">
-                            <i class="ri-refresh-line me-1"></i> Reset
+                            <i class="ri-refresh-line me-1"></i> <?= __('reset'); ?>
                         </a>
                     </div>
                 </form>
@@ -137,17 +137,17 @@ require_once(__DIR__.'/sidebar.php');
                     <table class="table table-bordered table-striped table-hover">
                         <thead>
                             <tr>
-                                <th>Date</th>
-                                <th>User</th>
-                                <th>Action</th>
-                                <th>Details</th>
-                                <th>IP</th>
-                                <th>User Agent</th>
+                                <th><?= __('date'); ?></th>
+                                <th><?= __('user'); ?></th>
+                                <th><?= __('action'); ?></th>
+                                <th><?= __('details'); ?></th>
+                                <th><?= __('ip'); ?></th>
+                                <th><?= __('user_agent'); ?></th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php if (empty($logs)): ?>
-                                <tr><td colspan="6" class="text-center text-muted py-4">No activity logs found</td></tr>
+                                <tr><td colspan="6" class="text-center text-muted py-4"><?= __('no_logs'); ?></td></tr>
                             <?php else: ?>
                                 <?php foreach ($logs as $log): ?>
                                 <tr>

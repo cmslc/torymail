@@ -2,7 +2,7 @@
     die('The Request Not Found');
 }
 $body = [
-    'title' => 'Mailboxes',
+    'title' => __('mailboxes'),
     'header' => '',
     'footer' => '',
 ];
@@ -24,11 +24,11 @@ require_once(__DIR__.'/sidebar.php');
 <div class="row">
     <div class="col-12">
         <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-            <h4 class="mb-sm-0">Mailboxes</h4>
+            <h4 class="mb-sm-0"><?= __('mailboxes'); ?></h4>
             <div class="page-title-right">
                 <ol class="breadcrumb m-0">
-                    <li class="breadcrumb-item"><a href="<?= admin_url('home'); ?>">Admin</a></li>
-                    <li class="breadcrumb-item active">Mailboxes</li>
+                    <li class="breadcrumb-item"><a href="<?= admin_url('home'); ?>"><?= __('admin'); ?></a></li>
+                    <li class="breadcrumb-item active"><?= __('mailboxes'); ?></li>
                 </ol>
             </div>
         </div>
@@ -39,20 +39,20 @@ require_once(__DIR__.'/sidebar.php');
     <div class="col-12">
         <div class="card">
             <div class="card-header">
-                <h5 class="card-title mb-0">All Mailboxes</h5>
+                <h5 class="card-title mb-0"><?= __('all_mailboxes'); ?></h5>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
                     <table id="datatable" class="table table-bordered table-striped table-hover">
                         <thead>
                             <tr>
-                                <th>Email</th>
-                                <th>Domain</th>
-                                <th>Owner</th>
-                                <th>Used / Quota</th>
-                                <th>Status</th>
-                                <th>Created</th>
-                                <th>Actions</th>
+                                <th><?= __('email'); ?></th>
+                                <th><?= __('domain'); ?></th>
+                                <th><?= __('owner'); ?></th>
+                                <th><?= __('used_quota'); ?></th>
+                                <th><?= __('status'); ?></th>
+                                <th><?= __('created'); ?></th>
+                                <th><?= __('actions'); ?></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -77,9 +77,9 @@ require_once(__DIR__.'/sidebar.php');
                                 </td>
                                 <td>
                                     <?php if ($mb['status'] === 'active'): ?>
-                                        <span class="badge bg-success-subtle text-success">Active</span>
+                                        <span class="badge bg-success-subtle text-success"><?= __('active'); ?></span>
                                     <?php elseif ($mb['status'] === 'disabled'): ?>
-                                        <span class="badge bg-danger-subtle text-danger">Disabled</span>
+                                        <span class="badge bg-danger-subtle text-danger"><?= __('disabled'); ?></span>
                                     <?php else: ?>
                                         <span class="badge bg-warning-subtle text-warning"><?= ucfirst($mb['status']); ?></span>
                                     <?php endif; ?>
@@ -88,18 +88,18 @@ require_once(__DIR__.'/sidebar.php');
                                 <td>
                                     <div class="d-flex gap-1">
                                         <?php if ($mb['status'] === 'disabled'): ?>
-                                            <button class="btn btn-sm btn-soft-success btn-toggle-mailbox" data-id="<?= $mb['id']; ?>" data-action="enable" title="Enable">
+                                            <button class="btn btn-sm btn-soft-success btn-toggle-mailbox" data-id="<?= $mb['id']; ?>" data-action="enable" title="<?= __('enable'); ?>">
                                                 <i class="ri-check-line"></i>
                                             </button>
                                         <?php else: ?>
-                                            <button class="btn btn-sm btn-soft-warning btn-toggle-mailbox" data-id="<?= $mb['id']; ?>" data-action="disable" title="Disable">
+                                            <button class="btn btn-sm btn-soft-warning btn-toggle-mailbox" data-id="<?= $mb['id']; ?>" data-action="disable" title="<?= __('disable'); ?>">
                                                 <i class="ri-forbid-line"></i>
                                             </button>
                                         <?php endif; ?>
-                                        <button class="btn btn-sm btn-soft-secondary btn-reset-password" data-id="<?= $mb['id']; ?>" data-email="<?= sanitize($mb['email_address']); ?>" title="Reset Password">
+                                        <button class="btn btn-sm btn-soft-secondary btn-reset-password" data-id="<?= $mb['id']; ?>" data-email="<?= sanitize($mb['email_address']); ?>" title="<?= __('reset_password'); ?>">
                                             <i class="ri-key-line"></i>
                                         </button>
-                                        <button class="btn btn-sm btn-soft-danger btn-delete-mailbox" data-id="<?= $mb['id']; ?>" title="Delete">
+                                        <button class="btn btn-sm btn-soft-danger btn-delete-mailbox" data-id="<?= $mb['id']; ?>" title="<?= __('delete'); ?>">
                                             <i class="ri-delete-bin-line"></i>
                                         </button>
                                     </div>
@@ -119,22 +119,22 @@ require_once(__DIR__.'/sidebar.php');
     <div class="modal-dialog modal-sm">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="ri-key-line me-2"></i> Reset Password</h5>
+                <h5 class="modal-title"><i class="ri-key-line me-2"></i> <?= __('reset_password'); ?></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form id="resetPasswordForm">
                 <input type="hidden" name="mailbox_id" id="resetMailboxId">
                 <div class="modal-body">
-                    <p class="mb-3">Reset password for: <strong id="resetMailboxEmail"></strong></p>
+                    <p class="mb-3"><?= __('reset_password_for'); ?> <strong id="resetMailboxEmail"></strong></p>
                     <div class="mb-3">
-                        <label class="form-label">New Password</label>
+                        <label class="form-label"><?= __('new_password'); ?></label>
                         <input type="password" name="new_password" class="form-control" required minlength="6">
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal"><?= __('cancel'); ?></button>
                     <button type="submit" class="btn btn-primary">
-                        <i class="ri-save-line me-1"></i> Reset
+                        <i class="ri-save-line me-1"></i> <?= __('reset'); ?>
                     </button>
                 </div>
             </form>
@@ -150,7 +150,7 @@ $(document).ready(function() {
     $(document).on('click', '.btn-toggle-mailbox', function() {
         var mbId = $(this).data('id');
         var action = $(this).data('action');
-        var label = action === 'disable' ? 'Disable this mailbox?' : 'Enable this mailbox?';
+        var label = action === 'disable' ? '<?= __('disable_mailbox'); ?>' : '<?= __('enable_mailbox'); ?>';
 
         confirmAction(label, '', function() {
             $.ajax({
@@ -181,7 +181,7 @@ $(document).ready(function() {
     $('#resetPasswordForm').on('submit', function(e) {
         e.preventDefault();
         var btn = $(this).find('button[type=submit]');
-        btn.prop('disabled', true).html('<i class="ri-loader-4-line ri-spin"></i> Resetting...');
+        btn.prop('disabled', true).html('<i class="ri-loader-4-line ri-spin"></i> <?= __('resetting'); ?>');
 
         $.ajax({
             url: '<?= base_url("ajaxs/admin/mailboxes.php?action=reset_password"); ?>',
@@ -195,11 +195,11 @@ $(document).ready(function() {
                 } else {
                     showToast('error', res.message);
                 }
-                btn.prop('disabled', false).html('<i class="ri-save-line me-1"></i> Reset');
+                btn.prop('disabled', false).html('<i class="ri-save-line me-1"></i> <?= __('reset'); ?>');
             },
             error: function() {
-                showToast('error', 'Server connection error');
-                btn.prop('disabled', false).html('<i class="ri-save-line me-1"></i> Reset');
+                showToast('error', '<?= __('server_error'); ?>');
+                btn.prop('disabled', false).html('<i class="ri-save-line me-1"></i> <?= __('reset'); ?>');
             }
         });
     });
@@ -208,7 +208,7 @@ $(document).ready(function() {
     $(document).on('click', '.btn-delete-mailbox', function() {
         var mbId = $(this).data('id');
 
-        confirmAction('Delete Mailbox?', 'This will permanently delete the mailbox and all its emails.', function() {
+        confirmAction('<?= __('delete_mailbox'); ?>', '<?= __('delete_mailbox_desc'); ?>', function() {
             $.ajax({
                 url: '<?= base_url("ajaxs/admin/mailboxes.php?action=delete"); ?>',
                 method: 'POST',

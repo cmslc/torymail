@@ -2,7 +2,7 @@
     die('The Request Not Found');
 }
 $body = [
-    'title' => 'Domains',
+    'title' => __('domains'),
     'header' => '',
     'footer' => '',
 ];
@@ -24,11 +24,11 @@ require_once(__DIR__.'/sidebar.php');
 <div class="row">
     <div class="col-12">
         <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-            <h4 class="mb-sm-0">Domains</h4>
+            <h4 class="mb-sm-0"><?= __('domains'); ?></h4>
             <div class="page-title-right">
                 <ol class="breadcrumb m-0">
-                    <li class="breadcrumb-item"><a href="<?= admin_url('home'); ?>">Admin</a></li>
-                    <li class="breadcrumb-item active">Domains</li>
+                    <li class="breadcrumb-item"><a href="<?= admin_url('home'); ?>"><?= __('admin'); ?></a></li>
+                    <li class="breadcrumb-item active"><?= __('domains'); ?></li>
                 </ol>
             </div>
         </div>
@@ -38,24 +38,27 @@ require_once(__DIR__.'/sidebar.php');
 <div class="row">
     <div class="col-12">
         <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">All Domains</h5>
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <h5 class="card-title mb-0"><?= __('all_domains'); ?></h5>
+                <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalAddDomain">
+                    <i class="ri-add-line me-1"></i> <?= __('add_domain'); ?>
+                </button>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
                     <table id="datatable" class="table table-bordered table-striped table-hover">
                         <thead>
                             <tr>
-                                <th>Domain</th>
-                                <th>Owner</th>
-                                <th>Status</th>
+                                <th><?= __('domain'); ?></th>
+                                <th><?= __('owner'); ?></th>
+                                <th><?= __('status'); ?></th>
                                 <th>MX</th>
                                 <th>SPF</th>
                                 <th>DKIM</th>
                                 <th>DMARC</th>
-                                <th>Mailboxes</th>
-                                <th>Created</th>
-                                <th>Actions</th>
+                                <th><?= __('mailboxes'); ?></th>
+                                <th><?= __('created'); ?></th>
+                                <th><?= __('actions'); ?></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -70,9 +73,9 @@ require_once(__DIR__.'/sidebar.php');
                                 </td>
                                 <td>
                                     <?php if ($domain['status'] === 'active'): ?>
-                                        <span class="badge bg-success-subtle text-success">Active</span>
+                                        <span class="badge bg-success-subtle text-success"><?= __('active'); ?></span>
                                     <?php elseif ($domain['status'] === 'suspended'): ?>
-                                        <span class="badge bg-danger-subtle text-danger">Suspended</span>
+                                        <span class="badge bg-danger-subtle text-danger"><?= __('suspended'); ?></span>
                                     <?php else: ?>
                                         <span class="badge bg-warning-subtle text-warning"><?= ucfirst($domain['status']); ?></span>
                                     <?php endif; ?>
@@ -93,19 +96,19 @@ require_once(__DIR__.'/sidebar.php');
                                 <td><small><?= format_date($domain['created_at']); ?></small></td>
                                 <td>
                                     <div class="d-flex gap-1">
-                                        <button class="btn btn-sm btn-soft-info btn-verify-domain" data-id="<?= $domain['id']; ?>" title="Verify DNS">
+                                        <button class="btn btn-sm btn-soft-info btn-verify-domain" data-id="<?= $domain['id']; ?>" title="<?= __('verify_dns'); ?>">
                                             <i class="ri-refresh-line"></i>
                                         </button>
                                         <?php if ($domain['status'] === 'suspended'): ?>
-                                            <button class="btn btn-sm btn-soft-success btn-toggle-domain" data-id="<?= $domain['id']; ?>" data-action="activate" title="Activate">
+                                            <button class="btn btn-sm btn-soft-success btn-toggle-domain" data-id="<?= $domain['id']; ?>" data-action="activate" title="<?= __('activate'); ?>">
                                                 <i class="ri-check-line"></i>
                                             </button>
                                         <?php elseif ($domain['status'] === 'active'): ?>
-                                            <button class="btn btn-sm btn-soft-warning btn-toggle-domain" data-id="<?= $domain['id']; ?>" data-action="suspend" title="Suspend">
+                                            <button class="btn btn-sm btn-soft-warning btn-toggle-domain" data-id="<?= $domain['id']; ?>" data-action="suspend" title="<?= __('suspend'); ?>">
                                                 <i class="ri-forbid-line"></i>
                                             </button>
                                         <?php endif; ?>
-                                        <button class="btn btn-sm btn-soft-danger btn-delete-domain" data-id="<?= $domain['id']; ?>" title="Delete">
+                                        <button class="btn btn-sm btn-soft-danger btn-delete-domain" data-id="<?= $domain['id']; ?>" title="<?= __('delete'); ?>">
                                             <i class="ri-delete-bin-line"></i>
                                         </button>
                                     </div>
@@ -120,10 +123,78 @@ require_once(__DIR__.'/sidebar.php');
     </div>
 </div>
 
+<!-- Modal Add Domain -->
+<div class="modal fade" id="modalAddDomain" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="ri-global-line me-1"></i> <?= __('add_domain'); ?></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="formAddDomain">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label"><?= __('domain_name'); ?></label>
+                        <input type="text" name="domain_name" class="form-control" placeholder="example.com" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><?= __('owner'); ?></label>
+                        <select name="user_id" class="form-select" required>
+                            <option value=""><?= __('select_user'); ?></option>
+                            <?php
+                            $users = $ToryMail->get_list_safe("SELECT id, fullname, email FROM users ORDER BY fullname ASC");
+                            foreach ($users as $u):
+                            ?>
+                                <option value="<?= $u['id']; ?>"><?= sanitize($u['fullname']); ?> (<?= sanitize($u['email']); ?>)</option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="auto_verify" value="1" id="autoVerify">
+                        <label class="form-check-label" for="autoVerify"><?= __('auto_verify'); ?></label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal"><?= __('cancel'); ?></button>
+                    <button type="submit" class="btn btn-primary"><i class="ri-add-line me-1"></i> <?= __('add_domain'); ?></button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <?php require_once(__DIR__.'/footer.php'); ?>
 
 <script>
 $(document).ready(function() {
+    // Add domain
+    $('#formAddDomain').on('submit', function(e) {
+        e.preventDefault();
+        var form = $(this);
+        var btn = form.find('button[type=submit]');
+        btn.prop('disabled', true).html('<i class="ri-loader-4-line ri-spin"></i> <?= __('adding'); ?>');
+
+        $.ajax({
+            url: '<?= base_url("ajaxs/admin/domains.php?action=add"); ?>',
+            method: 'POST',
+            data: form.serialize(),
+            dataType: 'json',
+            success: function(res) {
+                if (res.status === 'success') {
+                    showToast('success', res.message);
+                    setTimeout(function() { location.reload(); }, 1000);
+                } else {
+                    showToast('error', res.message);
+                    btn.prop('disabled', false).html('<i class="ri-add-line me-1"></i> <?= __('add_domain'); ?>');
+                }
+            },
+            error: function() {
+                showToast('error', '<?= __('server_error'); ?>');
+                btn.prop('disabled', false).html('<i class="ri-add-line me-1"></i> <?= __('add_domain'); ?>');
+            }
+        });
+    });
+
     // Verify domain DNS
     $(document).on('click', '.btn-verify-domain', function() {
         var btn = $(this);
@@ -145,7 +216,7 @@ $(document).ready(function() {
                 }
             },
             error: function() {
-                showToast('error', 'Server connection error');
+                showToast('error', '<?= __('server_error'); ?>');
                 btn.prop('disabled', false).html('<i class="ri-refresh-line"></i>');
             }
         });
@@ -155,9 +226,9 @@ $(document).ready(function() {
     $(document).on('click', '.btn-toggle-domain', function() {
         var domainId = $(this).data('id');
         var action = $(this).data('action');
-        var label = action === 'suspend' ? 'Suspend this domain?' : 'Activate this domain?';
+        var label = action === 'suspend' ? '<?= __('suspend_domain'); ?>' : '<?= __('activate_domain'); ?>';
 
-        confirmAction(label, 'This will affect all mailboxes under this domain.', function() {
+        confirmAction(label, '<?= __('suspend_domain_desc'); ?>', function() {
             $.ajax({
                 url: '<?= base_url("ajaxs/admin/domains.php?action=toggle_status"); ?>',
                 method: 'POST',
@@ -179,7 +250,7 @@ $(document).ready(function() {
     $(document).on('click', '.btn-delete-domain', function() {
         var domainId = $(this).data('id');
 
-        confirmAction('Delete Domain?', 'This will permanently delete the domain and all its mailboxes.', function() {
+        confirmAction('<?= __('delete_domain'); ?>', '<?= __('delete_domain_desc'); ?>', function() {
             $.ajax({
                 url: '<?= base_url("ajaxs/admin/domains.php?action=delete"); ?>',
                 method: 'POST',

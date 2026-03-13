@@ -4,8 +4,8 @@ if (!defined('IN_SITE')) {
 }
 
 $body = [
-    'title' => 'Filters - Torymail',
-    'desc'  => 'Email filter rules',
+    'title' => __('filters') . ' - Torymail',
+    'desc'  => __('email_filters'),
 ];
 $body['header'] = '';
 $body['footer'] = '';
@@ -17,34 +17,34 @@ require_once __DIR__ . '/sidebar.php';
 $filters = $ToryMail->get_list_safe("
     SELECT * FROM `email_filters`
     WHERE `user_id` = ?
-    ORDER BY `priority` ASC, `created_at` DESC
+    ORDER BY `priority_order` ASC, `created_at` DESC
 ", [$getUser['id']]);
 
 // Fetch labels for action dropdown
 $userLabels = $ToryMail->get_list_safe("
-    SELECT `id`, `name`, `color` FROM `labels`
+    SELECT `id`, `name`, `color` FROM `email_labels`
     WHERE `user_id` = ?
     ORDER BY `name` ASC
 ", [$getUser['id']]);
 
 $conditionTypes = [
-    'from_contains'    => 'From contains',
-    'from_equals'      => 'From equals',
-    'to_contains'      => 'To contains',
-    'to_equals'        => 'To equals',
-    'subject_contains' => 'Subject contains',
-    'subject_equals'   => 'Subject equals',
-    'body_contains'    => 'Body contains',
-    'has_attachment'    => 'Has attachment',
+    'from_contains'    => __('from_contains'),
+    'from_equals'      => __('from_equals'),
+    'to_contains'      => __('to_contains'),
+    'to_equals'        => __('to_equals'),
+    'subject_contains' => __('subject_contains'),
+    'subject_equals'   => __('subject_equals'),
+    'body_contains'    => __('body_contains'),
+    'has_attachment'    => __('has_attachment'),
 ];
 
 $actionTypes = [
-    'move_to_folder' => 'Move to folder',
-    'add_label'      => 'Add label',
-    'mark_read'      => 'Mark as read',
-    'mark_starred'   => 'Mark as starred',
-    'forward_to'     => 'Forward to',
-    'delete'         => 'Delete',
+    'move_to_folder' => __('move_to_folder_action'),
+    'add_label'      => __('add_label'),
+    'mark_read'      => __('mark_as_read'),
+    'mark_starred'   => __('mark_as_starred'),
+    'forward_to'     => __('forward_to'),
+    'delete'         => __('delete'),
 ];
 ?>
 
@@ -52,11 +52,11 @@ $actionTypes = [
 <div class="row">
     <div class="col-12">
         <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-            <h4 class="mb-sm-0">Filters</h4>
+            <h4 class="mb-sm-0"><?= __('filters'); ?></h4>
             <div class="page-title-right">
                 <ol class="breadcrumb m-0">
-                    <li class="breadcrumb-item"><a href="<?= base_url('inbox'); ?>">Home</a></li>
-                    <li class="breadcrumb-item active">Filters</li>
+                    <li class="breadcrumb-item"><a href="<?= base_url('inbox'); ?>"><?= __('home'); ?></a></li>
+                    <li class="breadcrumb-item active"><?= __('filters'); ?></li>
                 </ol>
             </div>
         </div>
@@ -67,11 +67,11 @@ $actionTypes = [
     <div class="card-header border-bottom-dashed">
         <div class="d-flex align-items-center justify-content-between">
             <h5 class="card-title mb-0">
-                <i class="ri-filter-line me-1 align-bottom text-primary"></i> Email Filters
+                <i class="ri-filter-line me-1 align-bottom text-primary"></i> <?= __('email_filters'); ?>
                 <span class="badge bg-primary-subtle text-primary ms-1"><?= count($filters); ?></span>
             </h5>
             <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#filterModal" onclick="resetFilterForm()">
-                <i class="ri-add-line me-1"></i> Add Filter
+                <i class="ri-add-line me-1"></i> <?= __('add_filter'); ?>
             </button>
         </div>
     </div>
@@ -84,8 +84,8 @@ $actionTypes = [
                     <i class="ri-filter-line"></i>
                 </div>
             </div>
-            <h5 class="fs-16 text-muted">No filters configured</h5>
-            <p class="text-muted fs-13">Create filters to automatically organize incoming emails.</p>
+            <h5 class="fs-16 text-muted"><?= __('no_filters'); ?></h5>
+            <p class="text-muted fs-13"><?= __('no_filters_hint'); ?></p>
         </div>
         <?php else: ?>
         <div class="table-responsive">
@@ -93,32 +93,36 @@ $actionTypes = [
                 <thead class="table-light">
                     <tr>
                         <th style="width:50px;">#</th>
-                        <th>Name</th>
-                        <th>Condition</th>
-                        <th>Action</th>
-                        <th class="text-center">Active</th>
-                        <th style="width:120px;">Actions</th>
+                        <th><?= __('name'); ?></th>
+                        <th><?= __('condition'); ?></th>
+                        <th><?= __('action'); ?></th>
+                        <th class="text-center"><?= __('active'); ?></th>
+                        <th style="width:120px;"><?= __('actions'); ?></th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php foreach ($filters as $i => $filter): ?>
                     <?php
-                    $conditionLabel = $conditionTypes[$filter['condition_type']] ?? $filter['condition_type'];
-                    $actionLabel = $actionTypes[$filter['action_type']] ?? $filter['action_type'];
+                    $filterConditions = json_decode($filter['conditions'] ?? '[]', true) ?: [];
+                    $filterActions = json_decode($filter['actions'] ?? '[]', true) ?: [];
+                    $firstCond = $filterConditions[0] ?? [];
+                    $firstAct = $filterActions[0] ?? [];
+                    $conditionLabel = $conditionTypes[$firstCond['type'] ?? ''] ?? ($firstCond['type'] ?? '-');
+                    $actionLabel = $actionTypes[$firstAct['type'] ?? ''] ?? ($firstAct['type'] ?? '-');
                     ?>
                     <tr>
                         <td class="text-muted"><?= $i + 1; ?></td>
                         <td class="fw-medium"><?= htmlspecialchars($filter['name'] ?? 'Filter #' . ($i + 1)); ?></td>
                         <td>
                             <span class="text-muted"><?= $conditionLabel; ?></span>
-                            <?php if ($filter['condition_type'] !== 'has_attachment'): ?>
-                            <code class="fs-12"><?= htmlspecialchars(str_truncate($filter['condition_value'] ?? '', 40)); ?></code>
+                            <?php if (($firstCond['type'] ?? '') !== 'has_attachment' && !empty($firstCond['value'])): ?>
+                            <code class="fs-12"><?= htmlspecialchars(str_truncate($firstCond['value'] ?? '', 40)); ?></code>
                             <?php endif; ?>
                         </td>
                         <td>
                             <span class="badge bg-primary-subtle text-primary"><?= $actionLabel; ?></span>
-                            <?php if (!empty($filter['action_value'])): ?>
-                            <span class="text-muted fs-12">: <?= htmlspecialchars(str_truncate($filter['action_value'], 30)); ?></span>
+                            <?php if (!empty($firstAct['value'])): ?>
+                            <span class="text-muted fs-12">: <?= htmlspecialchars(str_truncate($firstAct['value'], 30)); ?></span>
                             <?php endif; ?>
                         </td>
                         <td class="text-center">
@@ -129,10 +133,10 @@ $actionTypes = [
                         </td>
                         <td>
                             <div class="d-flex gap-1">
-                                <button class="btn btn-soft-primary btn-sm" onclick="editFilter(<?= htmlspecialchars(json_encode($filter)); ?>)" title="Edit">
+                                <button class="btn btn-soft-primary btn-sm" onclick="editFilter(<?= htmlspecialchars(json_encode($filter)); ?>)" title="<?= __('edit'); ?>">
                                     <i class="ri-pencil-line"></i>
                                 </button>
-                                <button class="btn btn-soft-danger btn-sm" onclick="deleteFilter(<?= $filter['id']; ?>)" title="Delete">
+                                <button class="btn btn-soft-danger btn-sm" onclick="deleteFilter(<?= $filter['id']; ?>)" title="<?= __('delete'); ?>">
                                     <i class="ri-delete-bin-line"></i>
                                 </button>
                             </div>
@@ -151,7 +155,7 @@ $actionTypes = [
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="filterModalTitle">Add Filter</h5>
+                <h5 class="modal-title" id="filterModalTitle"><?= __('add_filter'); ?></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
@@ -159,15 +163,15 @@ $actionTypes = [
                     <input type="hidden" name="filter_id" id="filterId">
 
                     <div class="mb-3">
-                        <label class="form-label">Filter Name</label>
-                        <input type="text" name="name" id="filterName" class="form-control" placeholder="e.g., Move newsletters">
+                        <label class="form-label"><?= __('filter_name'); ?></label>
+                        <input type="text" name="name" id="filterName" class="form-control" placeholder="<?= __('filter_name_placeholder'); ?>">
                     </div>
 
-                    <h6 class="fw-semibold text-muted mb-2 fs-13 text-uppercase">Condition</h6>
+                    <h6 class="fw-semibold text-muted mb-2 fs-13 text-uppercase"><?= __('condition'); ?></h6>
                     <div class="card border mb-3">
                         <div class="card-body">
                             <div class="mb-2">
-                                <label class="form-label">When</label>
+                                <label class="form-label"><?= __('when'); ?></label>
                                 <select name="condition_type" id="filterCondType" class="form-select">
                                     <?php foreach ($conditionTypes as $key => $label): ?>
                                     <option value="<?= $key; ?>"><?= $label; ?></option>
@@ -175,17 +179,17 @@ $actionTypes = [
                                 </select>
                             </div>
                             <div class="mb-0" id="condValueGroup">
-                                <label class="form-label">Value</label>
+                                <label class="form-label"><?= __('value'); ?></label>
                                 <input type="text" name="condition_value" id="filterCondValue" class="form-control" placeholder="e.g., newsletter@example.com">
                             </div>
                         </div>
                     </div>
 
-                    <h6 class="fw-semibold text-muted mb-2 fs-13 text-uppercase">Action</h6>
+                    <h6 class="fw-semibold text-muted mb-2 fs-13 text-uppercase"><?= __('action'); ?></h6>
                     <div class="card border mb-3">
                         <div class="card-body">
                             <div class="mb-2">
-                                <label class="form-label">Then</label>
+                                <label class="form-label"><?= __('then'); ?></label>
                                 <select name="action_type" id="filterActType" class="form-select">
                                     <?php foreach ($actionTypes as $key => $label): ?>
                                     <option value="<?= $key; ?>"><?= $label; ?></option>
@@ -193,27 +197,27 @@ $actionTypes = [
                                 </select>
                             </div>
                             <div class="mb-0" id="actValueGroup">
-                                <label class="form-label" id="actValueLabel">Folder</label>
+                                <label class="form-label" id="actValueLabel"><?= __('folder'); ?></label>
                                 <select name="action_value" id="filterActValue" class="form-select">
-                                    <option value="inbox">Inbox</option>
-                                    <option value="archive">Archive</option>
-                                    <option value="spam">Spam</option>
-                                    <option value="trash">Trash</option>
+                                    <option value="inbox"><?= __('inbox'); ?></option>
+                                    <option value="archive"><?= __('archive'); ?></option>
+                                    <option value="spam"><?= __('spam'); ?></option>
+                                    <option value="trash"><?= __('trash'); ?></option>
                                 </select>
-                                <input type="text" name="action_value_text" id="filterActValueText" class="form-control d-none" placeholder="Enter value">
+                                <input type="text" name="action_value_text" id="filterActValueText" class="form-control d-none" placeholder="">
                             </div>
                         </div>
                     </div>
 
                     <div class="mb-0">
-                        <label class="form-label">Priority (lower = runs first)</label>
-                        <input type="number" name="priority" id="filterPriority" class="form-control" value="10" min="1" max="999" style="width:120px;">
+                        <label class="form-label"><?= __('priority_order'); ?></label>
+                        <input type="number" name="priority_order" id="filterPriority" class="form-control" value="10" min="0" max="999" style="width:120px;">
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-ghost-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="saveFilterBtn">Save Filter</button>
+                <button type="button" class="btn btn-ghost-secondary" data-bs-dismiss="modal"><?= __('cancel'); ?></button>
+                <button type="button" class="btn btn-primary" id="saveFilterBtn"><?= __('save_filter'); ?></button>
             </div>
         </div>
     </div>
@@ -236,23 +240,23 @@ $('#filterActType').on('change', function() {
     var $text = $('#filterActValueText');
 
     if (act === 'move_to_folder') {
-        $select.html('<option value="inbox">Inbox</option><option value="archive">Archive</option><option value="spam">Spam</option><option value="trash">Trash</option>').removeClass('d-none');
+        $select.html('<option value="inbox"><?= __("inbox"); ?></option><option value="archive"><?= __("archive"); ?></option><option value="spam"><?= __("spam"); ?></option><option value="trash"><?= __("trash"); ?></option>').removeClass('d-none');
         $text.addClass('d-none');
-        $('#actValueLabel').text('Folder');
+        $('#actValueLabel').text('<?= __("folder"); ?>');
         $('#actValueGroup').show();
     } else if (act === 'add_label') {
         var opts = '';
         labelsData.forEach(function(l) {
             opts += '<option value="' + l.id + '">' + l.name + '</option>';
         });
-        $select.html(opts || '<option value="">No labels available</option>').removeClass('d-none');
+        $select.html(opts || '<option value=""><?= __("no_labels"); ?></option>').removeClass('d-none');
         $text.addClass('d-none');
-        $('#actValueLabel').text('Label');
+        $('#actValueLabel').text('<?= __("label"); ?>');
         $('#actValueGroup').show();
     } else if (act === 'forward_to') {
         $select.addClass('d-none');
-        $text.removeClass('d-none').attr('placeholder', 'Forward to email address');
-        $('#actValueLabel').text('Email');
+        $text.removeClass('d-none').attr('placeholder', '<?= __("forward_to"); ?>');
+        $('#actValueLabel').text('<?= __("email"); ?>');
         $('#actValueGroup').show();
     } else {
         $('#actValueGroup').hide();
@@ -260,7 +264,7 @@ $('#filterActType').on('change', function() {
 });
 
 function resetFilterForm() {
-    $('#filterModalTitle').text('Add Filter');
+    $('#filterModalTitle').text('<?= __("add_filter"); ?>');
     $('#filterId').val('');
     $('#filterForm')[0].reset();
     $('#condValueGroup').show();
@@ -268,19 +272,28 @@ function resetFilterForm() {
 }
 
 function editFilter(filter) {
-    $('#filterModalTitle').text('Edit Filter');
+    $('#filterModalTitle').text('<?= __("edit_filter"); ?>');
     $('#filterId').val(filter.id);
     $('#filterName').val(filter.name || '');
-    $('#filterCondType').val(filter.condition_type).trigger('change');
-    $('#filterCondValue').val(filter.condition_value || '');
-    $('#filterActType').val(filter.action_type).trigger('change');
-    $('#filterPriority').val(filter.priority || 10);
+    $('#filterPriority').val(filter.priority_order || 0);
+
+    var conditions = [];
+    var actions = [];
+    try { conditions = JSON.parse(filter.conditions || '[]'); } catch(e) {}
+    try { actions = JSON.parse(filter.actions || '[]'); } catch(e) {}
+
+    var firstCond = conditions[0] || {};
+    var firstAct = actions[0] || {};
+
+    $('#filterCondType').val(firstCond.type || 'from_contains').trigger('change');
+    $('#filterCondValue').val(firstCond.value || '');
+    $('#filterActType').val(firstAct.type || 'move_to_folder').trigger('change');
 
     setTimeout(function() {
-        if (filter.action_type === 'forward_to') {
-            $('#filterActValueText').val(filter.action_value || '');
+        if (firstAct.type === 'forward_to') {
+            $('#filterActValueText').val(firstAct.value || '');
         } else {
-            $('#filterActValue').val(filter.action_value || '');
+            $('#filterActValue').val(firstAct.value || '');
         }
     }, 50);
 
@@ -288,57 +301,58 @@ function editFilter(filter) {
 }
 
 $('#saveFilterBtn').on('click', function() {
-    var data = {};
-    data.action = $('#filterId').val() ? 'update' : 'create';
-    data.filter_id = $('#filterId').val();
-    data.name = $('#filterName').val();
-    data.condition_type = $('#filterCondType').val();
-    data.condition_value = $('#filterCondValue').val();
-    data.action_type = $('#filterActType').val();
-    data.priority = $('#filterPriority').val();
+    var condType = $('#filterCondType').val();
+    var condValue = $('#filterCondValue').val();
+    var actType = $('#filterActType').val();
+    var actValue = '';
 
-    if (data.action_type === 'forward_to') {
-        data.action_value = $('#filterActValueText').val();
-    } else if (['mark_read','mark_starred','delete'].indexOf(data.action_type) !== -1) {
-        data.action_value = '';
+    if (actType === 'forward_to') {
+        actValue = $('#filterActValueText').val();
+    } else if (['mark_read','mark_starred','delete'].indexOf(actType) !== -1) {
+        actValue = '';
     } else {
-        data.action_value = $('#filterActValue').val();
+        actValue = $('#filterActValue').val();
     }
 
-    $.post('<?= base_url("ajaxs/user/filters.php"); ?>', data, function(res) {
+    var data = {};
+    data.action = $('#filterId').val() ? 'edit' : 'add';
+    data.filter_id = $('#filterId').val();
+    data.name = $('#filterName').val();
+    data.conditions = JSON.stringify([{type: condType, value: condValue}]);
+    data.actions = JSON.stringify([{type: actType, value: actValue}]);
+
+    $.post('<?= base_url("ajaxs/user/filters.php"); ?>?action=' + data.action, data, function(res) {
         if (res.success) {
-            tmToast('success', res.message || 'Filter saved!');
+            tmToast('success', res.message || '<?= __("filter_saved"); ?>');
             setTimeout(function() { location.reload(); }, 800);
         } else {
-            tmToast('error', res.message || 'Failed to save filter.');
+            tmToast('error', res.message || '<?= __("filter_save_fail"); ?>');
         }
     }, 'json');
 });
 
 function toggleFilter(id, active) {
-    $.post('<?= base_url("ajaxs/user/filters.php"); ?>', {
-        action: 'toggle',
+    $.post('<?= base_url("ajaxs/user/filters.php"); ?>?action=toggle', {
         filter_id: id,
         is_active: active ? 1 : 0
     }, function(res) {
         if (!res.success) {
-            tmToast('error', res.message || 'Failed to update filter.');
+            tmToast('error', res.message || '<?= __("filter_save_fail"); ?>');
             location.reload();
         }
     }, 'json');
 }
 
 function deleteFilter(id) {
-    tmConfirm('Delete this filter?', 'This action cannot be undone.', function() {
-        $.post('<?= base_url("ajaxs/user/filters.php"); ?>', {
-            action: 'delete',
+    tmConfirm('<?= __("delete_filter"); ?>', '<?= __("delete_filter_desc"); ?>', function() {
+        $.post('<?= base_url("ajaxs/user/filters.php"); ?>?action=delete', {
             filter_id: id
         }, function(res) {
             if (res.success) {
-                tmToast('success', 'Filter deleted.');
+                tmToast('success', '<?= __("filter_deleted"); ?>');
                 setTimeout(function() { location.reload(); }, 800);
             } else {
-                tmToast('error', res.message || 'Failed to delete filter.');
+                tmToast('error', res.message || '<?= __("filter_delete_fail"); ?>');
             }
         }, 'json');
     });

@@ -126,7 +126,7 @@ class EmailEngine
             "SELECT * FROM email_queue
              WHERE status IN ('pending', 'failed')
              AND attempts < max_attempts
-             AND scheduled_at <= NOW()
+             AND (scheduled_at IS NULL OR scheduled_at <= NOW())
              ORDER BY priority ASC, created_at ASC
              LIMIT ?",
             [$limit]
@@ -213,7 +213,7 @@ class EmailEngine
         $body .= $item['body_html'] . "\r\n\r\n";
         $body .= "--{$boundary}--\r\n";
 
-        $sent = @mail($to, $subject, $body, $headers);
+        $sent = @mail($to, $subject, $body, $headers, '-f' . $item['from_address']);
 
         if ($sent) {
             return ['success' => true];
@@ -562,18 +562,66 @@ class EmailEngine
             'references' => $headers['references'] ?? '',
             'reply_to' => $headers['reply-to'] ?? '',
             'priority' => $priority,
-            'body_text' => $body_text,
+            'body_text' => $this->extractPlainText($body_text, $headers),
             'body_html' => $this->extractHtmlBody($body_text, $headers),
             'attachments' => $this->extractAttachments($body_text, $headers),
         ];
     }
 
+    private function decodeMimeContent($content, $partHeaders)
+    {
+        $encoding = '';
+        if (preg_match('/Content-Transfer-Encoding:\s*(\S+)/i', $partHeaders, $em)) {
+            $encoding = strtolower(trim($em[1]));
+        }
+        if ($encoding === 'quoted-printable') {
+            $content = quoted_printable_decode($content);
+        } elseif ($encoding === 'base64') {
+            $content = base64_decode($content);
+        }
+
+        // Convert charset to UTF-8 if needed
+        if (preg_match('/charset="?([^";\s]+)"?/i', $partHeaders, $cm)) {
+            $charset = strtolower(trim($cm[1]));
+            if ($charset && $charset !== 'utf-8' && $charset !== 'utf8') {
+                $converted = @iconv($charset, 'UTF-8//IGNORE', $content);
+                if ($converted !== false) $content = $converted;
+            }
+        }
+
+        return $content;
+    }
+
+    private function extractPlainText($body, $headers)
+    {
+        $content_type = $headers['content-type'] ?? 'text/plain';
+        $transfer_encoding = $headers['content-transfer-encoding'] ?? '';
+
+        if (stripos($content_type, 'multipart/') !== false) {
+            preg_match('/boundary="?([^";\s]+)"?/', $content_type, $m);
+            if (!empty($m[1])) {
+                $parts = explode('--' . $m[1], $body);
+                foreach ($parts as $part) {
+                    if (stripos($part, 'text/plain') !== false) {
+                        $split = preg_split('/\r?\n\r?\n/', $part, 2);
+                        if (isset($split[1])) {
+                            return $this->decodeMimeContent(trim($split[1]), $split[0]);
+                        }
+                    }
+                }
+            }
+        }
+
+        return $this->decodeMimeContent($body, "Content-Transfer-Encoding: {$transfer_encoding}\r\nContent-Type: {$content_type}");
+    }
+
     private function extractHtmlBody($body, $headers)
     {
         $content_type = $headers['content-type'] ?? 'text/plain';
+        $transfer_encoding = $headers['content-transfer-encoding'] ?? '';
 
         if (stripos($content_type, 'text/html') !== false) {
-            return $body;
+            return $this->decodeMimeContent($body, "Content-Transfer-Encoding: {$transfer_encoding}\r\n" . "Content-Type: {$content_type}");
         }
 
         if (stripos($content_type, 'multipart/') !== false) {
@@ -583,13 +631,30 @@ class EmailEngine
                 foreach ($parts as $part) {
                     if (stripos($part, 'text/html') !== false) {
                         $split = preg_split('/\r?\n\r?\n/', $part, 2);
-                        if (isset($split[1])) return trim($split[1]);
+                        if (isset($split[1])) {
+                            return $this->decodeMimeContent(trim($split[1]), $split[0]);
+                        }
+                    }
+                }
+                // Fallback to text/plain part
+                foreach ($parts as $part) {
+                    if (stripos($part, 'text/plain') !== false) {
+                        $split = preg_split('/\r?\n\r?\n/', $part, 2);
+                        if (isset($split[1])) {
+                            $decoded = $this->decodeMimeContent(trim($split[1]), $split[0]);
+                            return nl2br(htmlspecialchars($decoded));
+                        }
                     }
                 }
             }
         }
 
-        // Fallback: convert plain text to HTML
+        // Non-multipart plain text
+        if (stripos($content_type, 'text/plain') !== false) {
+            $decoded = $this->decodeMimeContent($body, "Content-Transfer-Encoding: {$transfer_encoding}\r\n" . "Content-Type: {$content_type}");
+            return nl2br(htmlspecialchars($decoded));
+        }
+
         return nl2br(htmlspecialchars($body));
     }
 

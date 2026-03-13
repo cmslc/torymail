@@ -2,7 +2,7 @@
     die('The Request Not Found');
 }
 $body = [
-    'title' => 'Email Queue',
+    'title' => __('email_queue'),
     'header' => '',
     'footer' => '',
 ];
@@ -30,11 +30,11 @@ require_once(__DIR__.'/sidebar.php');
 <div class="row">
     <div class="col-12">
         <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-            <h4 class="mb-sm-0">Email Queue</h4>
+            <h4 class="mb-sm-0"><?= __('email_queue'); ?></h4>
             <div class="page-title-right">
                 <ol class="breadcrumb m-0">
-                    <li class="breadcrumb-item"><a href="<?= admin_url('home'); ?>">Admin</a></li>
-                    <li class="breadcrumb-item active">Email Queue</li>
+                    <li class="breadcrumb-item"><a href="<?= admin_url('home'); ?>"><?= __('admin'); ?></a></li>
+                    <li class="breadcrumb-item active"><?= __('email_queue'); ?></li>
                 </ol>
             </div>
         </div>
@@ -45,10 +45,10 @@ require_once(__DIR__.'/sidebar.php');
 <div class="row">
     <?php
     $queueCards = [
-        ['bg' => 'warning', 'value' => number_format($queuePending), 'label' => 'Pending',  'icon' => 'ri-time-line'],
-        ['bg' => 'info',    'value' => number_format($queueSending), 'label' => 'Sending',  'icon' => 'ri-send-plane-line'],
-        ['bg' => 'success', 'value' => number_format($queueSent),    'label' => 'Sent',     'icon' => 'ri-check-double-line'],
-        ['bg' => 'danger',  'value' => number_format($queueFailed),  'label' => 'Failed',   'icon' => 'ri-error-warning-line'],
+        ['bg' => 'warning', 'value' => number_format($queuePending), 'label' => __('pending'),         'icon' => 'ri-time-line'],
+        ['bg' => 'info',    'value' => number_format($queueSending), 'label' => __('sending_status'),  'icon' => 'ri-send-plane-line'],
+        ['bg' => 'success', 'value' => number_format($queueSent),    'label' => __('sent'),            'icon' => 'ri-check-double-line'],
+        ['bg' => 'danger',  'value' => number_format($queueFailed),  'label' => __('failed'),          'icon' => 'ri-error-warning-line'],
     ];
     foreach ($queueCards as $card): ?>
     <div class="col-xl-3 col-md-6">
@@ -76,13 +76,13 @@ require_once(__DIR__.'/sidebar.php');
     <div class="col-12">
         <div class="card">
             <div class="card-header d-flex align-items-center justify-content-between">
-                <h5 class="card-title mb-0">Queue Items</h5>
+                <h5 class="card-title mb-0"><?= __('queue_items'); ?></h5>
                 <div class="d-flex gap-2">
                     <button class="btn btn-sm btn-soft-primary" id="btnRetryAllFailed">
-                        <i class="ri-refresh-line me-1"></i> Retry All Failed
+                        <i class="ri-refresh-line me-1"></i> <?= __('retry_all_failed'); ?>
                     </button>
                     <button class="btn btn-sm btn-soft-secondary" id="btnClearSent">
-                        <i class="ri-delete-bin-line me-1"></i> Clear Sent
+                        <i class="ri-delete-bin-line me-1"></i> <?= __('clear_sent'); ?>
                     </button>
                 </div>
             </div>
@@ -92,14 +92,14 @@ require_once(__DIR__.'/sidebar.php');
                         <thead>
                             <tr>
                                 <th>ID</th>
-                                <th>From</th>
-                                <th>To</th>
-                                <th>Subject</th>
-                                <th>Status</th>
-                                <th>Attempts</th>
-                                <th>Error</th>
-                                <th>Created</th>
-                                <th>Actions</th>
+                                <th><?= __('from'); ?></th>
+                                <th><?= __('to'); ?></th>
+                                <th><?= __('subject'); ?></th>
+                                <th><?= __('status'); ?></th>
+                                <th><?= __('attempts'); ?></th>
+                                <th><?= __('error'); ?></th>
+                                <th><?= __('created'); ?></th>
+                                <th><?= __('actions'); ?></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -118,13 +118,13 @@ require_once(__DIR__.'/sidebar.php');
                                 <td><small><?= sanitize(str_truncate($item['subject'], 40)); ?></small></td>
                                 <td>
                                     <?php if ($item['status'] === 'sent'): ?>
-                                        <span class="badge bg-success-subtle text-success">Sent</span>
+                                        <span class="badge bg-success-subtle text-success"><?= __('sent'); ?></span>
                                     <?php elseif ($item['status'] === 'failed'): ?>
-                                        <span class="badge bg-danger-subtle text-danger">Failed</span>
+                                        <span class="badge bg-danger-subtle text-danger"><?= __('failed'); ?></span>
                                     <?php elseif ($item['status'] === 'sending'): ?>
-                                        <span class="badge bg-info-subtle text-info">Sending</span>
+                                        <span class="badge bg-info-subtle text-info"><?= __('sending_status'); ?></span>
                                     <?php else: ?>
-                                        <span class="badge bg-warning-subtle text-warning">Pending</span>
+                                        <span class="badge bg-warning-subtle text-warning"><?= __('pending'); ?></span>
                                     <?php endif; ?>
                                 </td>
                                 <td><small><?= $item['attempts']; ?>/<?= $item['max_attempts']; ?></small></td>
@@ -141,11 +141,11 @@ require_once(__DIR__.'/sidebar.php');
                                 <td>
                                     <div class="d-flex gap-1">
                                         <?php if ($item['status'] === 'failed'): ?>
-                                            <button class="btn btn-sm btn-soft-primary btn-retry-queue" data-id="<?= $item['id']; ?>" title="Retry">
+                                            <button class="btn btn-sm btn-soft-primary btn-retry-queue" data-id="<?= $item['id']; ?>" title="<?= __('retry'); ?>">
                                                 <i class="ri-refresh-line"></i>
                                             </button>
                                         <?php endif; ?>
-                                        <button class="btn btn-sm btn-soft-danger btn-delete-queue" data-id="<?= $item['id']; ?>" title="Delete">
+                                        <button class="btn btn-sm btn-soft-danger btn-delete-queue" data-id="<?= $item['id']; ?>" title="<?= __('delete'); ?>">
                                             <i class="ri-delete-bin-line"></i>
                                         </button>
                                     </div>
@@ -168,7 +168,7 @@ $(document).ready(function() {
     $(document).on('click', '.btn-retry-queue', function() {
         var itemId = $(this).data('id');
         $.ajax({
-            url: '<?= base_url("ajaxs/admin/email-queue.php?action=retry"); ?>',
+            url: '<?= base_url("ajaxs/admin/queue.php?action=retry"); ?>',
             method: 'POST',
             data: { queue_id: itemId },
             dataType: 'json',
@@ -185,9 +185,9 @@ $(document).ready(function() {
 
     // Retry all failed
     $('#btnRetryAllFailed').on('click', function() {
-        confirmAction('Retry All Failed?', 'This will reset all failed emails to pending status.', function() {
+        confirmAction('<?= __('retry_all_confirm'); ?>', '<?= __('retry_all_desc'); ?>', function() {
             $.ajax({
-                url: '<?= base_url("ajaxs/admin/email-queue.php?action=retry_all_failed"); ?>',
+                url: '<?= base_url("ajaxs/admin/queue.php?action=retry_all_failed"); ?>',
                 method: 'POST',
                 dataType: 'json',
                 success: function(res) {
@@ -204,9 +204,9 @@ $(document).ready(function() {
 
     // Clear sent
     $('#btnClearSent').on('click', function() {
-        confirmAction('Clear Sent Emails?', 'This will remove all sent emails from the queue.', function() {
+        confirmAction('<?= __('clear_sent_confirm'); ?>', '<?= __('clear_sent_desc'); ?>', function() {
             $.ajax({
-                url: '<?= base_url("ajaxs/admin/email-queue.php?action=clear_sent"); ?>',
+                url: '<?= base_url("ajaxs/admin/queue.php?action=clear_sent"); ?>',
                 method: 'POST',
                 dataType: 'json',
                 success: function(res) {
@@ -224,9 +224,9 @@ $(document).ready(function() {
     // Delete single
     $(document).on('click', '.btn-delete-queue', function() {
         var itemId = $(this).data('id');
-        confirmAction('Delete Queue Item?', '', function() {
+        confirmAction('<?= __('delete_queue'); ?>', '', function() {
             $.ajax({
-                url: '<?= base_url("ajaxs/admin/email-queue.php?action=delete"); ?>',
+                url: '<?= base_url("ajaxs/admin/queue.php?action=delete"); ?>',
                 method: 'POST',
                 data: { queue_id: itemId },
                 dataType: 'json',

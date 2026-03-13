@@ -4,8 +4,8 @@ if (!defined('IN_SITE')) {
 }
 
 $body = [
-    'title' => 'Contacts - Torymail',
-    'desc'  => 'Manage your contacts',
+    'title' => __('contacts') . ' - Torymail',
+    'desc'  => __('contacts'),
 ];
 $body['header'] = '';
 $body['footer'] = '';
@@ -61,11 +61,11 @@ $groups = $ToryMail->get_list_safe("
 <div class="row">
     <div class="col-12">
         <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-            <h4 class="mb-sm-0">Contacts</h4>
+            <h4 class="mb-sm-0"><?= __('contacts'); ?></h4>
             <div class="page-title-right">
                 <ol class="breadcrumb m-0">
-                    <li class="breadcrumb-item"><a href="<?= base_url('inbox'); ?>">Home</a></li>
-                    <li class="breadcrumb-item active">Contacts</li>
+                    <li class="breadcrumb-item"><a href="<?= base_url('inbox'); ?>"><?= __('home'); ?></a></li>
+                    <li class="breadcrumb-item active"><?= __('contacts'); ?></li>
                 </ol>
             </div>
         </div>
@@ -76,11 +76,11 @@ $groups = $ToryMail->get_list_safe("
     <div class="card-header border-bottom-dashed">
         <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
             <h5 class="card-title mb-0">
-                <i class="ri-contacts-line me-1 align-bottom text-primary"></i> Contacts
+                <i class="ri-contacts-line me-1 align-bottom text-primary"></i> <?= __('contacts'); ?>
                 <span class="badge bg-primary-subtle text-primary ms-1"><?= $totalContacts; ?></span>
             </h5>
             <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#contactModal" onclick="resetContactForm()">
-                <i class="ri-add-line me-1"></i> Add Contact
+                <i class="ri-add-line me-1"></i> <?= __('add_contact'); ?>
             </button>
         </div>
     </div>
@@ -89,13 +89,13 @@ $groups = $ToryMail->get_list_safe("
     <div class="card-header border-bottom-dashed py-2">
         <form class="d-flex align-items-center gap-2 flex-wrap" method="GET" action="<?= base_url('contacts'); ?>">
             <div class="search-box" style="min-width:200px;">
-                <input type="text" name="search" class="form-control form-control-sm search" placeholder="Search contacts..."
+                <input type="text" name="search" class="form-control form-control-sm search" placeholder="<?= __('search_contacts'); ?>"
                        value="<?= htmlspecialchars($search); ?>">
                 <i class="ri-search-line search-icon"></i>
             </div>
             <?php if (!empty($groups)): ?>
             <select name="group" class="form-select form-select-sm" style="width:160px;">
-                <option value="">All Groups</option>
+                <option value=""><?= __('all_groups'); ?></option>
                 <?php foreach ($groups as $g): ?>
                 <option value="<?= htmlspecialchars($g['group_name']); ?>" <?= $group === $g['group_name'] ? 'selected' : ''; ?>>
                     <?= htmlspecialchars($g['group_name']); ?>
@@ -103,7 +103,7 @@ $groups = $ToryMail->get_list_safe("
                 <?php endforeach; ?>
             </select>
             <?php endif; ?>
-            <button type="submit" class="btn btn-soft-primary btn-sm">Filter</button>
+            <button type="submit" class="btn btn-soft-primary btn-sm"><?= __('filter'); ?></button>
         </form>
     </div>
 
@@ -115,7 +115,7 @@ $groups = $ToryMail->get_list_safe("
                     <i class="ri-contacts-line"></i>
                 </div>
             </div>
-            <h5 class="fs-16 text-muted">No contacts found</h5>
+            <h5 class="fs-16 text-muted"><?= __('no_contacts'); ?></h5>
         </div>
         <?php else: ?>
         <div class="table-responsive">
@@ -123,12 +123,12 @@ $groups = $ToryMail->get_list_safe("
                 <thead class="table-light">
                     <tr>
                         <th style="width:50px;"></th>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th class="d-none d-md-table-cell">Company</th>
-                        <th class="d-none d-md-table-cell">Group</th>
-                        <th class="d-none d-lg-table-cell">Phone</th>
-                        <th style="width:100px;">Actions</th>
+                        <th><?= __('name'); ?></th>
+                        <th><?= __('email'); ?></th>
+                        <th class="d-none d-md-table-cell"><?= __('company'); ?></th>
+                        <th class="d-none d-md-table-cell"><?= __('group'); ?></th>
+                        <th class="d-none d-lg-table-cell"><?= __('phone'); ?></th>
+                        <th style="width:100px;"><?= __('actions'); ?></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -152,10 +152,10 @@ $groups = $ToryMail->get_list_safe("
                         <td class="d-none d-lg-table-cell text-muted"><?= htmlspecialchars($contact['phone'] ?? '-'); ?></td>
                         <td>
                             <div class="d-flex gap-1">
-                                <button class="btn btn-soft-primary btn-sm" onclick="editContact(<?= htmlspecialchars(json_encode($contact)); ?>)" title="Edit">
+                                <button class="btn btn-soft-primary btn-sm" onclick="editContact(<?= htmlspecialchars(json_encode($contact)); ?>)" title="<?= __('edit'); ?>">
                                     <i class="ri-pencil-line"></i>
                                 </button>
-                                <button class="btn btn-soft-danger btn-sm" onclick="deleteContact(<?= $contact['id']; ?>)" title="Delete">
+                                <button class="btn btn-soft-danger btn-sm" onclick="deleteContact(<?= $contact['id']; ?>)" title="<?= __('delete'); ?>">
                                     <i class="ri-delete-bin-line"></i>
                                 </button>
                             </div>
@@ -197,41 +197,41 @@ $groups = $ToryMail->get_list_safe("
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="contactModalTitle">Add Contact</h5>
+                <h5 class="modal-title" id="contactModalTitle"><?= __('add_contact'); ?></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <form id="contactForm">
                     <input type="hidden" name="contact_id" id="contactId">
                     <div class="mb-3">
-                        <label class="form-label">Name</label>
-                        <input type="text" name="name" id="contactName" class="form-control" placeholder="Full name">
+                        <label class="form-label"><?= __('name'); ?></label>
+                        <input type="text" name="name" id="contactName" class="form-control" placeholder="<?= __('fullname'); ?>">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Email <span class="text-danger">*</span></label>
+                        <label class="form-label"><?= __('email'); ?> <span class="text-danger">*</span></label>
                         <input type="email" name="email" id="contactEmail" class="form-control" placeholder="email@example.com" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Company</label>
-                        <input type="text" name="company" id="contactCompany" class="form-control" placeholder="Company name">
+                        <label class="form-label"><?= __('company'); ?></label>
+                        <input type="text" name="company" id="contactCompany" class="form-control" placeholder="<?= __('company'); ?>">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Group</label>
-                        <input type="text" name="group_name" id="contactGroup" class="form-control" placeholder="Group name">
+                        <label class="form-label"><?= __('group'); ?></label>
+                        <input type="text" name="group_name" id="contactGroup" class="form-control" placeholder="<?= __('group'); ?>">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Phone</label>
-                        <input type="text" name="phone" id="contactPhone" class="form-control" placeholder="Phone number">
+                        <label class="form-label"><?= __('phone'); ?></label>
+                        <input type="text" name="phone" id="contactPhone" class="form-control" placeholder="<?= __('phone'); ?>">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Notes</label>
-                        <textarea name="notes" id="contactNotes" class="form-control" rows="2" placeholder="Notes"></textarea>
+                        <label class="form-label"><?= __('notes'); ?></label>
+                        <textarea name="notes" id="contactNotes" class="form-control" rows="2" placeholder="<?= __('notes'); ?>"></textarea>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-ghost-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="saveContactBtn">Save Contact</button>
+                <button type="button" class="btn btn-ghost-secondary" data-bs-dismiss="modal"><?= __('cancel'); ?></button>
+                <button type="button" class="btn btn-primary" id="saveContactBtn"><?= __('save_contact'); ?></button>
             </div>
         </div>
     </div>
@@ -239,13 +239,13 @@ $groups = $ToryMail->get_list_safe("
 
 <script>
 function resetContactForm() {
-    $('#contactModalTitle').text('Add Contact');
+    $('#contactModalTitle').text('<?= __("add_contact"); ?>');
     $('#contactId').val('');
     $('#contactForm')[0].reset();
 }
 
 function editContact(contact) {
-    $('#contactModalTitle').text('Edit Contact');
+    $('#contactModalTitle').text('<?= __("edit_contact"); ?>');
     $('#contactId').val(contact.id);
     $('#contactName').val(contact.name || '');
     $('#contactEmail').val(contact.email || '');
@@ -259,29 +259,28 @@ function editContact(contact) {
 $('#saveContactBtn').on('click', function() {
     var data = $('#contactForm').serialize();
     var isEdit = !!$('#contactId').val();
-    data += '&action=' + (isEdit ? 'update' : 'create');
+    var act = isEdit ? 'edit' : 'add';
 
-    $.post('<?= base_url("ajaxs/user/contacts.php"); ?>', data, function(res) {
+    $.post('<?= base_url("ajaxs/user/contacts.php"); ?>?action=' + act, data, function(res) {
         if (res.success) {
-            tmToast('success', res.message || 'Contact saved!');
+            tmToast('success', res.message || '<?= __("contact_saved"); ?>');
             setTimeout(function() { location.reload(); }, 800);
         } else {
-            tmToast('error', res.message || 'Failed to save contact.');
+            tmToast('error', res.message || '<?= __("contact_save_fail"); ?>');
         }
     }, 'json');
 });
 
 function deleteContact(id) {
-    tmConfirm('Delete contact?', 'This action cannot be undone.', function() {
-        $.post('<?= base_url("ajaxs/user/contacts.php"); ?>', {
-            action: 'delete',
+    tmConfirm('<?= __("delete_contact"); ?>', '<?= __("delete_contact_desc"); ?>', function() {
+        $.post('<?= base_url("ajaxs/user/contacts.php"); ?>?action=delete', {
             contact_id: id
         }, function(res) {
             if (res.success) {
-                tmToast('success', 'Contact deleted.');
+                tmToast('success', '<?= __("contact_deleted"); ?>');
                 setTimeout(function() { location.reload(); }, 800);
             } else {
-                tmToast('error', res.message || 'Failed to delete contact.');
+                tmToast('error', res.message || '<?= __("contact_delete_fail"); ?>');
             }
         }, 'json');
     });

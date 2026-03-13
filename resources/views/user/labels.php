@@ -4,8 +4,8 @@ if (!defined('IN_SITE')) {
 }
 
 $body = [
-    'title' => 'Labels - Torymail',
-    'desc'  => 'Manage email labels',
+    'title' => __('labels') . ' - Torymail',
+    'desc'  => __('manage_labels'),
 ];
 $body['header'] = '';
 $body['footer'] = '';
@@ -16,8 +16,8 @@ require_once __DIR__ . '/sidebar.php';
 // Fetch labels with email counts
 $labels = $ToryMail->get_list_safe("
     SELECT l.*,
-           (SELECT COUNT(*) FROM `email_labels` el WHERE el.`label_id` = l.`id`) as email_count
-    FROM `labels` l
+           (SELECT COUNT(*) FROM `email_label_map` elm WHERE elm.`label_id` = l.`id`) as email_count
+    FROM `email_labels` l
     WHERE l.`user_id` = ?
     ORDER BY l.`name` ASC
 ", [$getUser['id']]);
@@ -29,11 +29,11 @@ $defaultColors = ['#4F46E5', '#EF4444', '#F59E0B', '#10B981', '#3B82F6', '#8B5CF
 <div class="row">
     <div class="col-12">
         <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-            <h4 class="mb-sm-0">Labels</h4>
+            <h4 class="mb-sm-0"><?= __('labels'); ?></h4>
             <div class="page-title-right">
                 <ol class="breadcrumb m-0">
-                    <li class="breadcrumb-item"><a href="<?= base_url('inbox'); ?>">Home</a></li>
-                    <li class="breadcrumb-item active">Labels</li>
+                    <li class="breadcrumb-item"><a href="<?= base_url('inbox'); ?>"><?= __('home'); ?></a></li>
+                    <li class="breadcrumb-item active"><?= __('labels'); ?></li>
                 </ol>
             </div>
         </div>
@@ -44,11 +44,11 @@ $defaultColors = ['#4F46E5', '#EF4444', '#F59E0B', '#10B981', '#3B82F6', '#8B5CF
     <div class="card-header border-bottom-dashed">
         <div class="d-flex align-items-center justify-content-between">
             <h5 class="card-title mb-0">
-                <i class="ri-price-tag-3-line me-1 align-bottom text-primary"></i> Labels
+                <i class="ri-price-tag-3-line me-1 align-bottom text-primary"></i> <?= __('labels'); ?>
                 <span class="badge bg-primary-subtle text-primary ms-1"><?= count($labels); ?></span>
             </h5>
             <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#labelModal" onclick="resetLabelForm()">
-                <i class="ri-add-line me-1"></i> Add Label
+                <i class="ri-add-line me-1"></i> <?= __('add_label_btn'); ?>
             </button>
         </div>
     </div>
@@ -61,8 +61,8 @@ $defaultColors = ['#4F46E5', '#EF4444', '#F59E0B', '#10B981', '#3B82F6', '#8B5CF
                     <i class="ri-price-tag-3-line"></i>
                 </div>
             </div>
-            <h5 class="fs-16 text-muted">No labels yet</h5>
-            <p class="text-muted fs-13">Create labels to organize your emails by category.</p>
+            <h5 class="fs-16 text-muted"><?= __('no_labels_yet'); ?></h5>
+            <p class="text-muted fs-13"><?= __('no_labels_hint'); ?></p>
         </div>
         <?php else: ?>
         <div class="row g-3">
@@ -78,14 +78,14 @@ $defaultColors = ['#4F46E5', '#EF4444', '#F59E0B', '#10B981', '#3B82F6', '#8B5CF
                             </div>
                             <div>
                                 <h6 class="mb-0 fw-medium"><?= htmlspecialchars($label['name']); ?></h6>
-                                <span class="text-muted fs-12"><?= $label['email_count']; ?> email<?= $label['email_count'] != 1 ? 's' : ''; ?></span>
+                                <span class="text-muted fs-12"><?= $label['email_count']; ?> <?= __('emails_count'); ?></span>
                             </div>
                         </div>
                         <div class="d-flex gap-1">
-                            <button class="btn btn-soft-primary btn-sm" onclick="editLabel(<?= htmlspecialchars(json_encode($label)); ?>)" title="Edit">
+                            <button class="btn btn-soft-primary btn-sm" onclick="editLabel(<?= htmlspecialchars(json_encode($label)); ?>)" title="<?= __('edit'); ?>">
                                 <i class="ri-pencil-line"></i>
                             </button>
-                            <button class="btn btn-soft-danger btn-sm" onclick="deleteLabel(<?= $label['id']; ?>, '<?= htmlspecialchars($label['name']); ?>')" title="Delete">
+                            <button class="btn btn-soft-danger btn-sm" onclick="deleteLabel(<?= $label['id']; ?>, '<?= htmlspecialchars($label['name']); ?>')" title="<?= __('delete'); ?>">
                                 <i class="ri-delete-bin-line"></i>
                             </button>
                         </div>
@@ -103,18 +103,18 @@ $defaultColors = ['#4F46E5', '#EF4444', '#F59E0B', '#10B981', '#3B82F6', '#8B5CF
     <div class="modal-dialog modal-sm">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="labelModalTitle">Add Label</h5>
+                <h5 class="modal-title" id="labelModalTitle"><?= __('add_label_btn'); ?></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <form id="labelForm">
                     <input type="hidden" name="label_id" id="lblId">
                     <div class="mb-3">
-                        <label class="form-label">Label Name <span class="text-danger">*</span></label>
-                        <input type="text" name="name" id="lblName" class="form-control" placeholder="e.g., Important" required>
+                        <label class="form-label"><?= __('label_name'); ?> <span class="text-danger">*</span></label>
+                        <input type="text" name="name" id="lblName" class="form-control" placeholder="<?= __('label_name_placeholder'); ?>" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Color</label>
+                        <label class="form-label"><?= __('color'); ?></label>
                         <div class="d-flex flex-wrap gap-2 mb-2">
                             <?php foreach ($defaultColors as $color): ?>
                             <div class="color-option" data-color="<?= $color; ?>"
@@ -128,8 +128,8 @@ $defaultColors = ['#4F46E5', '#EF4444', '#F59E0B', '#10B981', '#3B82F6', '#8B5CF
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-ghost-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="saveLabelBtn">Save Label</button>
+                <button type="button" class="btn btn-ghost-secondary" data-bs-dismiss="modal"><?= __('cancel'); ?></button>
+                <button type="button" class="btn btn-primary" id="saveLabelBtn"><?= __('save_label'); ?></button>
             </div>
         </div>
     </div>
@@ -143,7 +143,7 @@ function selectColor(color) {
 }
 
 function resetLabelForm() {
-    $('#labelModalTitle').text('Add Label');
+    $('#labelModalTitle').text('<?= __("add_label_btn"); ?>');
     $('#lblId').val('');
     $('#labelForm')[0].reset();
     $('#lblColor').val('#4F46E5');
@@ -152,7 +152,7 @@ function resetLabelForm() {
 }
 
 function editLabel(label) {
-    $('#labelModalTitle').text('Edit Label');
+    $('#labelModalTitle').text('<?= __("edit_label"); ?>');
     $('#lblId').val(label.id);
     $('#lblName').val(label.name || '');
     $('#lblColor').val(label.color || '#4F46E5');
@@ -164,29 +164,28 @@ function editLabel(label) {
 $('#saveLabelBtn').on('click', function() {
     var data = $('#labelForm').serialize();
     var isEdit = !!$('#lblId').val();
-    data += '&action=' + (isEdit ? 'update' : 'create');
+    var act = isEdit ? 'edit' : 'add';
 
-    $.post('<?= base_url("ajaxs/user/labels.php"); ?>', data, function(res) {
+    $.post('<?= base_url("ajaxs/user/labels.php"); ?>?action=' + act, data, function(res) {
         if (res.success) {
-            tmToast('success', res.message || 'Label saved!');
+            tmToast('success', res.message || '<?= __("label_saved"); ?>');
             setTimeout(function() { location.reload(); }, 800);
         } else {
-            tmToast('error', res.message || 'Failed to save label.');
+            tmToast('error', res.message || '<?= __("label_save_fail"); ?>');
         }
     }, 'json');
 });
 
 function deleteLabel(id, name) {
-    tmConfirm('Delete label "' + name + '"?', 'The label will be removed from all emails.', function() {
-        $.post('<?= base_url("ajaxs/user/labels.php"); ?>', {
-            action: 'delete',
+    tmConfirm('<?= __("delete_label"); ?>', '<?= __("delete_label_desc"); ?>', function() {
+        $.post('<?= base_url("ajaxs/user/labels.php"); ?>?action=delete', {
             label_id: id
         }, function(res) {
             if (res.success) {
-                tmToast('success', 'Label deleted.');
+                tmToast('success', '<?= __("label_deleted"); ?>');
                 setTimeout(function() { location.reload(); }, 800);
             } else {
-                tmToast('error', res.message || 'Failed to delete label.');
+                tmToast('error', res.message || '<?= __("label_delete_fail"); ?>');
             }
         }, 'json');
     });

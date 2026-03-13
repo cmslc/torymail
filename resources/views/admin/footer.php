@@ -13,7 +13,7 @@
                         </div>
                         <div class="col-sm-6">
                             <div class="text-sm-end d-none d-sm-block">
-                                Powered by <a href="<?= base_url(); ?>" target="_blank"><?= sanitize(get_setting('site_name', 'Torymail')); ?></a>
+                                <?= __('footer_system'); ?>
                             </div>
                         </div>
                     </div>
@@ -56,6 +56,12 @@
             showConfirmButton: false,
             timer: 3000,
             timerProgressBar: true
+        });
+    }
+
+    function switchLang(lang) {
+        $.get('<?= base_url("ajaxs/user/lang.php"); ?>?lang=' + lang, function() {
+            location.reload();
         });
     }
 

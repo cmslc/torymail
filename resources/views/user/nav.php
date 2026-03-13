@@ -7,13 +7,14 @@
             <div class="d-flex">
                 <!-- LOGO (for horizontal layout) -->
                 <div class="navbar-brand-box horizontal-logo">
+                    <?php $navLogo = get_setting('site_logo', ''); $navSiteName = get_setting('site_name', 'Torymail'); ?>
                     <a href="<?= base_url('inbox'); ?>" class="logo logo-dark">
-                        <span class="logo-sm"><i class="ri-mail-line fs-22 text-primary"></i></span>
-                        <span class="logo-lg"><i class="ri-mail-line me-1 text-primary"></i> <span class="fw-bold">Torymail</span></span>
+                        <span class="logo-sm"><?php if ($navLogo): ?><img src="<?= base_url($navLogo); ?>" alt="" height="22"><?php else: ?><i class="ri-mail-line fs-22 text-primary"></i><?php endif; ?></span>
+                        <span class="logo-lg"><?php if ($navLogo): ?><img src="<?= base_url($navLogo); ?>" alt="<?= sanitize($navSiteName); ?>" height="28"><?php else: ?><i class="ri-mail-line me-1 text-primary"></i> <span class="fw-bold"><?= sanitize($navSiteName); ?></span><?php endif; ?></span>
                     </a>
                     <a href="<?= base_url('inbox'); ?>" class="logo logo-light">
-                        <span class="logo-sm"><i class="ri-mail-line fs-22"></i></span>
-                        <span class="logo-lg"><i class="ri-mail-line me-1"></i> <span class="fw-bold">Torymail</span></span>
+                        <span class="logo-sm"><?php if ($navLogo): ?><img src="<?= base_url($navLogo); ?>" alt="" height="22"><?php else: ?><i class="ri-mail-line fs-22"></i><?php endif; ?></span>
+                        <span class="logo-lg"><?php if ($navLogo): ?><img src="<?= base_url($navLogo); ?>" alt="<?= sanitize($navSiteName); ?>" height="28"><?php else: ?><i class="ri-mail-line me-1"></i> <span class="fw-bold"><?= sanitize($navSiteName); ?></span><?php endif; ?></span>
                     </a>
                 </div>
 
@@ -30,7 +31,7 @@
                     <div class="position-relative">
                         <input type="text" name="search" class="form-control" placeholder="Search emails..." autocomplete="off" value="<?= htmlspecialchars($_GET['search'] ?? ''); ?>">
                         <input type="hidden" name="folder" value="<?= htmlspecialchars($_GET['folder'] ?? 'inbox'); ?>">
-                        <span class="ri-search-line search-icon"></span>
+                        <span class="ri-search-line search-widget-icon"></span>
                     </div>
                 </form>
 
@@ -43,6 +44,21 @@
             </div>
 
             <div class="d-flex align-items-center">
+                <!-- Language Switcher -->
+                <div class="dropdown ms-1 header-item">
+                    <button type="button" class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle" data-bs-toggle="dropdown" aria-expanded="false">
+                        <span class="fs-14 fw-medium"><?= strtoupper(current_lang()); ?></span>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end">
+                        <a class="dropdown-item <?= current_lang() === 'en' ? 'active' : ''; ?>" href="#" onclick="switchLang('en')">
+                            <span class="align-middle">English</span>
+                        </a>
+                        <a class="dropdown-item <?= current_lang() === 'vi' ? 'active' : ''; ?>" href="#" onclick="switchLang('vi')">
+                            <span class="align-middle">Tiếng Việt</span>
+                        </a>
+                    </div>
+                </div>
+
                 <!-- Fullscreen -->
                 <div class="ms-1 header-item d-none d-sm-flex">
                     <button type="button" class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle" data-bs-toggle="fullscreen">
@@ -116,10 +132,10 @@
                     <button type="button" class="btn" id="page-header-user-dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         <span class="d-flex align-items-center">
                             <span class="rounded-circle header-profile-user bg-primary text-white d-flex align-items-center justify-content-center" style="width:32px;height:32px;font-size:14px;font-weight:600;">
-                                <?= strtoupper(substr($getUser['username'] ?? $getUser['email'] ?? 'U', 0, 1)); ?>
+                                <?= strtoupper(substr($getUser['fullname'] ?? $getUser['email'] ?? 'U', 0, 1)); ?>
                             </span>
                             <span class="text-start ms-xl-2">
-                                <span class="d-none d-xl-inline-block ms-1 fw-medium user-name-text"><?= htmlspecialchars($getUser['username'] ?? $getUser['email'] ?? 'User'); ?></span>
+                                <span class="d-none d-xl-inline-block ms-1 fw-medium user-name-text"><?= htmlspecialchars($getUser['fullname'] ?? $getUser['email'] ?? 'User'); ?></span>
                                 <span class="d-none d-xl-block ms-1 fs-12 text-muted user-name-sub-text"><?= htmlspecialchars($getUser['role'] ?? 'User'); ?></span>
                             </span>
                         </span>
@@ -137,7 +153,7 @@
                         </a>
                         <?php endif; ?>
                         <div class="dropdown-divider"></div>
-                        <a class="dropdown-item text-danger" href="<?= base_url('logout'); ?>">
+                        <a class="dropdown-item text-danger" href="<?= base_url('auth/logout'); ?>">
                             <i class="ri-shut-down-line text-danger fs-16 align-middle me-1"></i>
                             <span class="align-middle">Logout</span>
                         </a>

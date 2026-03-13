@@ -1,8 +1,8 @@
 <?php
-$body = ['title' => 'Đăng ký - Torymail'];
+$body = ['title' => __('register_title')];
 ?>
 <!doctype html>
-<html lang="vi" data-bs-theme="light">
+<html lang="<?= current_lang() ?>" data-bs-theme="light">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
@@ -30,7 +30,7 @@ $body = ['title' => 'Đăng ký - Torymail'];
                     <div class="col-lg-12">
                         <div class="text-center mt-sm-5 mb-4 text-white-50">
                             <h3 class="text-white"><i class="ri-mail-line"></i> Torymail</h3>
-                            <p class="mt-2 fs-15 fw-medium">Tạo tài khoản mới</p>
+                            <p class="mt-2 fs-15 fw-medium"><?= __('register_subtitle') ?></p>
                         </div>
                     </div>
                 </div>
@@ -40,37 +40,37 @@ $body = ['title' => 'Đăng ký - Torymail'];
                         <div class="card mt-4">
                             <div class="card-body p-4">
                                 <div class="text-center mt-2">
-                                    <h5 class="text-primary">Đăng ký tài khoản</h5>
-                                    <p class="text-muted">Tạo tài khoản miễn phí ngay hôm nay.</p>
+                                    <h5 class="text-primary"><?= __('register') ?></h5>
+                                    <p class="text-muted"><?= __('register_desc') ?></p>
                                 </div>
                                 <div id="alert-box"></div>
                                 <div class="p-2 mt-4">
                                     <form id="registerForm" autocomplete="off">
                                         <div class="mb-3">
-                                            <label class="form-label">Họ và tên</label>
-                                            <input type="text" name="fullname" class="form-control" placeholder="Nguyễn Văn A" required>
+                                            <label class="form-label"><?= __('fullname') ?></label>
+                                            <input type="text" name="fullname" class="form-control" placeholder="<?= __('fullname_placeholder') ?>" required>
                                         </div>
                                         <div class="mb-3">
-                                            <label class="form-label">Email</label>
-                                            <input type="email" name="email" class="form-control" placeholder="you@example.com" required>
+                                            <label class="form-label"><?= __('email') ?></label>
+                                            <input type="email" name="email" class="form-control" placeholder="<?= __('email_register_placeholder') ?>" required>
                                         </div>
                                         <div class="mb-3">
-                                            <label class="form-label">Mật khẩu</label>
-                                            <input type="password" name="password" class="form-control" placeholder="Tối thiểu 8 ký tự" required minlength="8">
+                                            <label class="form-label"><?= __('password') ?></label>
+                                            <input type="password" name="password" class="form-control" placeholder="<?= __('password_min') ?>" required minlength="8">
                                         </div>
                                         <div class="mb-3">
-                                            <label class="form-label">Xác nhận mật khẩu</label>
-                                            <input type="password" name="password_confirm" class="form-control" placeholder="Nhập lại mật khẩu" required>
+                                            <label class="form-label"><?= __('confirm_password') ?></label>
+                                            <input type="password" name="password_confirm" class="form-control" placeholder="<?= __('confirm_password_placeholder') ?>" required>
                                         </div>
                                         <div class="mt-4">
-                                            <button class="btn btn-primary w-100" type="submit">Đăng ký</button>
+                                            <button class="btn btn-primary w-100" type="submit"><?= __('register') ?></button>
                                         </div>
                                     </form>
                                 </div>
                             </div>
                         </div>
                         <div class="mt-4 text-center">
-                            <p class="mb-0">Đã có tài khoản? <a href="<?= base_url('auth/login') ?>" class="fw-semibold text-primary text-decoration-underline">Đăng nhập</a></p>
+                            <p class="mb-0"><?= __('has_account') ?> <a href="<?= base_url('auth/login') ?>" class="fw-semibold text-primary text-decoration-underline"><?= __('login') ?></a></p>
                         </div>
                     </div>
                 </div>
@@ -88,7 +88,7 @@ $body = ['title' => 'Đăng ký - Torymail'];
     $('#registerForm').submit(function(e) {
         e.preventDefault();
         var btn = $(this).find('button[type=submit]');
-        btn.prop('disabled', true).html('<i class="ri-loader-4-line ri-spin me-1"></i> Đang xử lý...');
+        btn.prop('disabled', true).html('<i class="ri-loader-4-line ri-spin me-1"></i> <?= __('processing') ?>');
         $.ajax({
             url: '<?= base_url('ajaxs/user/auth.php?action=register') ?>',
             method: 'POST', data: $(this).serialize(), dataType: 'json',
@@ -97,12 +97,12 @@ $body = ['title' => 'Đăng ký - Torymail'];
                     window.location.href = '<?= base_url('auth/login') ?>?registered=1';
                 } else {
                     $('#alert-box').html('<div class="alert alert-danger">' + res.message + '</div>');
-                    btn.prop('disabled', false).html('Đăng ký');
+                    btn.prop('disabled', false).html('<?= __('register') ?>');
                 }
             },
             error: function() {
-                $('#alert-box').html('<div class="alert alert-danger">Lỗi kết nối server</div>');
-                btn.prop('disabled', false).html('Đăng ký');
+                $('#alert-box').html('<div class="alert alert-danger"><?= __('server_error') ?></div>');
+                btn.prop('disabled', false).html('<?= __('register') ?>');
             }
         });
     });

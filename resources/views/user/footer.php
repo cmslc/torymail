@@ -13,7 +13,7 @@
                         </div>
                         <div class="col-sm-6">
                             <div class="text-sm-end d-none d-sm-block">
-                                Email Management System
+                                <?= __('footer_system'); ?>
                             </div>
                         </div>
                     </div>
@@ -34,6 +34,12 @@
             timerProgressBar: true,
         });
         Toast.fire({ icon: icon, title: title });
+    }
+
+    function switchLang(lang) {
+        $.get('<?= base_url("ajaxs/user/lang.php"); ?>?lang=' + lang, function() {
+            location.reload();
+        });
     }
 
     function tmConfirm(title, text, callback) {

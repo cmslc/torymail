@@ -201,11 +201,11 @@ switch ($action) {
         // Update dns_records verification status
         $ToryMail->update_safe('dns_records', ['last_checked' => gettime()], 'domain_id = ?', [$domain_id]);
 
-        $message = $txtVerified
-            ? 'Domain verified successfully'
-            : 'TXT verification record not found. Please add the DNS records and try again.';
-
-        success_response($message, ['verification' => $results]);
+        if ($txtVerified) {
+            success_response('Domain verified successfully', ['verification' => $results]);
+        } else {
+            error_response('TXT verification record not found. Please add the DNS records and try again.', 200, ['verification' => $results]);
+        }
         break;
 
     // -------------------------------------------------------

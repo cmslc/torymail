@@ -77,7 +77,12 @@ switch ($action) {
         $status   = in_array($_POST['status'] ?? 'active', ['active', 'banned', 'inactive']) ? $_POST['status'] : 'active';
         $max_domains = intval($_POST['max_domains'] ?? get_setting('max_domains_per_user', '5'));
         $max_mailboxes = intval($_POST['max_mailboxes_per_domain'] ?? get_setting('max_mailboxes_per_domain', '50'));
-        $storage_quota = intval($_POST['storage_quota'] ?? get_setting('default_quota', '1073741824'));
+        // Form sends storage_quota_mb in MB, convert to bytes
+        if (isset($_POST['storage_quota_mb'])) {
+            $storage_quota = intval($_POST['storage_quota_mb']) * 1048576;
+        } else {
+            $storage_quota = intval($_POST['storage_quota'] ?? get_setting('default_quota', '1073741824'));
+        }
 
         if (empty($fullname) || empty($email) || empty($password)) {
             error_response('Full name, email, and password are required');
@@ -157,7 +162,9 @@ switch ($action) {
         if (isset($_POST['max_mailboxes_per_domain'])) {
             $updateData['max_mailboxes_per_domain'] = max(0, intval($_POST['max_mailboxes_per_domain']));
         }
-        if (isset($_POST['storage_quota'])) {
+        if (isset($_POST['storage_quota_mb'])) {
+            $updateData['storage_quota'] = max(0, intval($_POST['storage_quota_mb'])) * 1048576;
+        } elseif (isset($_POST['storage_quota'])) {
             $updateData['storage_quota'] = max(0, intval($_POST['storage_quota']));
         }
 

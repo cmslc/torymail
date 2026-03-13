@@ -2,7 +2,7 @@
     die('The Request Not Found');
 }
 $body = [
-    'title' => 'Dashboard',
+    'title' => __('dashboard'),
     'header' => '',
     'footer' => '',
 ];
@@ -51,7 +51,7 @@ $recentLogs = $ToryMail->get_list_safe("
     FROM activity_logs al
     LEFT JOIN users u ON al.user_id = u.id
     ORDER BY al.created_at DESC
-    LIMIT 20
+    LIMIT 10
 ");
 
 require_once(__DIR__.'/header.php');
@@ -62,11 +62,11 @@ require_once(__DIR__.'/sidebar.php');
 <div class="row">
     <div class="col-12">
         <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-            <h4 class="mb-sm-0">Dashboard</h4>
+            <h4 class="mb-sm-0"><?= __('dashboard'); ?></h4>
             <div class="page-title-right">
                 <ol class="breadcrumb m-0">
-                    <li class="breadcrumb-item"><a href="<?= admin_url('home'); ?>">Admin</a></li>
-                    <li class="breadcrumb-item active">Dashboard</li>
+                    <li class="breadcrumb-item"><a href="<?= admin_url('home'); ?>"><?= __('admin'); ?></a></li>
+                    <li class="breadcrumb-item active"><?= __('dashboard'); ?></li>
                 </ol>
             </div>
         </div>
@@ -77,12 +77,12 @@ require_once(__DIR__.'/sidebar.php');
 <div class="row">
     <?php
     $kpiCards = [
-        ['bg' => 'primary', 'value' => number_format($totalUsers),      'label' => 'Total Users',       'icon' => 'ri-group-line',          'link' => admin_url('users')],
-        ['bg' => 'success', 'value' => number_format($activeDomains),   'label' => 'Active Domains',    'icon' => 'ri-global-line',         'link' => admin_url('domains')],
-        ['bg' => 'info',    'value' => number_format($activeMailboxes),  'label' => 'Active Mailboxes',  'icon' => 'ri-mail-settings-line',  'link' => admin_url('mailboxes')],
-        ['bg' => 'warning', 'value' => number_format($emailsToday),     'label' => 'Emails Today',      'icon' => 'ri-mail-line',           'link' => admin_url('activity-logs')],
-        ['bg' => 'danger',  'value' => number_format($queuePending),    'label' => 'Queue Pending',     'icon' => 'ri-mail-send-line',      'link' => admin_url('email-queue')],
-        ['bg' => 'secondary','value' => format_email_size($storageUsed),'label' => 'Total Storage Used','icon' => 'ri-hard-drive-2-line',   'link' => admin_url('users')],
+        ['bg' => 'primary', 'value' => number_format($totalUsers),      'label' => __('total_users'),       'icon' => 'ri-group-line',          'link' => admin_url('users')],
+        ['bg' => 'success', 'value' => number_format($activeDomains),   'label' => __('active_domains'),    'icon' => 'ri-global-line',         'link' => admin_url('domains')],
+        ['bg' => 'info',    'value' => number_format($activeMailboxes),  'label' => __('active_mailboxes'),  'icon' => 'ri-mail-settings-line',  'link' => admin_url('mailboxes')],
+        ['bg' => 'warning', 'value' => number_format($emailsToday),     'label' => __('emails_today'),      'icon' => 'ri-mail-line',           'link' => admin_url('activity-logs')],
+        ['bg' => 'danger',  'value' => number_format($queuePending),    'label' => __('queue_pending'),     'icon' => 'ri-mail-send-line',      'link' => admin_url('email-queue')],
+        ['bg' => 'secondary','value' => format_email_size($storageUsed),'label' => __('total_storage'),     'icon' => 'ri-hard-drive-2-line',   'link' => admin_url('users')],
     ];
     foreach ($kpiCards as $card): ?>
     <div class="col-xl-4 col-md-6">
@@ -96,7 +96,7 @@ require_once(__DIR__.'/sidebar.php');
                 <div class="d-flex align-items-end justify-content-between mt-4">
                     <div>
                         <h4 class="fs-22 fw-semibold ff-secondary mb-4"><?= $card['value']; ?></h4>
-                        <a href="<?= $card['link']; ?>" class="text-decoration-underline text-<?= $card['bg']; ?>">View details <i class="ri-arrow-right-line"></i></a>
+                        <a href="<?= $card['link']; ?>" class="text-decoration-underline text-<?= $card['bg']; ?>"><?= __('view_details'); ?> <i class="ri-arrow-right-line"></i></a>
                     </div>
                     <div class="avatar-sm flex-shrink-0">
                         <span class="avatar-title bg-<?= $card['bg']; ?>-subtle rounded fs-3">
@@ -115,7 +115,7 @@ require_once(__DIR__.'/sidebar.php');
     <div class="col-12">
         <div class="card">
             <div class="card-header">
-                <h5 class="card-title mb-0"><i class="ri-line-chart-line me-1"></i> Emails - Last 30 Days</h5>
+                <h5 class="card-title mb-0"><i class="ri-line-chart-line me-1"></i> <?= __('emails_last_30'); ?></h5>
             </div>
             <div class="card-body">
                 <canvas id="emailChart" height="80"></canvas>
@@ -129,24 +129,24 @@ require_once(__DIR__.'/sidebar.php');
     <div class="col-12">
         <div class="card">
             <div class="card-header">
-                <h5 class="card-title mb-0"><i class="ri-history-line me-1"></i> Recent Activity</h5>
+                <h5 class="card-title mb-0"><i class="ri-history-line me-1"></i> <?= __('recent_activity'); ?></h5>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
-                    <table id="datatable" class="table table-bordered table-striped table-hover">
+                    <table class="table table-bordered table-striped table-hover">
                         <thead>
                             <tr>
                                 <th>#</th>
-                                <th>Time</th>
-                                <th>User</th>
-                                <th>Action</th>
-                                <th>Details</th>
-                                <th>IP</th>
+                                <th><?= __('time'); ?></th>
+                                <th><?= __('user'); ?></th>
+                                <th><?= __('action'); ?></th>
+                                <th><?= __('details'); ?></th>
+                                <th><?= __('ip'); ?></th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php if (empty($recentLogs)): ?>
-                                <tr><td colspan="6" class="text-center text-muted py-4">No activity logged yet</td></tr>
+                                <tr><td colspan="6" class="text-center text-muted py-4"><?= __('no_activity'); ?></td></tr>
                             <?php else: ?>
                                 <?php $i = 1; foreach ($recentLogs as $log): ?>
                                 <tr>
@@ -187,7 +187,7 @@ document.addEventListener('DOMContentLoaded', function() {
             labels: <?= json_encode($chartLabels); ?>,
             datasets: [
                 {
-                    label: 'Sent',
+                    label: '<?= __('sent'); ?>',
                     data: <?= json_encode($chartSent); ?>,
                     borderColor: '#405189',
                     backgroundColor: 'rgba(64,81,137,0.08)',
@@ -198,7 +198,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     borderWidth: 2
                 },
                 {
-                    label: 'Received',
+                    label: '<?= __('received'); ?>',
                     data: <?= json_encode($chartReceived); ?>,
                     borderColor: '#0ab39c',
                     backgroundColor: 'rgba(10,179,156,0.08)',

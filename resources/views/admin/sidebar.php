@@ -6,46 +6,52 @@ $currentAction = $action ?? '';
 
 $sidebarMenu = [
     [
-        'label' => 'Dashboard',
+        'label' => __('dashboard'),
         'icon'  => 'ri-dashboard-2-line',
         'url'   => admin_url('home'),
         'active' => ['home', ''],
     ],
     [
-        'label' => 'Users',
+        'label' => __('users'),
         'icon'  => 'ri-group-line',
         'url'   => admin_url('users'),
         'active' => ['users', 'user-edit'],
     ],
     [
-        'label' => 'Domains',
+        'label' => __('domains'),
         'icon'  => 'ri-global-line',
         'url'   => admin_url('domains'),
         'active' => ['domains'],
     ],
     [
-        'label' => 'Mailboxes',
+        'label' => __('mailboxes'),
         'icon'  => 'ri-mail-settings-line',
         'url'   => admin_url('mailboxes'),
         'active' => ['mailboxes'],
     ],
     [
-        'label' => 'Email Queue',
+        'label' => __('email_queue'),
         'icon'  => 'ri-mail-send-line',
         'url'   => admin_url('email-queue'),
         'active' => ['email-queue'],
     ],
     [
-        'label' => 'Activity Logs',
+        'label' => __('activity_logs'),
         'icon'  => 'ri-file-list-3-line',
         'url'   => admin_url('activity-logs'),
         'active' => ['activity-logs'],
     ],
     [
-        'label' => 'Settings',
+        'label' => __('settings'),
         'icon'  => 'ri-settings-3-line',
         'url'   => admin_url('settings'),
         'active' => ['settings'],
+    ],
+    [
+        'label' => __('system_info'),
+        'icon'  => 'ri-information-line',
+        'url'   => admin_url('system-info'),
+        'active' => ['system-info'],
     ],
 ];
 ?>
@@ -59,15 +65,14 @@ $sidebarMenu = [
         <div class="app-menu navbar-menu">
             <!-- LOGO -->
             <div class="navbar-brand-box">
+                <?php $adminLogo = get_setting('site_logo', ''); $adminSiteName = get_setting('site_name', 'Torymail'); ?>
                 <a href="<?= admin_url('home'); ?>" class="logo logo-dark">
-                    <span class="logo-lg" style="font-size:18px;font-weight:700;color:#fff;">
-                        <i class="ri-mail-line"></i> Torymail
-                    </span>
+                    <span class="logo-sm"><?php if ($adminLogo): ?><img src="<?= base_url($adminLogo); ?>" alt="" height="22"><?php else: ?><i class="ri-mail-line fs-22"></i><?php endif; ?></span>
+                    <span class="logo-lg"><?php if ($adminLogo): ?><img src="<?= base_url($adminLogo); ?>" alt="<?= sanitize($adminSiteName); ?>" height="28"><?php else: ?><span style="font-size:18px;font-weight:700;color:#fff;"><i class="ri-mail-line"></i> <?= sanitize($adminSiteName); ?></span><?php endif; ?></span>
                 </a>
                 <a href="<?= admin_url('home'); ?>" class="logo logo-light">
-                    <span class="logo-lg" style="font-size:18px;font-weight:700;color:#fff;">
-                        <i class="ri-mail-line"></i> Torymail
-                    </span>
+                    <span class="logo-sm"><?php if ($adminLogo): ?><img src="<?= base_url($adminLogo); ?>" alt="" height="22"><?php else: ?><i class="ri-mail-line fs-22"></i><?php endif; ?></span>
+                    <span class="logo-lg"><?php if ($adminLogo): ?><img src="<?= base_url($adminLogo); ?>" alt="<?= sanitize($adminSiteName); ?>" height="28"><?php else: ?><span style="font-size:18px;font-weight:700;color:#fff;"><i class="ri-mail-line"></i> <?= sanitize($adminSiteName); ?></span><?php endif; ?></span>
                 </a>
                 <button type="button" class="btn btn-sm p-0 fs-20 header-item float-end btn-vertical-sm-hover" id="vertical-hover">
                     <i class="ri-record-circle-line"></i>
@@ -77,7 +82,7 @@ $sidebarMenu = [
             <div id="scrollbar" data-simplebar>
                 <div class="container-fluid">
                     <ul class="navbar-nav" id="navbar-nav">
-                        <li class="menu-title"><span>Menu</span></li>
+                        <li class="menu-title"><span><?= __('menu'); ?></span></li>
 
                         <?php foreach ($sidebarMenu as $index => $item): ?>
                             <?php

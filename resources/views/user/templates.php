@@ -4,8 +4,8 @@ if (!defined('IN_SITE')) {
 }
 
 $body = [
-    'title' => 'Templates - Torymail',
-    'desc'  => 'Email templates',
+    'title' => __('templates') . ' - Torymail',
+    'desc'  => __('email_templates'),
 ];
 $body['header'] = '';
 $body['footer'] = '';
@@ -25,11 +25,11 @@ $templates = $ToryMail->get_list_safe("
 <div class="row">
     <div class="col-12">
         <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-            <h4 class="mb-sm-0">Templates</h4>
+            <h4 class="mb-sm-0"><?= __('templates'); ?></h4>
             <div class="page-title-right">
                 <ol class="breadcrumb m-0">
-                    <li class="breadcrumb-item"><a href="<?= base_url('inbox'); ?>">Home</a></li>
-                    <li class="breadcrumb-item active">Templates</li>
+                    <li class="breadcrumb-item"><a href="<?= base_url('inbox'); ?>"><?= __('home'); ?></a></li>
+                    <li class="breadcrumb-item active"><?= __('templates'); ?></li>
                 </ol>
             </div>
         </div>
@@ -40,11 +40,11 @@ $templates = $ToryMail->get_list_safe("
     <div class="card-header border-bottom-dashed">
         <div class="d-flex align-items-center justify-content-between">
             <h5 class="card-title mb-0">
-                <i class="ri-file-copy-line me-1 align-bottom text-primary"></i> Email Templates
+                <i class="ri-file-copy-line me-1 align-bottom text-primary"></i> <?= __('email_templates'); ?>
                 <span class="badge bg-primary-subtle text-primary ms-1"><?= count($templates); ?></span>
             </h5>
             <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#templateModal" onclick="resetTemplateForm()">
-                <i class="ri-add-line me-1"></i> Add Template
+                <i class="ri-add-line me-1"></i> <?= __('add_template'); ?>
             </button>
         </div>
     </div>
@@ -57,18 +57,18 @@ $templates = $ToryMail->get_list_safe("
                     <i class="ri-file-copy-line"></i>
                 </div>
             </div>
-            <h5 class="fs-16 text-muted">No templates yet</h5>
-            <p class="text-muted fs-13">Create reusable email templates to save time composing emails.</p>
+            <h5 class="fs-16 text-muted"><?= __('no_templates'); ?></h5>
+            <p class="text-muted fs-13"><?= __('no_templates_hint'); ?></p>
         </div>
         <?php else: ?>
         <div class="table-responsive">
             <table class="table table-hover table-nowrap align-middle mb-0">
                 <thead class="table-light">
                     <tr>
-                        <th>Template Name</th>
-                        <th>Subject</th>
-                        <th>Last Updated</th>
-                        <th style="width:140px;">Actions</th>
+                        <th><?= __('template_name'); ?></th>
+                        <th><?= __('subject'); ?></th>
+                        <th><?= __('last_updated'); ?></th>
+                        <th style="width:140px;"><?= __('actions'); ?></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -79,13 +79,13 @@ $templates = $ToryMail->get_list_safe("
                         <td class="text-muted fs-12"><?= time_ago($tpl['updated_at']); ?></td>
                         <td>
                             <div class="d-flex gap-1">
-                                <a href="<?= base_url('compose?template=' . $tpl['id']); ?>" class="btn btn-soft-success btn-sm" title="Use template">
+                                <a href="<?= base_url('compose?template=' . $tpl['id']); ?>" class="btn btn-soft-success btn-sm" title="<?= __('send'); ?>">
                                     <i class="ri-mail-send-line"></i>
                                 </a>
-                                <button class="btn btn-soft-primary btn-sm" onclick="editTemplate(<?= htmlspecialchars(json_encode($tpl)); ?>)" title="Edit">
+                                <button class="btn btn-soft-primary btn-sm" onclick="editTemplate(<?= htmlspecialchars(json_encode($tpl)); ?>)" title="<?= __('edit'); ?>">
                                     <i class="ri-pencil-line"></i>
                                 </button>
-                                <button class="btn btn-soft-danger btn-sm" onclick="deleteTemplate(<?= $tpl['id']; ?>)" title="Delete">
+                                <button class="btn btn-soft-danger btn-sm" onclick="deleteTemplate(<?= $tpl['id']; ?>)" title="<?= __('delete'); ?>">
                                     <i class="ri-delete-bin-line"></i>
                                 </button>
                             </div>
@@ -104,22 +104,22 @@ $templates = $ToryMail->get_list_safe("
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="templateModalTitle">Add Template</h5>
+                <h5 class="modal-title" id="templateModalTitle"><?= __('add_template'); ?></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <form id="templateForm">
                     <input type="hidden" name="template_id" id="tplId">
                     <div class="mb-3">
-                        <label class="form-label">Template Name <span class="text-danger">*</span></label>
-                        <input type="text" name="name" id="tplName" class="form-control" placeholder="e.g., Welcome Email" required>
+                        <label class="form-label"><?= __('template_name'); ?> <span class="text-danger">*</span></label>
+                        <input type="text" name="name" id="tplName" class="form-control" placeholder="<?= __('template_name_placeholder'); ?>" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Subject</label>
-                        <input type="text" name="subject" id="tplSubject" class="form-control" placeholder="Email subject line">
+                        <label class="form-label"><?= __('subject'); ?></label>
+                        <input type="text" name="subject" id="tplSubject" class="form-control" placeholder="<?= __('subject_placeholder_tpl'); ?>">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Body (HTML)</label>
+                        <label class="form-label"><?= __('body_html'); ?></label>
                         <div class="border rounded-top px-2 py-1 bg-light d-flex gap-1">
                             <button type="button" class="btn btn-soft-secondary btn-sm" onclick="tplExecCmd('bold')"><i class="ri-bold"></i></button>
                             <button type="button" class="btn btn-soft-secondary btn-sm" onclick="tplExecCmd('italic')"><i class="ri-italic"></i></button>
@@ -129,13 +129,13 @@ $templates = $ToryMail->get_list_safe("
                         <div id="tplBody" contenteditable="true"
                              class="form-control rounded-top-0"
                              style="min-height:250px;font-size:14px;line-height:1.7;"></div>
-                        <input type="hidden" name="body" id="tplBodyInput">
+                        <input type="hidden" name="body_html" id="tplBodyInput">
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-ghost-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="saveTemplateBtn">Save Template</button>
+                <button type="button" class="btn btn-ghost-secondary" data-bs-dismiss="modal"><?= __('cancel'); ?></button>
+                <button type="button" class="btn btn-primary" id="saveTemplateBtn"><?= __('save_template'); ?></button>
             </div>
         </div>
     </div>
@@ -148,7 +148,7 @@ function tplExecCmd(cmd) {
 }
 
 function resetTemplateForm() {
-    $('#templateModalTitle').text('Add Template');
+    $('#templateModalTitle').text('<?= __("add_template"); ?>');
     $('#tplId').val('');
     $('#tplName').val('');
     $('#tplSubject').val('');
@@ -156,11 +156,11 @@ function resetTemplateForm() {
 }
 
 function editTemplate(tpl) {
-    $('#templateModalTitle').text('Edit Template');
+    $('#templateModalTitle').text('<?= __("edit_template"); ?>');
     $('#tplId').val(tpl.id);
     $('#tplName').val(tpl.name || '');
     $('#tplSubject').val(tpl.subject || '');
-    $('#tplBody').html(tpl.body || '');
+    $('#tplBody').html(tpl.body_html || '');
     new bootstrap.Modal(document.getElementById('templateModal')).show();
 }
 
@@ -168,29 +168,28 @@ $('#saveTemplateBtn').on('click', function() {
     $('#tplBodyInput').val($('#tplBody').html());
     var data = $('#templateForm').serialize();
     var isEdit = !!$('#tplId').val();
-    data += '&action=' + (isEdit ? 'update' : 'create');
+    var act = isEdit ? 'edit' : 'add';
 
-    $.post('<?= base_url("ajaxs/user/templates.php"); ?>', data, function(res) {
+    $.post('<?= base_url("ajaxs/user/templates.php"); ?>?action=' + act, data, function(res) {
         if (res.success) {
-            tmToast('success', res.message || 'Template saved!');
+            tmToast('success', res.message || '<?= __("template_saved"); ?>');
             setTimeout(function() { location.reload(); }, 800);
         } else {
-            tmToast('error', res.message || 'Failed to save template.');
+            tmToast('error', res.message || '<?= __("template_save_fail"); ?>');
         }
     }, 'json');
 });
 
 function deleteTemplate(id) {
-    tmConfirm('Delete this template?', 'This action cannot be undone.', function() {
-        $.post('<?= base_url("ajaxs/user/templates.php"); ?>', {
-            action: 'delete',
+    tmConfirm('<?= __("delete_template"); ?>', '<?= __("delete_template_desc"); ?>', function() {
+        $.post('<?= base_url("ajaxs/user/templates.php"); ?>?action=delete', {
             template_id: id
         }, function(res) {
             if (res.success) {
-                tmToast('success', 'Template deleted.');
+                tmToast('success', '<?= __("template_deleted"); ?>');
                 setTimeout(function() { location.reload(); }, 800);
             } else {
-                tmToast('error', res.message || 'Failed to delete template.');
+                tmToast('error', res.message || '<?= __("template_delete_fail"); ?>');
             }
         }, 'json');
     });

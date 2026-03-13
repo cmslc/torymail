@@ -1,11 +1,11 @@
 <?php
 $body = [
-    'title' => 'Đăng nhập - Torymail',
-    'desc' => 'Đăng nhập vào hệ thống email Torymail'
+    'title' => __('login_title'),
+    'desc' => __('login_subtitle')
 ];
 ?>
 <!doctype html>
-<html lang="vi" data-bs-theme="light">
+<html lang="<?= current_lang() ?>" data-bs-theme="light">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
@@ -37,7 +37,7 @@ $body = [
                                     <h3 class="text-white"><i class="ri-mail-line"></i> Torymail</h3>
                                 </a>
                             </div>
-                            <p class="mt-2 fs-15 fw-medium">Hệ thống email chuyên nghiệp</p>
+                            <p class="mt-2 fs-15 fw-medium"><?= __('system_tagline') ?></p>
                         </div>
                     </div>
                 </div>
@@ -47,8 +47,8 @@ $body = [
                         <div class="card mt-4">
                             <div class="card-body p-4">
                                 <div class="text-center mt-2">
-                                    <h5 class="text-primary">Chào mừng trở lại!</h5>
-                                    <p class="text-muted">Đăng nhập để tiếp tục sử dụng Torymail.</p>
+                                    <h5 class="text-primary"><?= __('login_welcome') ?></h5>
+                                    <p class="text-muted"><?= __('login_desc') ?></p>
                                 </div>
 
                                 <div id="alert-box"></div>
@@ -56,17 +56,17 @@ $body = [
                                 <div class="p-2 mt-4">
                                     <form id="loginForm" autocomplete="off">
                                         <div class="mb-3">
-                                            <label for="email" class="form-label">Email</label>
-                                            <input type="email" name="email" class="form-control" id="email" placeholder="Nhập email" required>
+                                            <label for="email" class="form-label"><?= __('email') ?></label>
+                                            <input type="email" name="email" class="form-control" id="email" placeholder="<?= __('email_placeholder') ?>" required>
                                         </div>
 
                                         <div class="mb-3">
                                             <div class="float-end">
-                                                <a href="<?= base_url('auth/forgot-password') ?>" class="text-muted">Quên mật khẩu?</a>
+                                                <a href="<?= base_url('auth/forgot-password') ?>" class="text-muted"><?= __('forgot_password') ?></a>
                                             </div>
-                                            <label for="password" class="form-label">Mật khẩu</label>
+                                            <label for="password" class="form-label"><?= __('password') ?></label>
                                             <div class="position-relative auth-pass-inputgroup mb-3">
-                                                <input type="password" name="password" class="form-control pe-5" id="password" placeholder="Nhập mật khẩu" required>
+                                                <input type="password" name="password" class="form-control pe-5" id="password" placeholder="<?= __('password_placeholder') ?>" required>
                                                 <button class="btn btn-link position-absolute end-0 top-0 text-decoration-none text-muted password-addon" type="button" id="password-addon">
                                                     <i class="ri-eye-fill align-middle"></i>
                                                 </button>
@@ -75,11 +75,11 @@ $body = [
 
                                         <div class="form-check">
                                             <input class="form-check-input" type="checkbox" name="remember" id="remember">
-                                            <label class="form-check-label" for="remember">Ghi nhớ đăng nhập</label>
+                                            <label class="form-check-label" for="remember"><?= __('remember_me') ?></label>
                                         </div>
 
                                         <div class="mt-4">
-                                            <button class="btn btn-primary w-100" type="submit">Đăng nhập</button>
+                                            <button class="btn btn-primary w-100" type="submit"><?= __('login') ?></button>
                                         </div>
                                     </form>
                                 </div>
@@ -87,7 +87,7 @@ $body = [
                         </div>
 
                         <div class="mt-4 text-center">
-                            <p class="mb-0">Chưa có tài khoản? <a href="<?= base_url('auth/register') ?>" class="fw-semibold text-primary text-decoration-underline">Đăng ký ngay</a></p>
+                            <p class="mb-0"><?= __('no_account') ?> <a href="<?= base_url('auth/register') ?>" class="fw-semibold text-primary text-decoration-underline"><?= __('register_now') ?></a></p>
                         </div>
                     </div>
                 </div>
@@ -136,7 +136,7 @@ $body = [
     $('#loginForm').submit(function(e) {
         e.preventDefault();
         var btn = $(this).find('button[type=submit]');
-        btn.prop('disabled', true).html('<i class="ri-loader-4-line ri-spin align-middle me-1"></i> Đang xử lý...');
+        btn.prop('disabled', true).html('<i class="ri-loader-4-line ri-spin align-middle me-1"></i> <?= __('processing') ?>');
 
         $.ajax({
             url: '<?= base_url('ajaxs/user/auth.php?action=login') ?>',
@@ -148,12 +148,12 @@ $body = [
                     window.location.href = res.redirect || '<?= base_url('inbox') ?>';
                 } else {
                     $('#alert-box').html('<div class="alert alert-danger alert-dismissible fade show"><i class="ri-error-warning-line me-2"></i>' + res.message + '<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>');
-                    btn.prop('disabled', false).html('Đăng nhập');
+                    btn.prop('disabled', false).html('<?= __('login') ?>');
                 }
             },
             error: function() {
-                $('#alert-box').html('<div class="alert alert-danger">Lỗi kết nối server</div>');
-                btn.prop('disabled', false).html('Đăng nhập');
+                $('#alert-box').html('<div class="alert alert-danger"><?= __('server_error') ?></div>');
+                btn.prop('disabled', false).html('<?= __('login') ?>');
             }
         });
     });

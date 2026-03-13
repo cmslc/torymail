@@ -43,6 +43,9 @@ if ($settingsRows) {
     }
 }
 
+// Load language
+load_language();
+
 // Route handling
 $module = isset($_GET['module']) ? preg_replace('/[^a-zA-Z0-9_-]/', '', $_GET['module']) : 'user';
 $action = isset($_GET['action']) ? preg_replace('/[^a-zA-Z0-9_-]/', '', $_GET['action']) : 'inbox';

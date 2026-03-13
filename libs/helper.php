@@ -5,6 +5,46 @@
  */
 
 // ============================================================
+// Language / i18n
+// ============================================================
+
+/**
+ * Get translation string
+ */
+function __($key, $replacements = [])
+{
+    global $_lang;
+    $text = $_lang[$key] ?? $key;
+    foreach ($replacements as $k => $v) {
+        $text = str_replace(':' . $k, $v, $text);
+    }
+    return $text;
+}
+
+/**
+ * Get current language code
+ */
+function current_lang()
+{
+    return $_SESSION['lang'] ?? 'en';
+}
+
+/**
+ * Load language file
+ */
+function load_language($lang = null)
+{
+    global $_lang;
+    if (!$lang) $lang = $_SESSION['lang'] ?? 'en';
+    $file = __DIR__ . '/../langs/' . preg_replace('/[^a-z]/', '', $lang) . '.php';
+    if (file_exists($file)) {
+        $_lang = require $file;
+    } else {
+        $_lang = require __DIR__ . '/../langs/en.php';
+    }
+}
+
+// ============================================================
 // URL & Path Helpers
 // ============================================================
 
@@ -208,12 +248,12 @@ function json_response($data, $code = 200)
 
 function success_response($message, $data = [])
 {
-    json_response(array_merge(['status' => 'success', 'message' => $message], $data));
+    json_response(array_merge(['status' => 'success', 'success' => true, 'message' => $message], $data));
 }
 
-function error_response($message, $code = 400)
+function error_response($message, $code = 400, $extra = [])
 {
-    json_response(['status' => 'error', 'message' => $message], $code);
+    json_response(array_merge(['status' => 'error', 'success' => false, 'message' => $message], $extra), $code);
 }
 
 // ============================================================

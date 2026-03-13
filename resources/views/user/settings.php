@@ -4,8 +4,8 @@ if (!defined('IN_SITE')) {
 }
 
 $body = [
-    'title' => 'Settings - Torymail',
-    'desc'  => 'Account settings',
+    'title' => __('settings_title'),
+    'desc'  => __('account_settings'),
 ];
 $body['header'] = '';
 $body['footer'] = '';
@@ -21,36 +21,29 @@ if (!in_array($activeTab, $validTabs)) {
 
 // Fetch user's mailboxes for signature/autoreply tabs
 $userMailboxes = $ToryMail->get_list_safe("
-    SELECT `id`, `email`, `display_name`, `signature`, `auto_reply_enabled`, `auto_reply_subject`, `auto_reply_message`
+    SELECT `id`, `email_address`, `display_name`, `auto_reply_enabled`, `auto_reply_subject`, `auto_reply_message`
     FROM `mailboxes`
     WHERE `user_id` = ? AND `status` = 'active'
-    ORDER BY `email` ASC
+    ORDER BY `email_address` ASC
 ", [$getUser['id']]);
 
-// User preferences
-$userPrefs = $ToryMail->get_row_safe("
-    SELECT * FROM `user_settings`
-    WHERE `user_id` = ?
-", [$getUser['id']]);
-
-if (!$userPrefs) {
-    $userPrefs = [
-        'emails_per_page' => 20,
-        'default_mailbox_id' => '',
-        'timezone' => 'UTC',
-    ];
-}
+// User preferences (stored on users table)
+$userPrefs = [
+    'emails_per_page' => 20,
+    'default_mailbox_id' => '',
+    'timezone' => $getUser['timezone'] ?? 'UTC',
+];
 ?>
 
 <!-- Breadcrumb -->
 <div class="row">
     <div class="col-12">
         <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-            <h4 class="mb-sm-0">Settings</h4>
+            <h4 class="mb-sm-0"><?= __('settings'); ?></h4>
             <div class="page-title-right">
                 <ol class="breadcrumb m-0">
-                    <li class="breadcrumb-item"><a href="<?= base_url('inbox'); ?>">Home</a></li>
-                    <li class="breadcrumb-item active">Settings</li>
+                    <li class="breadcrumb-item"><a href="<?= base_url('inbox'); ?>"><?= __('home'); ?></a></li>
+                    <li class="breadcrumb-item active"><?= __('settings'); ?></li>
                 </ol>
             </div>
         </div>
@@ -60,7 +53,7 @@ if (!$userPrefs) {
 <div class="card">
     <div class="card-header">
         <h5 class="card-title mb-0">
-            <i class="ri-settings-3-line me-1 align-bottom text-primary"></i> Settings
+            <i class="ri-settings-3-line me-1 align-bottom text-primary"></i> <?= __('settings'); ?>
         </h5>
     </div>
 
@@ -69,27 +62,27 @@ if (!$userPrefs) {
         <ul class="nav nav-tabs nav-tabs-custom" role="tablist">
             <li class="nav-item">
                 <a class="nav-link <?= $activeTab === 'profile' ? 'active' : ''; ?>" href="<?= base_url('settings?tab=profile'); ?>">
-                    <i class="ri-user-line me-1 align-bottom"></i> Profile
+                    <i class="ri-user-line me-1 align-bottom"></i> <?= __('profile'); ?>
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link <?= $activeTab === 'security' ? 'active' : ''; ?>" href="<?= base_url('settings?tab=security'); ?>">
-                    <i class="ri-lock-line me-1 align-bottom"></i> Security
+                    <i class="ri-lock-line me-1 align-bottom"></i> <?= __('security'); ?>
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link <?= $activeTab === 'signature' ? 'active' : ''; ?>" href="<?= base_url('settings?tab=signature'); ?>">
-                    <i class="ri-pen-nib-line me-1 align-bottom"></i> Signature
+                    <i class="ri-pen-nib-line me-1 align-bottom"></i> <?= __('signature'); ?>
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link <?= $activeTab === 'autoreply' ? 'active' : ''; ?>" href="<?= base_url('settings?tab=autoreply'); ?>">
-                    <i class="ri-reply-line me-1 align-bottom"></i> Auto-reply
+                    <i class="ri-reply-line me-1 align-bottom"></i> <?= __('auto_reply'); ?>
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link <?= $activeTab === 'display' ? 'active' : ''; ?>" href="<?= base_url('settings?tab=display'); ?>">
-                    <i class="ri-palette-line me-1 align-bottom"></i> Display
+                    <i class="ri-palette-line me-1 align-bottom"></i> <?= __('display'); ?>
                 </a>
             </li>
         </ul>
@@ -102,20 +95,20 @@ if (!$userPrefs) {
             <div class="row">
                 <div class="col-lg-8">
                     <div class="mb-3">
-                        <label class="form-label fw-medium">Username</label>
-                        <input type="text" class="form-control" value="<?= htmlspecialchars($getUser['username'] ?? ''); ?>" disabled>
-                        <div class="form-text">Username cannot be changed.</div>
+                        <label class="form-label fw-medium"><?= __('username'); ?></label>
+                        <input type="text" class="form-control" value="<?= htmlspecialchars($getUser['email'] ?? ''); ?>" disabled>
+                        <div class="form-text"><?= __('username_note'); ?></div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label fw-medium">Full Name</label>
-                        <input type="text" name="full_name" class="form-control" value="<?= htmlspecialchars($getUser['full_name'] ?? ''); ?>" placeholder="Your full name">
+                        <label class="form-label fw-medium"><?= __('fullname'); ?></label>
+                        <input type="text" name="fullname" class="form-control" value="<?= htmlspecialchars($getUser['fullname'] ?? ''); ?>" placeholder="<?= __('your_fullname'); ?>">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label fw-medium">Email</label>
+                        <label class="form-label fw-medium"><?= __('email'); ?></label>
                         <input type="email" class="form-control" value="<?= htmlspecialchars($getUser['email'] ?? ''); ?>" disabled>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label fw-medium">Timezone</label>
+                        <label class="form-label fw-medium"><?= __('timezone_label'); ?></label>
                         <select name="timezone" class="form-select">
                             <?php
                             $timezones = timezone_identifiers_list();
@@ -127,18 +120,18 @@ if (!$userPrefs) {
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label fw-medium">Avatar URL</label>
+                        <label class="form-label fw-medium"><?= __('avatar_url'); ?></label>
                         <input type="url" name="avatar" class="form-control" value="<?= htmlspecialchars($getUser['avatar'] ?? ''); ?>" placeholder="https://example.com/avatar.jpg">
-                        <div class="form-text">Enter a URL to your avatar image.</div>
+                        <div class="form-text"><?= __('avatar_hint'); ?></div>
                     </div>
                     <button type="button" class="btn btn-primary" onclick="saveSettings('profile')">
-                        <i class="ri-save-line me-1"></i> Save Profile
+                        <i class="ri-save-line me-1"></i> <?= __('save_profile'); ?>
                     </button>
                 </div>
                 <div class="col-lg-4 text-center">
                     <div class="avatar-lg mx-auto mb-3">
                         <div class="avatar-title bg-primary-subtle text-primary rounded-circle fs-24 fw-semibold">
-                            <?= strtoupper(substr($getUser['username'] ?? $getUser['email'] ?? 'U', 0, 1)); ?>
+                            <?= strtoupper(substr($getUser['email'] ?? $getUser['email'] ?? 'U', 0, 1)); ?>
                         </div>
                     </div>
                     <p class="text-muted fs-13">
@@ -153,27 +146,27 @@ if (!$userPrefs) {
         <?php if ($activeTab === 'security'): ?>
         <div class="row">
             <div class="col-lg-6">
-                <h6 class="fw-semibold mb-3">Change Password</h6>
+                <h6 class="fw-semibold mb-3"><?= __('change_password'); ?></h6>
                 <form id="securityForm">
                     <div class="mb-3">
-                        <label class="form-label">Current Password</label>
-                        <input type="password" name="current_password" class="form-control" required>
+                        <label class="form-label"><?= __('current_password'); ?></label>
+                        <input type="password" name="old_password" class="form-control" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">New Password</label>
+                        <label class="form-label"><?= __('new_password_label'); ?></label>
                         <input type="password" name="new_password" class="form-control" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Confirm New Password</label>
+                        <label class="form-label"><?= __('confirm_new_password'); ?></label>
                         <input type="password" name="confirm_password" class="form-control" required>
                     </div>
                     <button type="button" class="btn btn-primary" onclick="saveSettings('security')">
-                        <i class="ri-lock-line me-1"></i> Update Password
+                        <i class="ri-lock-line me-1"></i> <?= __('update_password'); ?>
                     </button>
                 </form>
             </div>
             <div class="col-lg-6">
-                <h6 class="fw-semibold mb-3">Two-Factor Authentication</h6>
+                <h6 class="fw-semibold mb-3"><?= __('two_factor'); ?></h6>
                 <div class="card border">
                     <div class="card-body text-center">
                         <?php if ($getUser['two_factor_enabled'] ?? false): ?>
@@ -182,10 +175,10 @@ if (!$userPrefs) {
                                 <i class="ri-shield-check-fill"></i>
                             </div>
                         </div>
-                        <h6 class="fw-semibold">2FA is enabled</h6>
-                        <p class="text-muted fs-13 mb-3">Your account is protected with two-factor authentication.</p>
+                        <h6 class="fw-semibold"><?= __('2fa_enabled'); ?></h6>
+                        <p class="text-muted fs-13 mb-3"><?= __('2fa_enabled_desc'); ?></p>
                         <button class="btn btn-soft-danger btn-sm" onclick="toggle2FA('disable')">
-                            <i class="ri-shield-line me-1"></i> Disable 2FA
+                            <i class="ri-shield-line me-1"></i> <?= __('disable_2fa'); ?>
                         </button>
                         <?php else: ?>
                         <div class="avatar-md mx-auto mb-3">
@@ -193,10 +186,10 @@ if (!$userPrefs) {
                                 <i class="ri-shield-line"></i>
                             </div>
                         </div>
-                        <h6 class="fw-semibold">2FA is not enabled</h6>
-                        <p class="text-muted fs-13 mb-3">Add an extra layer of security to your account.</p>
+                        <h6 class="fw-semibold"><?= __('2fa_disabled'); ?></h6>
+                        <p class="text-muted fs-13 mb-3"><?= __('2fa_disabled_desc'); ?></p>
                         <button class="btn btn-primary btn-sm" onclick="toggle2FA('enable')">
-                            <i class="ri-shield-check-line me-1"></i> Enable 2FA
+                            <i class="ri-shield-check-line me-1"></i> <?= __('enable_2fa'); ?>
                         </button>
                         <?php endif; ?>
                     </div>
@@ -209,28 +202,28 @@ if (!$userPrefs) {
         <?php if ($activeTab === 'signature'): ?>
         <?php if (empty($userMailboxes)): ?>
         <div class="text-center py-4">
-            <p class="text-muted">No active mailboxes. <a href="<?= base_url('mailboxes'); ?>">Create a mailbox</a> first.</p>
+            <p class="text-muted"><?= __('no_mailbox_msg'); ?></p>
         </div>
         <?php else: ?>
         <div class="mb-3">
-            <label class="form-label fw-medium">Select Mailbox</label>
+            <label class="form-label fw-medium"><?= __('select_mailbox'); ?></label>
             <select id="signatureMailbox" class="form-select" style="max-width:350px;">
                 <?php foreach ($userMailboxes as $mb): ?>
-                <option value="<?= $mb['id']; ?>" data-signature="<?= htmlspecialchars($mb['signature'] ?? ''); ?>">
-                    <?= htmlspecialchars($mb['email']); ?>
+                <option value="<?= $mb['id']; ?>">
+                    <?= htmlspecialchars($mb['email_address']); ?>
                 </option>
                 <?php endforeach; ?>
             </select>
         </div>
         <div class="mb-3">
-            <label class="form-label fw-medium">Email Signature (HTML)</label>
+            <label class="form-label fw-medium"><?= __('email_signature'); ?></label>
             <div id="signatureEditor" contenteditable="true"
                  class="form-control" style="min-height:200px;font-size:14px;">
-                <?= htmlspecialchars($userMailboxes[0]['signature'] ?? ''); ?>
+                <?= htmlspecialchars($getUser['signature'] ?? ''); ?>
             </div>
         </div>
         <button type="button" class="btn btn-primary" onclick="saveSignature()">
-            <i class="ri-save-line me-1"></i> Save Signature
+            <i class="ri-save-line me-1"></i> <?= __('save_signature'); ?>
         </button>
         <?php endif; ?>
         <?php endif; ?>
@@ -239,18 +232,18 @@ if (!$userPrefs) {
         <?php if ($activeTab === 'autoreply'): ?>
         <?php if (empty($userMailboxes)): ?>
         <div class="text-center py-4">
-            <p class="text-muted">No active mailboxes. <a href="<?= base_url('mailboxes'); ?>">Create a mailbox</a> first.</p>
+            <p class="text-muted"><?= __('no_mailbox_msg'); ?></p>
         </div>
         <?php else: ?>
         <div class="mb-3">
-            <label class="form-label fw-medium">Select Mailbox</label>
+            <label class="form-label fw-medium"><?= __('select_mailbox'); ?></label>
             <select id="autoreplyMailbox" class="form-select" style="max-width:350px;">
                 <?php foreach ($userMailboxes as $mb): ?>
                 <option value="<?= $mb['id']; ?>"
                         data-enabled="<?= $mb['auto_reply_enabled'] ?? 0; ?>"
                         data-subject="<?= htmlspecialchars($mb['auto_reply_subject'] ?? ''); ?>"
                         data-message="<?= htmlspecialchars($mb['auto_reply_message'] ?? ''); ?>">
-                    <?= htmlspecialchars($mb['email']); ?>
+                    <?= htmlspecialchars($mb['email_address']); ?>
                 </option>
                 <?php endforeach; ?>
             </select>
@@ -261,22 +254,22 @@ if (!$userPrefs) {
                 <div class="form-check form-switch">
                     <input class="form-check-input" type="checkbox" id="arEnabled" name="auto_reply_enabled"
                            <?= ($userMailboxes[0]['auto_reply_enabled'] ?? 0) ? 'checked' : ''; ?>>
-                    <label class="form-check-label fw-medium" for="arEnabled">Enable Auto-reply</label>
+                    <label class="form-check-label fw-medium" for="arEnabled"><?= __('enable_auto_reply'); ?></label>
                 </div>
             </div>
             <div class="mb-3">
-                <label class="form-label">Subject</label>
+                <label class="form-label"><?= __('subject'); ?></label>
                 <input type="text" name="auto_reply_subject" id="arSubject" class="form-control"
                        value="<?= htmlspecialchars($userMailboxes[0]['auto_reply_subject'] ?? ''); ?>"
-                       placeholder="I'm currently out of office">
+                       placeholder="<?= __('auto_reply_subject'); ?>">
             </div>
             <div class="mb-3">
-                <label class="form-label">Message</label>
+                <label class="form-label"><?= __('message'); ?></label>
                 <textarea name="auto_reply_message" id="arMessage" class="form-control" rows="6"
-                          placeholder="Thank you for your email. I am currently out of the office..."><?= htmlspecialchars($userMailboxes[0]['auto_reply_message'] ?? ''); ?></textarea>
+                          placeholder="<?= __('auto_reply_msg'); ?>"><?= htmlspecialchars($userMailboxes[0]['auto_reply_message'] ?? ''); ?></textarea>
             </div>
             <button type="button" class="btn btn-primary" onclick="saveAutoReply()">
-                <i class="ri-save-line me-1"></i> Save Auto-reply
+                <i class="ri-save-line me-1"></i> <?= __('save_auto_reply'); ?>
             </button>
         </form>
         <?php endif; ?>
@@ -288,7 +281,7 @@ if (!$userPrefs) {
             <div class="row">
                 <div class="col-lg-6">
                     <div class="mb-3">
-                        <label class="form-label fw-medium">Emails Per Page</label>
+                        <label class="form-label fw-medium"><?= __('emails_per_page'); ?></label>
                         <select name="emails_per_page" class="form-select">
                             <?php foreach ([10, 20, 30, 50, 100] as $n): ?>
                             <option value="<?= $n; ?>" <?= ($userPrefs['emails_per_page'] ?? 20) == $n ? 'selected' : ''; ?>><?= $n; ?></option>
@@ -296,18 +289,18 @@ if (!$userPrefs) {
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label fw-medium">Default Mailbox</label>
+                        <label class="form-label fw-medium"><?= __('default_mailbox'); ?></label>
                         <select name="default_mailbox_id" class="form-select">
-                            <option value="">No default</option>
+                            <option value=""><?= __('no_default'); ?></option>
                             <?php foreach ($userMailboxes as $mb): ?>
                             <option value="<?= $mb['id']; ?>" <?= ($userPrefs['default_mailbox_id'] ?? '') == $mb['id'] ? 'selected' : ''; ?>>
-                                <?= htmlspecialchars($mb['email']); ?>
+                                <?= htmlspecialchars($mb['email_address']); ?>
                             </option>
                             <?php endforeach; ?>
                         </select>
                     </div>
                     <button type="button" class="btn btn-primary" onclick="saveSettings('display')">
-                        <i class="ri-save-line me-1"></i> Save Display Settings
+                        <i class="ri-save-line me-1"></i> <?= __('save_display'); ?>
                     </button>
                 </div>
             </div>
@@ -320,50 +313,45 @@ if (!$userPrefs) {
 function saveSettings(section) {
     var formId = section + 'Form';
     var data = $('#' + formId).serialize();
-    data += '&action=save_' + section;
+    var actionMap = {'profile': 'update_profile', 'security': 'change_password', 'display': 'update_profile'};
+    var act = actionMap[section] || 'update_profile';
 
-    $.post('<?= base_url("ajaxs/user/settings.php"); ?>', data, function(res) {
+    $.post('<?= base_url("ajaxs/user/settings.php"); ?>?action=' + act, data, function(res) {
         if (res.success) {
-            tmToast('success', res.message || 'Settings saved!');
+            tmToast('success', res.message || '<?= __("settings_saved"); ?>');
         } else {
-            tmToast('error', res.message || 'Failed to save settings.');
+            tmToast('error', res.message || '<?= __("settings_failed"); ?>');
         }
     }, 'json');
 }
 
 function toggle2FA(action) {
-    $.post('<?= base_url("ajaxs/user/settings.php"); ?>', {
-        action: 'toggle_2fa',
+    $.post('<?= base_url("ajaxs/user/settings.php"); ?>?action=toggle_2fa', {
         mode: action
     }, function(res) {
         if (res.success) {
-            tmToast('success', res.message || '2FA updated!');
+            tmToast('success', res.message || '<?= __("settings_saved"); ?>');
             setTimeout(function() { location.reload(); }, 1000);
         } else {
-            tmToast('error', res.message || 'Failed to update 2FA.');
+            tmToast('error', res.message || '<?= __("settings_failed"); ?>');
         }
     }, 'json');
 }
 
-// Signature mailbox switcher
-$('#signatureMailbox').on('change', function() {
-    var sig = $(this).find('option:selected').data('signature') || '';
-    $('#signatureEditor').html(sig);
-});
+// Signature is user-level, not per-mailbox
 
 function saveSignature() {
     var mailboxId = $('#signatureMailbox').val();
     var signature = $('#signatureEditor').html();
 
-    $.post('<?= base_url("ajaxs/user/settings.php"); ?>', {
-        action: 'save_signature',
+    $.post('<?= base_url("ajaxs/user/settings.php"); ?>?action=update_signature', {
         mailbox_id: mailboxId,
         signature: signature
     }, function(res) {
         if (res.success) {
-            tmToast('success', 'Signature saved!');
+            tmToast('success', '<?= __("settings_saved"); ?>');
         } else {
-            tmToast('error', res.message || 'Failed to save signature.');
+            tmToast('error', res.message || '<?= __("settings_failed"); ?>');
         }
     }, 'json');
 }
@@ -379,16 +367,15 @@ $('#autoreplyMailbox').on('change', function() {
 
 function saveAutoReply() {
     var data = $('#autoreplyForm').serialize();
-    data += '&action=save_autoreply';
     if (!$('#arEnabled').is(':checked')) {
         data += '&auto_reply_enabled=0';
     }
 
-    $.post('<?= base_url("ajaxs/user/settings.php"); ?>', data, function(res) {
+    $.post('<?= base_url("ajaxs/user/mailboxes.php"); ?>?action=set_auto_reply', data, function(res) {
         if (res.success) {
-            tmToast('success', 'Auto-reply settings saved!');
+            tmToast('success', '<?= __("settings_saved"); ?>');
         } else {
-            tmToast('error', res.message || 'Failed to save auto-reply settings.');
+            tmToast('error', res.message || '<?= __("settings_failed"); ?>');
         }
     }, 'json');
 }

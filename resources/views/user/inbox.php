@@ -11,8 +11,18 @@ $page = max(1, intval($_GET['page'] ?? 1));
 $perPage = 20;
 $offset = ($page - 1) * $perPage;
 
+$folderNames = [
+    'inbox'   => __('inbox'),
+    'starred' => __('starred'),
+    'sent'    => __('sent'),
+    'drafts'  => __('drafts'),
+    'spam'    => __('spam'),
+    'trash'   => __('trash'),
+    'archive' => __('archive'),
+];
+
 $body = [
-    'title' => ucfirst($folder) . ' - Torymail',
+    'title' => ($folderNames[$folder] ?? ucfirst($folder)) . ' - Torymail',
     'desc'  => 'Torymail email management',
 ];
 $body['header'] = '';
@@ -29,13 +39,13 @@ if (!in_array($folder, $validFolders)) {
 
 // Fetch user's mailboxes for selector
 $userMailboxes = $ToryMail->get_list_safe("
-    SELECT `id`, `email`, `display_name` FROM `mailboxes`
+    SELECT `id`, `email_address`, `display_name` FROM `mailboxes`
     WHERE `user_id` = ? AND `status` = 'active'
-    ORDER BY `email` ASC
+    ORDER BY `email_address` ASC
 ", [$getUser['id']]);
 
 // Build query
-$where = ["e.`user_id` = ?"];
+$where = ["e.`mailbox_id` IN (SELECT id FROM mailboxes WHERE user_id = ?)"];
 $params = [$getUser['id']];
 
 if ($folder === 'starred') {
@@ -52,7 +62,7 @@ if ($mailboxFilter) {
 }
 
 if ($search) {
-    $where[] = "(e.`subject` LIKE ? OR e.`from_name` LIKE ? OR e.`from_email` LIKE ? OR e.`body_text` LIKE ?)";
+    $where[] = "(e.`subject` LIKE ? OR e.`from_name` LIKE ? OR e.`from_address` LIKE ? OR e.`body_text` LIKE ?)";
     $searchTerm = '%' . $search . '%';
     $params[] = $searchTerm;
     $params[] = $searchTerm;
@@ -61,7 +71,7 @@ if ($search) {
 }
 
 if ($labelFilter) {
-    $where[] = "EXISTS (SELECT 1 FROM `email_labels` el WHERE el.`email_id` = e.`id` AND el.`label_id` = ?)";
+    $where[] = "EXISTS (SELECT 1 FROM `email_label_map` el WHERE el.`email_id` = e.`id` AND el.`label_id` = ?)";
     $params[] = $labelFilter;
 }
 
@@ -75,7 +85,7 @@ $totalPages = max(1, ceil($totalEmails / $perPage));
 // Fetch emails
 $emails = $ToryMail->get_list_safe("
     SELECT e.*,
-           (SELECT COUNT(*) FROM `attachments` a WHERE a.`email_id` = e.`id`) as attachment_count
+           (SELECT COUNT(*) FROM `email_attachments` a WHERE a.`email_id` = e.`id`) as attachment_count
     FROM `emails` e
     WHERE {$whereClause}
     ORDER BY e.`created_at` DESC
@@ -98,11 +108,11 @@ $folderIcons = [
 <div class="row">
     <div class="col-12">
         <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-            <h4 class="mb-sm-0"><?= ucfirst($folder); ?></h4>
+            <h4 class="mb-sm-0"><?= $folderNames[$folder] ?? ucfirst($folder); ?></h4>
             <div class="page-title-right">
                 <ol class="breadcrumb m-0">
-                    <li class="breadcrumb-item"><a href="<?= base_url('inbox'); ?>">Home</a></li>
-                    <li class="breadcrumb-item active"><?= ucfirst($folder); ?></li>
+                    <li class="breadcrumb-item"><a href="<?= base_url('inbox'); ?>"><?= __('home'); ?></a></li>
+                    <li class="breadcrumb-item active"><?= $folderNames[$folder] ?? ucfirst($folder); ?></li>
                 </ol>
             </div>
         </div>
@@ -114,15 +124,15 @@ $folderIcons = [
         <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
             <h5 class="card-title mb-0">
                 <i class="<?= $folderIcons[$folder] ?? 'ri-inbox-line'; ?> me-1 align-bottom"></i>
-                <?= ucfirst($folder); ?>
+                <?= $folderNames[$folder] ?? ucfirst($folder); ?>
             </h5>
             <div class="d-flex align-items-center gap-2">
                 <?php if (count($userMailboxes) > 1): ?>
                 <select id="mailboxSelector" class="form-select form-select-sm" style="width:220px;">
-                    <option value="">All Mailboxes</option>
+                    <option value=""><?= __('all_mailboxes_filter'); ?></option>
                     <?php foreach ($userMailboxes as $mb): ?>
                     <option value="<?= $mb['id']; ?>" <?= $mailboxFilter == $mb['id'] ? 'selected' : ''; ?>>
-                        <?= htmlspecialchars($mb['email']); ?>
+                        <?= htmlspecialchars($mb['email_address']); ?>
                     </option>
                     <?php endforeach; ?>
                 </select>
@@ -139,7 +149,7 @@ $folderIcons = [
                 <a class="nav-link <?= $folder === $f ? 'active' : ''; ?>"
                    href="<?= base_url('inbox?folder=' . $f . ($mailboxFilter ? '&mailbox=' . $mailboxFilter : '')); ?>">
                     <i class="<?= $folderIcons[$f]; ?> me-1"></i>
-                    <?= ucfirst($f); ?>
+                    <?= $folderNames[$f] ?? ucfirst($f); ?>
                 </a>
             </li>
             <?php endforeach; ?>
@@ -152,31 +162,31 @@ $folderIcons = [
             <div class="form-check fs-15">
                 <input class="form-check-input" type="checkbox" id="selectAll">
             </div>
-            <button class="btn btn-soft-secondary btn-sm" onclick="refreshInbox()" title="Refresh">
+            <button class="btn btn-soft-secondary btn-sm" onclick="refreshInbox()" title="<?= __('refresh'); ?>">
                 <i class="ri-refresh-line"></i>
             </button>
-            <button class="btn btn-soft-secondary btn-sm" onclick="bulkAction('read')" title="Mark as read">
+            <button class="btn btn-soft-secondary btn-sm" onclick="bulkAction('read')" title="<?= __('mark_read'); ?>">
                 <i class="ri-mail-open-line"></i>
             </button>
-            <button class="btn btn-soft-secondary btn-sm" onclick="bulkAction('unread')" title="Mark as unread">
+            <button class="btn btn-soft-secondary btn-sm" onclick="bulkAction('unread')" title="<?= __('mark_unread'); ?>">
                 <i class="ri-mail-unread-line"></i>
             </button>
-            <button class="btn btn-soft-secondary btn-sm" onclick="bulkAction('archive')" title="Archive">
+            <button class="btn btn-soft-secondary btn-sm" onclick="bulkAction('archive')" title="<?= __('archive'); ?>">
                 <i class="ri-archive-line"></i>
             </button>
-            <button class="btn btn-soft-danger btn-sm" onclick="bulkAction('delete')" title="Delete">
+            <button class="btn btn-soft-danger btn-sm" onclick="bulkAction('delete')" title="<?= __('delete'); ?>">
                 <i class="ri-delete-bin-line"></i>
             </button>
 
             <!-- Move dropdown -->
             <div class="dropdown">
                 <button class="btn btn-soft-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown">
-                    <i class="ri-folder-transfer-line me-1"></i> Move
+                    <i class="ri-folder-transfer-line me-1"></i> <?= __('move'); ?>
                 </button>
                 <ul class="dropdown-menu">
                     <?php foreach (['inbox', 'archive', 'spam', 'trash'] as $mf): ?>
                     <li><a class="dropdown-item" href="#" onclick="bulkAction('move','<?= $mf; ?>');return false;">
-                        <i class="<?= $folderIcons[$mf]; ?> me-2 align-bottom"></i> <?= ucfirst($mf); ?>
+                        <i class="<?= $folderIcons[$mf]; ?> me-2 align-bottom"></i> <?= $folderNames[$mf] ?? ucfirst($mf); ?>
                     </a></li>
                     <?php endforeach; ?>
                 </ul>
@@ -185,12 +195,12 @@ $folderIcons = [
             <div class="ms-auto d-flex align-items-center gap-2">
                 <?php if ($search): ?>
                 <span class="badge bg-primary-subtle text-primary">
-                    Search: "<?= htmlspecialchars($search); ?>"
+                    <?= __('search'); ?>: "<?= htmlspecialchars($search); ?>"
                     <a href="<?= base_url('inbox?folder=' . $folder); ?>" class="text-danger ms-1"><i class="ri-close-line"></i></a>
                 </span>
                 <?php endif; ?>
                 <span class="text-muted fs-13">
-                    <?= ($offset + 1); ?>-<?= min($offset + $perPage, $totalEmails); ?> of <?= $totalEmails; ?>
+                    <?= ($offset + 1); ?>-<?= min($offset + $perPage, $totalEmails); ?> / <?= $totalEmails; ?>
                 </span>
             </div>
         </div>
@@ -204,7 +214,7 @@ $folderIcons = [
                     <i class="<?= $folderIcons[$folder] ?? 'ri-inbox-line'; ?>"></i>
                 </div>
             </div>
-            <h5 class="fs-16 text-muted">No emails in <?= $folder; ?></h5>
+            <h5 class="fs-16 text-muted"><?= __('no_emails'); ?></h5>
         </div>
         <?php else: ?>
         <div class="table-responsive">
@@ -225,13 +235,13 @@ $folderIcons = [
                         </td>
                         <td style="width:180px;" onclick="window.location='<?= base_url('read/' . $email['id']); ?>'">
                             <span class="text-truncate d-inline-block" style="max-width:170px;">
-                                <?= htmlspecialchars($email['from_name'] ?: $email['from_email']); ?>
+                                <?= htmlspecialchars($email['from_name'] ?: $email['from_address']); ?>
                             </span>
                         </td>
                         <td onclick="window.location='<?= base_url('read/' . $email['id']); ?>'">
                             <div class="d-flex align-items-center gap-2">
                                 <span class="text-truncate d-inline-block <?= !$email['is_read'] ? 'text-body' : 'text-muted'; ?>" style="max-width:350px;">
-                                    <?= htmlspecialchars($email['subject'] ?: '(No subject)'); ?>
+                                    <?= htmlspecialchars($email['subject'] ?: __('no_subject')); ?>
                                 </span>
                                 <span class="text-muted fw-normal text-truncate d-none d-lg-inline-block" style="max-width:250px;">
                                     - <?= htmlspecialchars(str_truncate($email['body_text'] ?? '', 80)); ?>
@@ -240,7 +250,7 @@ $folderIcons = [
                         </td>
                         <td style="width:30px;" onclick="window.location='<?= base_url('read/' . $email['id']); ?>'">
                             <?php if ($email['attachment_count'] > 0): ?>
-                            <i class="ri-attachment-2 text-muted fs-16" title="<?= $email['attachment_count']; ?> attachment(s)"></i>
+                            <i class="ri-attachment-2 text-muted fs-16" title="<?= $email['attachment_count']; ?> <?= __('attachments'); ?>"></i>
                             <?php endif; ?>
                         </td>
                         <td style="width:80px;" onclick="window.location='<?= base_url('read/' . $email['id']); ?>'">
@@ -330,12 +340,12 @@ function getSelectedIds() {
 function bulkAction(action, target) {
     var ids = getSelectedIds();
     if (ids.length === 0) {
-        tmToast('warning', 'Please select at least one email.');
+        tmToast('warning', '<?= __("select_emails_warning"); ?>');
         return;
     }
 
     if (action === 'delete') {
-        tmConfirm('Delete emails?', 'Selected emails will be moved to trash.', function() {
+        tmConfirm('<?= __("delete_emails_confirm"); ?>', '<?= __("delete_emails_desc"); ?>', function() {
             doBulkAction(action, ids, target);
         });
         return;
@@ -351,10 +361,10 @@ function doBulkAction(action, ids, target) {
         target: target || ''
     }, function(res) {
         if (res.success) {
-            tmToast('success', res.message || 'Done!');
+            tmToast('success', res.message || '<?= __("done"); ?>');
             setTimeout(function() { location.reload(); }, 800);
         } else {
-            tmToast('error', res.message || 'An error occurred.');
+            tmToast('error', res.message || '<?= __("error_occurred"); ?>');
         }
     }, 'json');
 }

@@ -16,6 +16,57 @@ $action = isset($_GET['action']) ? preg_replace('/[^a-zA-Z0-9_-]/', '', $_GET['a
 switch ($action) {
 
     // -------------------------------------------------------
+    // ADD DOMAIN
+    // -------------------------------------------------------
+    case 'add':
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') error_response('Invalid request method', 405);
+        csrf_verify();
+
+        $domain_name = trim(strtolower($_POST['domain_name'] ?? ''));
+        $user_id = intval($_POST['user_id'] ?? 0);
+
+        if (empty($domain_name)) error_response('Domain name is required');
+        if (!preg_match('/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/', $domain_name)) {
+            error_response('Invalid domain name format');
+        }
+        if ($user_id <= 0) error_response('Please select a user');
+
+        // Check user exists
+        $user = $ToryMail->get_row_safe("SELECT id FROM users WHERE id = ?", [$user_id]);
+        if (!$user) error_response('User not found');
+
+        // Check domain not already exists
+        $existing = $ToryMail->get_row_safe("SELECT id FROM domains WHERE domain_name = ?", [$domain_name]);
+        if ($existing) error_response('Domain already exists');
+
+        $auto_verify = intval($_POST['auto_verify'] ?? 0);
+
+        $ToryMail->insert_safe('domains', [
+            'user_id'     => $user_id,
+            'domain_name' => $domain_name,
+            'status'      => $auto_verify ? 'active' : 'pending',
+            'verified_at' => $auto_verify ? gettime() : null,
+            'mx_verified'    => $auto_verify ? 1 : 0,
+            'spf_verified'   => $auto_verify ? 1 : 0,
+            'dkim_verified'  => $auto_verify ? 1 : 0,
+            'dmarc_verified' => $auto_verify ? 1 : 0,
+            'created_at'  => gettime(),
+            'updated_at'  => gettime(),
+        ]);
+
+        $ToryMail->insert_safe('activity_logs', [
+            'user_id'    => $getAdmin['id'],
+            'action'     => 'admin_domain_add',
+            'details'    => 'Admin added domain: ' . $domain_name . ' for user #' . $user_id,
+            'ip_address' => get_client_ip(),
+            'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? '',
+            'created_at' => gettime(),
+        ]);
+
+        success_response('Domain added successfully');
+        break;
+
+    // -------------------------------------------------------
     // LIST
     // -------------------------------------------------------
     case 'list':

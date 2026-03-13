@@ -32,6 +32,9 @@ require_once __DIR__ . '/../libs/helper.php';
 
 $ToryMail = new DB();
 
+// Load language
+load_language();
+
 // Load settings
 $settings = [];
 $settingsRows = $ToryMail->get_list_safe("SELECT * FROM settings", []);

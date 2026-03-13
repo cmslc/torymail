@@ -36,6 +36,21 @@
             </div>
 
             <div class="d-flex align-items-center">
+                <!-- Language Switcher -->
+                <div class="dropdown ms-1 header-item">
+                    <button type="button" class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle" data-bs-toggle="dropdown" aria-expanded="false">
+                        <span class="fs-14 fw-medium"><?= strtoupper(current_lang()); ?></span>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end">
+                        <a class="dropdown-item <?= current_lang() === 'en' ? 'active' : ''; ?>" href="#" onclick="switchLang('en')">
+                            <span class="align-middle">English</span>
+                        </a>
+                        <a class="dropdown-item <?= current_lang() === 'vi' ? 'active' : ''; ?>" href="#" onclick="switchLang('vi')">
+                            <span class="align-middle">Tiếng Việt</span>
+                        </a>
+                    </div>
+                </div>
+
                 <!-- Fullscreen -->
                 <div class="ms-1 header-item d-none d-sm-flex">
                     <button type="button" class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle" data-bs-toggle="fullscreen">
