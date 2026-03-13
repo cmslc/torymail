@@ -62,17 +62,17 @@ require_once(__DIR__.'/sidebar.php');
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <label class="form-label">Site Name</label>
-                                    <input type="text" name="site_name" class="form-control" value="<?= sanitize(get_setting('site_name', 'Torymail')); ?>">
+                                    <input type="text" name="settings[site_name]" class="form-control" value="<?= sanitize(get_setting('site_name', 'Torymail')); ?>">
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Site URL</label>
-                                    <input type="url" name="site_url" class="form-control" value="<?= sanitize(get_setting('site_url', '')); ?>" placeholder="https://mail.example.com">
+                                    <input type="url" name="settings[site_url]" class="form-control" value="<?= sanitize(get_setting('site_url', '')); ?>" placeholder="https://mail.example.com">
                                 </div>
                             </div>
                             <div class="row g-3 mt-1">
                                 <div class="col-md-6">
                                     <label class="form-label">Timezone</label>
-                                    <select name="timezone" class="form-select">
+                                    <select name="settings[timezone]" class="form-select">
                                         <?php
                                         $timezones = ['UTC', 'Asia/Ho_Chi_Minh', 'Asia/Bangkok', 'Asia/Singapore', 'Asia/Tokyo', 'Asia/Seoul', 'Asia/Shanghai', 'Europe/London', 'Europe/Paris', 'Europe/Berlin', 'America/New_York', 'America/Chicago', 'America/Denver', 'America/Los_Angeles', 'Australia/Sydney'];
                                         $currentTz = get_setting('timezone', 'UTC');
@@ -98,15 +98,15 @@ require_once(__DIR__.'/sidebar.php');
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <label class="form-label">SMTP Host</label>
-                                    <input type="text" name="smtp_host" class="form-control" value="<?= sanitize(get_setting('smtp_host', '')); ?>" placeholder="smtp.example.com">
+                                    <input type="text" name="settings[smtp_host]" class="form-control" value="<?= sanitize(get_setting('smtp_host', '')); ?>" placeholder="smtp.example.com">
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label">SMTP Port</label>
-                                    <input type="number" name="smtp_port" class="form-control" value="<?= sanitize(get_setting('smtp_port', '587')); ?>">
+                                    <input type="number" name="settings[smtp_port]" class="form-control" value="<?= sanitize(get_setting('smtp_port', '587')); ?>">
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label">Encryption</label>
-                                    <select name="smtp_encryption" class="form-select">
+                                    <select name="settings[smtp_encryption]" class="form-select">
                                         <?php $enc = get_setting('smtp_encryption', 'tls'); ?>
                                         <option value="tls" <?= $enc === 'tls' ? 'selected' : ''; ?>>TLS</option>
                                         <option value="ssl" <?= $enc === 'ssl' ? 'selected' : ''; ?>>SSL</option>
@@ -117,11 +117,11 @@ require_once(__DIR__.'/sidebar.php');
                             <div class="row g-3 mt-1">
                                 <div class="col-md-6">
                                     <label class="form-label">SMTP Username</label>
-                                    <input type="text" name="smtp_username" class="form-control" value="<?= sanitize(get_setting('smtp_username', '')); ?>">
+                                    <input type="text" name="settings[smtp_username]" class="form-control" value="<?= sanitize(get_setting('smtp_username', '')); ?>">
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">SMTP Password</label>
-                                    <input type="password" name="smtp_password" class="form-control" value="<?= sanitize(get_setting('smtp_password', '')); ?>" placeholder="Leave empty to keep current">
+                                    <input type="password" name="settings[smtp_password]" class="form-control" value="<?= sanitize(get_setting('smtp_password', '')); ?>" placeholder="Leave empty to keep current">
                                 </div>
                             </div>
 
@@ -130,7 +130,7 @@ require_once(__DIR__.'/sidebar.php');
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <label class="form-label">Mail Server Hostname</label>
-                                    <input type="text" name="mail_server_hostname" class="form-control" value="<?= sanitize(get_setting('mail_server_hostname', '')); ?>" placeholder="mail.example.com">
+                                    <input type="text" name="settings[mail_server_hostname]" class="form-control" value="<?= sanitize(get_setting('mail_server_hostname', '')); ?>" placeholder="mail.example.com">
                                     <small class="text-muted">The hostname that MX records should point to</small>
                                 </div>
                             </div>
@@ -140,12 +140,12 @@ require_once(__DIR__.'/sidebar.php');
                             <div class="row g-3">
                                 <div class="col-md-8">
                                     <label class="form-label">Required MX Record Value</label>
-                                    <input type="text" name="mx_record_value" class="form-control" value="<?= sanitize(get_setting('mx_record_value', '')); ?>" placeholder="mail.example.com">
+                                    <input type="text" name="settings[mx_record_value]" class="form-control" value="<?= sanitize(get_setting('mx_record_value', '')); ?>" placeholder="mail.example.com">
                                     <small class="text-muted">Users must point their MX records to this value</small>
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label">MX Priority</label>
-                                    <input type="number" name="mx_record_priority" class="form-control" value="<?= sanitize(get_setting('mx_record_priority', '10')); ?>">
+                                    <input type="number" name="settings[mx_record_priority]" class="form-control" value="<?= sanitize(get_setting('mx_record_priority', '10')); ?>">
                                 </div>
                             </div>
 
@@ -163,7 +163,7 @@ require_once(__DIR__.'/sidebar.php');
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <label class="form-label">Allow Registration</label>
-                                    <select name="allow_registration" class="form-select">
+                                    <select name="settings[allow_registration]" class="form-select">
                                         <?php $ar = get_setting('allow_registration', '1'); ?>
                                         <option value="1" <?= $ar === '1' ? 'selected' : ''; ?>>Yes</option>
                                         <option value="0" <?= $ar === '0' ? 'selected' : ''; ?>>No</option>
@@ -171,7 +171,7 @@ require_once(__DIR__.'/sidebar.php');
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Require Email Verification</label>
-                                    <select name="require_email_verification" class="form-select">
+                                    <select name="settings[require_email_verification]" class="form-select">
                                         <?php $rev = get_setting('require_email_verification', '1'); ?>
                                         <option value="1" <?= $rev === '1' ? 'selected' : ''; ?>>Yes</option>
                                         <option value="0" <?= $rev === '0' ? 'selected' : ''; ?>>No</option>
@@ -181,12 +181,12 @@ require_once(__DIR__.'/sidebar.php');
                             <div class="row g-3 mt-1">
                                 <div class="col-md-6">
                                     <label class="form-label">Max Login Attempts</label>
-                                    <input type="number" name="max_login_attempts" class="form-control" value="<?= sanitize(get_setting('max_login_attempts', '5')); ?>" min="1">
+                                    <input type="number" name="settings[max_login_attempts]" class="form-control" value="<?= sanitize(get_setting('max_login_attempts', '5')); ?>" min="1">
                                     <small class="text-muted">Before account lockout</small>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Session Timeout (minutes)</label>
-                                    <input type="number" name="session_timeout" class="form-control" value="<?= sanitize(get_setting('session_timeout', '120')); ?>" min="5">
+                                    <input type="number" name="settings[session_timeout]" class="form-control" value="<?= sanitize(get_setting('session_timeout', '120')); ?>" min="5">
                                 </div>
                             </div>
                             <div class="mt-4">
@@ -203,25 +203,25 @@ require_once(__DIR__.'/sidebar.php');
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <label class="form-label">Max Domains per User</label>
-                                    <input type="number" name="max_domains_per_user" class="form-control" value="<?= sanitize(get_setting('max_domains_per_user', '5')); ?>" min="1">
+                                    <input type="number" name="settings[max_domains_per_user]" class="form-control" value="<?= sanitize(get_setting('max_domains_per_user', '5')); ?>" min="1">
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Max Mailboxes per Domain</label>
-                                    <input type="number" name="max_mailboxes_per_domain" class="form-control" value="<?= sanitize(get_setting('max_mailboxes_per_domain', '50')); ?>" min="1">
+                                    <input type="number" name="settings[max_mailboxes_per_domain]" class="form-control" value="<?= sanitize(get_setting('max_mailboxes_per_domain', '50')); ?>" min="1">
                                 </div>
                             </div>
                             <div class="row g-3 mt-1">
                                 <div class="col-md-4">
                                     <label class="form-label">Default Storage Quota (MB)</label>
-                                    <input type="number" name="default_quota_mb" class="form-control" value="<?= round(intval(get_setting('default_quota', '1073741824')) / 1048576); ?>" min="1">
+                                    <input type="number" name="settings[default_quota_mb]" class="form-control" value="<?= round(intval(get_setting('default_quota', '1073741824')) / 1048576); ?>" min="1">
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label">Max Attachment Size (MB)</label>
-                                    <input type="number" name="max_attachment_size_mb" class="form-control" value="<?= round(intval(get_setting('max_attachment_size', '26214400')) / 1048576); ?>" min="1">
+                                    <input type="number" name="settings[max_attachment_size_mb]" class="form-control" value="<?= round(intval(get_setting('max_attachment_size', '26214400')) / 1048576); ?>" min="1">
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label">Max Email Size (MB)</label>
-                                    <input type="number" name="max_email_size_mb" class="form-control" value="<?= round(intval(get_setting('max_email_size', '52428800')) / 1048576); ?>" min="1">
+                                    <input type="number" name="settings[max_email_size_mb]" class="form-control" value="<?= round(intval(get_setting('max_email_size', '52428800')) / 1048576); ?>" min="1">
                                 </div>
                             </div>
                             <div class="mt-4">
