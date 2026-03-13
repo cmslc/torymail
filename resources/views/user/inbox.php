@@ -373,6 +373,28 @@ function doBulkAction(action, ids, target) {
 function refreshInbox() {
     location.reload();
 }
+
+// Auto-check for new emails every 10 seconds
+(function() {
+    var lastId = <?= !empty($emails) ? intval($emails[0]['id']) : 0; ?>;
+    var folder = '<?= $folder; ?>';
+    var checking = false;
+
+    setInterval(function() {
+        if (checking) return;
+        checking = true;
+        $.get('<?= base_url("ajaxs/user/email_action.php"); ?>', {
+            action: 'check_new',
+            folder: folder,
+            last_id: lastId
+        }, function(res) {
+            checking = false;
+            if (res.success && res.new_count > 0) {
+                location.reload();
+            }
+        }, 'json').fail(function() { checking = false; });
+    }, 10000);
+})();
 </script>
 
 <?php require_once __DIR__ . '/footer.php'; ?>

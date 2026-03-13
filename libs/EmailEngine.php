@@ -431,7 +431,8 @@ class EmailEngine
             'created_at' => gettime(),
         ]);
 
-        // Store attachments
+        // Store attachments and replace cid: references in HTML
+        $cidMap = [];
         if (!empty($parsed['attachments'])) {
             foreach ($parsed['attachments'] as $att) {
                 $stored_name = uniqid('att_') . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '', $att['filename']);
@@ -441,7 +442,7 @@ class EmailEngine
                 @mkdir(dirname($full_path), 0755, true);
                 file_put_contents($full_path, $att['content']);
 
-                $this->db->insert_safe('email_attachments', [
+                $att_id = $this->db->insert_safe('email_attachments', [
                     'email_id' => $email_id,
                     'filename' => $stored_name,
                     'original_filename' => $att['filename'],
@@ -449,9 +450,24 @@ class EmailEngine
                     'size' => strlen($att['content']),
                     'storage_path' => $storage_path,
                     'content_id' => $att['content_id'] ?? null,
+                    'is_inline' => !empty($att['is_inline']) ? 1 : 0,
                     'created_at' => gettime(),
                 ]);
+
+                // Map content_id to URL for inline images
+                if (!empty($att['content_id'])) {
+                    $cidMap[$att['content_id']] = $storage_path;
+                }
             }
+        }
+
+        // Replace cid: references in HTML body with actual URLs
+        if (!empty($cidMap)) {
+            $body_html = $parsed['body_html'] ?? '';
+            foreach ($cidMap as $cid => $path) {
+                $body_html = str_replace('cid:' . $cid, '/' . $path, $body_html);
+            }
+            $this->db->update_safe('emails', ['body_html' => $body_html], 'id = ?', [$email_id]);
         }
 
         // Update mailbox storage
@@ -485,6 +501,72 @@ class EmailEngine
         $body_text = $parts[1];
 
         // Parse headers
+        $headers = $this->parseHeaders($header_text);
+
+        // Extract from
+        $from = $headers['from'] ?? '';
+        $from_name = '';
+        $from_email = '';
+        if (preg_match('/^"?([^"<]*)"?\s*<([^>]+)>/', $from, $m)) {
+            $from_name = trim($m[1]);
+            $from_email = trim($m[2]);
+        } elseif (preg_match('/^([^@\s]+@[^@\s]+)/', $from, $m)) {
+            $from_email = $m[1];
+        }
+
+        // Extract to
+        $to_header = $headers['to'] ?? '';
+        preg_match_all('/([^@\s,<]+@[^@\s,>]+)/', $to_header, $m);
+        $to = $m[1] ?? [];
+
+        // Extract CC
+        $cc = [];
+        if (isset($headers['cc'])) {
+            preg_match_all('/([^@\s,<]+@[^@\s,>]+)/', $headers['cc'], $m);
+            $cc = $m[1] ?? [];
+        }
+
+        // Subject (decode MIME)
+        $subject = $headers['subject'] ?? '';
+        if (preg_match('/=\?/', $subject)) {
+            $subject = mb_decode_mimeheader($subject);
+        }
+
+        // Priority
+        $priority = 'normal';
+        $x_priority = $headers['x-priority'] ?? '';
+        if ($x_priority === '1' || $x_priority === '2') $priority = 'high';
+        if ($x_priority === '4' || $x_priority === '5') $priority = 'low';
+
+        // Parse MIME tree recursively
+        $content_type = $headers['content-type'] ?? 'text/plain';
+        $transfer_encoding = $headers['content-transfer-encoding'] ?? '';
+        $mimeParts = $this->parseMimeParts($body_text, $content_type, $transfer_encoding);
+
+        return [
+            'headers' => $headers,
+            'from_name' => $from_name,
+            'from_email' => $from_email,
+            'to' => $to,
+            'cc' => $cc,
+            'delivered_to' => $headers['delivered-to'] ?? '',
+            'subject' => $subject,
+            'message_id' => $headers['message-id'] ?? '',
+            'in_reply_to' => $headers['in-reply-to'] ?? '',
+            'references' => $headers['references'] ?? '',
+            'reply_to' => $headers['reply-to'] ?? '',
+            'priority' => $priority,
+            'body_text' => $mimeParts['text'] ?? '',
+            'body_html' => $mimeParts['html'] ?? '',
+            'attachments' => $mimeParts['attachments'] ?? [],
+        ];
+    }
+
+    /**
+     * Parse header block into associative array
+     */
+    private function parseHeaders($header_text)
+    {
         $headers = [];
         $current_header = '';
         foreach (preg_split('/\r?\n/', $header_text) as $line) {
@@ -502,7 +584,6 @@ class EmailEngine
                 $current_header = $line;
             }
         }
-        // Last header
         if ($current_header) {
             $colon = strpos($current_header, ':');
             if ($colon !== false) {
@@ -511,77 +592,137 @@ class EmailEngine
                 $headers[$key] = $val;
             }
         }
-
-        // Extract from
-        $from = $headers['from'] ?? '';
-        $from_name = '';
-        $from_email = '';
-        if (preg_match('/^"?([^"<]*)"?\s*<([^>]+)>/', $from, $m)) {
-            $from_name = trim($m[1]);
-            $from_email = trim($m[2]);
-        } elseif (preg_match('/^([^@\s]+@[^@\s]+)/', $from, $m)) {
-            $from_email = $m[1];
-        }
-
-        // Extract to
-        $to = [];
-        $to_header = $headers['to'] ?? '';
-        preg_match_all('/([^@\s,<]+@[^@\s,>]+)/', $to_header, $m);
-        $to = $m[1] ?? [];
-
-        // Extract CC
-        $cc = [];
-        if (isset($headers['cc'])) {
-            preg_match_all('/([^@\s,<]+@[^@\s,>]+)/', $headers['cc'], $m);
-            $cc = $m[1] ?? [];
-        }
-
-        // Subject
-        $subject = $headers['subject'] ?? '';
-        // Decode MIME encoded subject
-        if (preg_match('/=\?/', $subject)) {
-            $subject = mb_decode_mimeheader($subject);
-        }
-
-        // Priority
-        $priority = 'normal';
-        $x_priority = $headers['x-priority'] ?? '';
-        if ($x_priority === '1' || $x_priority === '2') $priority = 'high';
-        if ($x_priority === '4' || $x_priority === '5') $priority = 'low';
-
-        return [
-            'headers' => $headers,
-            'from_name' => $from_name,
-            'from_email' => $from_email,
-            'to' => $to,
-            'cc' => $cc,
-            'delivered_to' => $headers['delivered-to'] ?? '',
-            'subject' => $subject,
-            'message_id' => $headers['message-id'] ?? '',
-            'in_reply_to' => $headers['in-reply-to'] ?? '',
-            'references' => $headers['references'] ?? '',
-            'reply_to' => $headers['reply-to'] ?? '',
-            'priority' => $priority,
-            'body_text' => $this->extractPlainText($body_text, $headers),
-            'body_html' => $this->extractHtmlBody($body_text, $headers),
-            'attachments' => $this->extractAttachments($body_text, $headers),
-        ];
+        return $headers;
     }
 
-    private function decodeMimeContent($content, $partHeaders)
+    /**
+     * Recursively parse MIME parts, returning text, html, and attachments
+     */
+    private function parseMimeParts($body, $content_type, $transfer_encoding, $disposition = '', $content_id_header = '')
     {
-        $encoding = '';
-        if (preg_match('/Content-Transfer-Encoding:\s*(\S+)/i', $partHeaders, $em)) {
-            $encoding = strtolower(trim($em[1]));
+        $result = ['text' => '', 'html' => '', 'attachments' => []];
+
+        // Check if this is a multipart message
+        if (stripos($content_type, 'multipart/') !== false) {
+            preg_match('/boundary="?([^";\s]+)"?/', $content_type, $m);
+            if (empty($m[1])) return $result;
+
+            $boundary = $m[1];
+            $parts = explode('--' . $boundary, $body);
+
+            // Remove preamble (first) and epilogue (last with --)
+            array_shift($parts);
+            foreach ($parts as $i => $part) {
+                $part = ltrim($part, "\r\n");
+                if ($part === '--' || strpos($part, '--') === 0) {
+                    unset($parts[$i]);
+                    continue;
+                }
+                // Remove trailing boundary marker
+                $parts[$i] = preg_replace('/\r?\n?--\s*$/', '', $part);
+            }
+
+            foreach ($parts as $part) {
+                // Split part headers and body
+                $split = preg_split('/\r?\n\r?\n/', $part, 2);
+                if (count($split) < 2) continue;
+
+                $partHeaderText = $split[0];
+                $partBody = $split[1];
+                $partHeaders = $this->parseHeaders($partHeaderText);
+
+                $partCT = $partHeaders['content-type'] ?? 'text/plain';
+                $partTE = $partHeaders['content-transfer-encoding'] ?? '';
+                $partDisp = $partHeaders['content-disposition'] ?? '';
+                $partCID = $partHeaders['content-id'] ?? '';
+
+                // Recurse into nested multipart
+                $sub = $this->parseMimeParts($partBody, $partCT, $partTE, $partDisp, $partCID);
+
+                if (!$result['text'] && $sub['text']) $result['text'] = $sub['text'];
+                if (!$result['html'] && $sub['html']) $result['html'] = $sub['html'];
+                $result['attachments'] = array_merge($result['attachments'], $sub['attachments']);
+            }
+
+            // If we got HTML but no text, generate text from HTML
+            if ($result['html'] && !$result['text']) {
+                $result['text'] = strip_tags($result['html']);
+            }
+            // If we got text but no HTML, generate HTML from text
+            if ($result['text'] && !$result['html']) {
+                $result['html'] = nl2br(htmlspecialchars($result['text']));
+            }
+
+            return $result;
         }
+
+        // Non-multipart: decode the content
+        $decoded = $this->decodeMimeContent($body, $content_type, $transfer_encoding);
+
+        // Check if it's an attachment or inline image
+        $isAttachment = (stripos($disposition, 'attachment') !== false);
+        $isInline = (stripos($disposition, 'inline') !== false);
+        $hasFilename = (preg_match('/filename/i', $content_type . ' ' . $disposition));
+
+        if ($isAttachment || ($isInline && $hasFilename && stripos($content_type, 'text/') === false)) {
+            $filename = 'attachment';
+            if (preg_match('/filename="?([^";\r\n]+)"?/i', $disposition . "\r\n" . $content_type, $fm)) {
+                $filename = trim($fm[1]);
+                // Decode MIME encoded filename
+                if (preg_match('/=\?/', $filename)) {
+                    $filename = mb_decode_mimeheader($filename);
+                }
+            }
+
+            $mime = 'application/octet-stream';
+            if (preg_match('/^([^;\s]+)/i', $content_type, $tm)) {
+                $mime = trim($tm[1]);
+            }
+
+            $content_id = '';
+            if ($content_id_header) {
+                $content_id = trim($content_id_header, '<> ');
+            }
+
+            // For attachments, decode as binary
+            $binContent = $decoded;
+            if (strtolower($transfer_encoding) === 'base64') {
+                $binContent = base64_decode(preg_replace('/\s+/', '', $body));
+            } elseif (strtolower($transfer_encoding) === 'quoted-printable') {
+                $binContent = quoted_printable_decode($body);
+            }
+
+            $result['attachments'][] = [
+                'filename' => $filename,
+                'mime_type' => $mime,
+                'content' => $binContent,
+                'content_id' => $content_id,
+                'is_inline' => $isInline,
+            ];
+            return $result;
+        }
+
+        // Text content
+        if (stripos($content_type, 'text/html') !== false) {
+            $result['html'] = $decoded;
+        } elseif (stripos($content_type, 'text/plain') !== false) {
+            $result['text'] = $decoded;
+        }
+
+        return $result;
+    }
+
+    private function decodeMimeContent($content, $content_type, $transfer_encoding = '')
+    {
+        $encoding = strtolower(trim($transfer_encoding));
         if ($encoding === 'quoted-printable') {
             $content = quoted_printable_decode($content);
         } elseif ($encoding === 'base64') {
-            $content = base64_decode($content);
+            $content = base64_decode(preg_replace('/\s+/', '', $content));
         }
 
         // Convert charset to UTF-8 if needed
-        if (preg_match('/charset="?([^";\s]+)"?/i', $partHeaders, $cm)) {
+        if (preg_match('/charset="?([^";\s]+)"?/i', $content_type, $cm)) {
             $charset = strtolower(trim($cm[1]));
             if ($charset && $charset !== 'utf-8' && $charset !== 'utf8') {
                 $converted = @iconv($charset, 'UTF-8//IGNORE', $content);
@@ -590,117 +731,6 @@ class EmailEngine
         }
 
         return $content;
-    }
-
-    private function extractPlainText($body, $headers)
-    {
-        $content_type = $headers['content-type'] ?? 'text/plain';
-        $transfer_encoding = $headers['content-transfer-encoding'] ?? '';
-
-        if (stripos($content_type, 'multipart/') !== false) {
-            preg_match('/boundary="?([^";\s]+)"?/', $content_type, $m);
-            if (!empty($m[1])) {
-                $parts = explode('--' . $m[1], $body);
-                foreach ($parts as $part) {
-                    if (stripos($part, 'text/plain') !== false) {
-                        $split = preg_split('/\r?\n\r?\n/', $part, 2);
-                        if (isset($split[1])) {
-                            return $this->decodeMimeContent(trim($split[1]), $split[0]);
-                        }
-                    }
-                }
-            }
-        }
-
-        return $this->decodeMimeContent($body, "Content-Transfer-Encoding: {$transfer_encoding}\r\nContent-Type: {$content_type}");
-    }
-
-    private function extractHtmlBody($body, $headers)
-    {
-        $content_type = $headers['content-type'] ?? 'text/plain';
-        $transfer_encoding = $headers['content-transfer-encoding'] ?? '';
-
-        if (stripos($content_type, 'text/html') !== false) {
-            return $this->decodeMimeContent($body, "Content-Transfer-Encoding: {$transfer_encoding}\r\n" . "Content-Type: {$content_type}");
-        }
-
-        if (stripos($content_type, 'multipart/') !== false) {
-            preg_match('/boundary="?([^";\s]+)"?/', $content_type, $m);
-            if (!empty($m[1])) {
-                $parts = explode('--' . $m[1], $body);
-                foreach ($parts as $part) {
-                    if (stripos($part, 'text/html') !== false) {
-                        $split = preg_split('/\r?\n\r?\n/', $part, 2);
-                        if (isset($split[1])) {
-                            return $this->decodeMimeContent(trim($split[1]), $split[0]);
-                        }
-                    }
-                }
-                // Fallback to text/plain part
-                foreach ($parts as $part) {
-                    if (stripos($part, 'text/plain') !== false) {
-                        $split = preg_split('/\r?\n\r?\n/', $part, 2);
-                        if (isset($split[1])) {
-                            $decoded = $this->decodeMimeContent(trim($split[1]), $split[0]);
-                            return nl2br(htmlspecialchars($decoded));
-                        }
-                    }
-                }
-            }
-        }
-
-        // Non-multipart plain text
-        if (stripos($content_type, 'text/plain') !== false) {
-            $decoded = $this->decodeMimeContent($body, "Content-Transfer-Encoding: {$transfer_encoding}\r\n" . "Content-Type: {$content_type}");
-            return nl2br(htmlspecialchars($decoded));
-        }
-
-        return nl2br(htmlspecialchars($body));
-    }
-
-    private function extractAttachments($body, $headers)
-    {
-        $attachments = [];
-        $content_type = $headers['content-type'] ?? '';
-
-        if (stripos($content_type, 'multipart/') === false) {
-            return $attachments;
-        }
-
-        preg_match('/boundary="?([^";\s]+)"?/', $content_type, $m);
-        if (empty($m[1])) return $attachments;
-
-        $parts = explode('--' . $m[1], $body);
-        foreach ($parts as $part) {
-            if (preg_match('/Content-Disposition:\s*attachment/i', $part)) {
-                $filename = 'attachment';
-                if (preg_match('/filename="?([^";\r\n]+)"?/i', $part, $fm)) {
-                    $filename = trim($fm[1]);
-                }
-
-                $mime = 'application/octet-stream';
-                if (preg_match('/Content-Type:\s*([^;\r\n]+)/i', $part, $tm)) {
-                    $mime = trim($tm[1]);
-                }
-
-                $content_id = '';
-                if (preg_match('/Content-ID:\s*<?([^>\r\n]+)>?/i', $part, $cid)) {
-                    $content_id = trim($cid[1]);
-                }
-
-                $split = preg_split('/\r?\n\r?\n/', $part, 2);
-                $content = isset($split[1]) ? base64_decode(trim($split[1])) : '';
-
-                $attachments[] = [
-                    'filename' => $filename,
-                    'mime_type' => $mime,
-                    'content' => $content,
-                    'content_id' => $content_id,
-                ];
-            }
-        }
-
-        return $attachments;
     }
 
     // ============================================================

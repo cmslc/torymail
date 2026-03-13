@@ -113,6 +113,71 @@ function clean_input($str)
 }
 
 // ============================================================
+// Rate Limiting (file-based)
+// ============================================================
+
+function rate_limit($key, $max_attempts = 5, $window_seconds = 300)
+{
+    $dir = sys_get_temp_dir() . '/torymail_ratelimit';
+    if (!is_dir($dir)) @mkdir($dir, 0700, true);
+
+    $file = $dir . '/' . md5($key) . '.json';
+    $now = time();
+    $attempts = [];
+
+    if (file_exists($file)) {
+        $data = json_decode(file_get_contents($file), true);
+        if (is_array($data)) {
+            $attempts = array_filter($data, function ($t) use ($now, $window_seconds) {
+                return ($now - $t) < $window_seconds;
+            });
+        }
+    }
+
+    if (count($attempts) >= $max_attempts) {
+        $oldest = min($attempts);
+        $retry_after = $window_seconds - ($now - $oldest);
+        error_response('Too many attempts. Please try again in ' . ceil($retry_after / 60) . ' minutes.', 429);
+    }
+
+    $attempts[] = $now;
+    file_put_contents($file, json_encode(array_values($attempts)));
+}
+
+// ============================================================
+// Email HTML Sanitizer
+// ============================================================
+
+function sanitize_email_html($html)
+{
+    // Remove script tags and event handlers
+    $html = preg_replace('/<script\b[^>]*>.*?<\/script>/is', '', $html);
+    $html = preg_replace('/<script\b[^>]*>/is', '', $html);
+
+    // Remove event handlers (onclick, onerror, onload, etc.)
+    $html = preg_replace('/\s+on\w+\s*=\s*["\'][^"\']*["\']/i', '', $html);
+    $html = preg_replace('/\s+on\w+\s*=\s*\S+/i', '', $html);
+
+    // Remove javascript: and data: URLs (except data:image)
+    $html = preg_replace('/href\s*=\s*["\']?\s*javascript:[^"\'>\s]*/i', 'href="#"', $html);
+    $html = preg_replace('/src\s*=\s*["\']?\s*javascript:[^"\'>\s]*/i', 'src=""', $html);
+    $html = preg_replace('/src\s*=\s*["\']?\s*data:(?!image\/)[^"\'>\s]*/i', 'src=""', $html);
+
+    // Remove iframe, object, embed, form, input, meta, link, base tags
+    $dangerous_tags = ['iframe', 'object', 'embed', 'form', 'input', 'textarea', 'select', 'button', 'meta', 'link', 'base', 'applet', 'svg'];
+    foreach ($dangerous_tags as $tag) {
+        $html = preg_replace('/<' . $tag . '\b[^>]*>.*?<\/' . $tag . '>/is', '', $html);
+        $html = preg_replace('/<' . $tag . '\b[^>]*\/?>/i', '', $html);
+    }
+
+    // Remove style attributes with expression() or url(javascript:)
+    $html = preg_replace('/style\s*=\s*["\'][^"\']*expression\s*\([^"\']*["\']/i', '', $html);
+    $html = preg_replace('/style\s*=\s*["\'][^"\']*javascript:[^"\']*["\']/i', '', $html);
+
+    return $html;
+}
+
+// ============================================================
 // Password Helpers
 // ============================================================
 

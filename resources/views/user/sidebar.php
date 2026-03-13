@@ -79,8 +79,6 @@ $sidebarLabels = $ToryMail->get_list_safe("
                 <div class="container-fluid">
                     <ul class="navbar-nav" id="navbar-nav">
 
-                        <li class="menu-title"><span><?= __('menu'); ?></span></li>
-
                         <!-- Compose -->
                         <li class="nav-item">
                             <a href="<?= base_url('compose'); ?>" class="nav-link menu-link <?= tm_active(['compose']); ?>">
@@ -218,8 +216,6 @@ $sidebarLabels = $ToryMail->get_list_safe("
                                 <span><?= __('labels'); ?></span>
                             </a>
                         </li>
-
-                        <li class="menu-title"><span>&nbsp;</span></li>
 
                         <!-- Settings -->
                         <li class="nav-item">

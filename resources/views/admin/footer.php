@@ -45,18 +45,26 @@
     });
     </script>
 
+    <!-- Toast container -->
+    <div id="toastContainer" class="position-fixed top-0 end-0 p-3" style="z-index: 1080;"></div>
+
     <!-- Helper JS functions -->
     <script type="text/javascript">
     function showToast(type, message) {
-        Swal.fire({
-            toast: true,
-            position: 'top-end',
-            icon: type,
-            title: message,
-            showConfirmButton: false,
-            timer: 3000,
-            timerProgressBar: true
-        });
+        var icons = { success: 'ri-check-double-line', error: 'ri-close-circle-line', warning: 'ri-alert-line', info: 'ri-information-line' };
+        var colors = { success: 'success', error: 'danger', warning: 'warning', info: 'info' };
+        var color = colors[type] || 'primary';
+        var icon = icons[type] || 'ri-notification-3-line';
+        var id = 'toast-' + Date.now();
+        var html = '<div id="' + id + '" class="toast align-items-center text-white bg-' + color + ' border-0" role="alert">' +
+            '<div class="d-flex">' +
+            '<div class="toast-body"><i class="' + icon + ' me-2"></i>' + message + '</div>' +
+            '<button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>' +
+            '</div></div>';
+        $('#toastContainer').append(html);
+        var toast = new bootstrap.Toast(document.getElementById(id), { delay: 3000 });
+        toast.show();
+        document.getElementById(id).addEventListener('hidden.bs.toast', function() { this.remove(); });
     }
 
     function switchLang(lang) {

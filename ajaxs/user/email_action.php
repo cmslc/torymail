@@ -15,10 +15,43 @@ $getUser = $ToryMail->get_row_safe(
 );
 if (!$getUser) error_response('Authentication required', 401);
 
+// Allow GET for check_new
+$action = preg_replace('/[^a-zA-Z0-9_]/', '', $_REQUEST['action'] ?? '');
+if ($action === 'check_new') {
+    $folder = preg_replace('/[^a-z]/', '', $_GET['folder'] ?? 'inbox');
+    $lastId = intval($_GET['last_id'] ?? 0);
+    $validFolders = ['inbox', 'starred', 'sent', 'drafts', 'spam', 'trash', 'archive'];
+    if (!in_array($folder, $validFolders)) $folder = 'inbox';
+
+    $where = "e.mailbox_id IN (SELECT id FROM mailboxes WHERE user_id = ?)";
+    $params = [$getUser['id']];
+    if ($folder === 'starred') {
+        $where .= " AND e.is_starred = 1 AND e.folder NOT IN ('trash')";
+    } else {
+        $where .= " AND e.folder = ?";
+        $params[] = $folder;
+    }
+
+    if ($lastId > 0) {
+        $where .= " AND e.id > ?";
+        $params[] = $lastId;
+    }
+
+    $count = $ToryMail->get_row_safe("SELECT COUNT(*) as cnt FROM emails e WHERE $where", $params);
+    $total = $ToryMail->get_row_safe(
+        "SELECT COUNT(*) as cnt FROM emails e WHERE e.mailbox_id IN (SELECT id FROM mailboxes WHERE user_id = ?) AND e.folder = ? AND e.is_read = 0",
+        [$getUser['id'], $folder]
+    );
+    success_response('OK', [
+        'new_count' => intval($count['cnt'] ?? 0),
+        'unread_count' => intval($total['cnt'] ?? 0),
+    ]);
+}
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') error_response('Invalid request method', 405);
 csrf_verify();
 
-$action   = preg_replace('/[^a-zA-Z0-9_]/', '', $_POST['action'] ?? '');
+$action   = preg_replace('/[^a-zA-Z0-9_]/', '', $_POST['action'] ?? $action);
 $emailId  = intval($_POST['email_id'] ?? 0);
 $emailIds = $_POST['email_ids'] ?? [];
 $target   = preg_replace('/[^a-zA-Z0-9_-]/', '', $_POST['target'] ?? '');

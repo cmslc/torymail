@@ -82,8 +82,6 @@ $sidebarMenu = [
             <div id="scrollbar" data-simplebar>
                 <div class="container-fluid">
                     <ul class="navbar-nav" id="navbar-nav">
-                        <li class="menu-title"><span><?= __('menu'); ?></span></li>
-
                         <?php foreach ($sidebarMenu as $index => $item): ?>
                             <?php
                                 $isActive = in_array($currentAction, $item['active']);

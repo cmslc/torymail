@@ -11,6 +11,7 @@ switch ($action) {
     case 'login':
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') error_response('Invalid request method', 405);
         csrf_verify();
+        rate_limit('login:' . get_client_ip(), 5, 300); // 5 attempts per 5 minutes
 
         $email = trim($_POST['email'] ?? '');
         $password = $_POST['password'] ?? '';
@@ -85,6 +86,7 @@ switch ($action) {
     case 'register':
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') error_response('Invalid request method', 405);
         csrf_verify();
+        rate_limit('register:' . get_client_ip(), 3, 600); // 3 attempts per 10 minutes
 
         if (get_setting('allow_registration', '1') !== '1') {
             error_response('Registration is currently disabled');
@@ -176,6 +178,7 @@ switch ($action) {
     case 'forgot_password':
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') error_response('Invalid request method', 405);
         csrf_verify();
+        rate_limit('forgot:' . get_client_ip(), 3, 600); // 3 attempts per 10 minutes
 
         $email = trim($_POST['email'] ?? '');
         if (empty($email) || !validate_email($email)) {

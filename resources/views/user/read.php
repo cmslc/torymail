@@ -58,7 +58,7 @@ if (!empty($email['thread_id'])) {
 
 // Sanitize HTML body for display
 $emailBodyHtml = $email['body_html']
-    ? $email['body_html']
+    ? sanitize_email_html($email['body_html'])
     : nl2br(htmlspecialchars($email['body_text'] ?? ''));
 
 $folderNames = [
@@ -206,9 +206,9 @@ $(function() {
                     </span>
                 </div>
                 <div class="text-muted mt-1 fs-13">
-                    <?= __('to'); ?>: <?= htmlspecialchars($email['to_addresses'] ?? ''); ?>
-                    <?php if (!empty($email['cc_addresses'])): ?>
-                    <br><?= __('cc'); ?>: <?= htmlspecialchars($email['cc_addresses']); ?>
+                    <?= __('to'); ?>: <?= htmlspecialchars(implode(', ', json_decode($email['to_addresses'] ?? '[]', true) ?: [])); ?>
+                    <?php $ccList = json_decode($email['cc_addresses'] ?? '[]', true) ?: []; if (!empty($ccList)): ?>
+                    <br><?= __('cc'); ?>: <?= htmlspecialchars(implode(', ', $ccList)); ?>
                     <?php endif; ?>
                 </div>
             </div>
@@ -217,20 +217,30 @@ $(function() {
 
     <!-- Email Body -->
     <div class="card-body" style="min-height:200px;">
-        <div style="font-size:14px;line-height:1.8;overflow-wrap:break-word;">
+        <div class="email-body-content" style="font-size:14px;line-height:1.8;overflow-wrap:break-word;">
             <?= $emailBodyHtml; ?>
         </div>
+        <style>
+        .email-body-content img {
+            display: block;
+            max-width: 100%;
+            height: auto;
+            margin: 8px 0;
+        }
+        </style>
     </div>
 
     <!-- Attachments -->
-    <?php if (!empty($attachments)): ?>
+    <?php
+    $downloadableAtts = array_filter($attachments, function($a) { return empty($a['is_inline']); });
+    if (!empty($downloadableAtts)): ?>
     <div class="card-body border-top">
         <h6 class="fw-semibold mb-3 fs-14">
             <i class="ri-attachment-2 me-1 align-bottom"></i>
-            <?= count($attachments); ?> <?= __('attachments'); ?>
+            <?= count($downloadableAtts); ?> <?= __('attachments'); ?>
         </h6>
         <div class="d-flex flex-wrap gap-2">
-            <?php foreach ($attachments as $att): ?>
+            <?php foreach ($downloadableAtts as $att): ?>
             <a href="<?= base_url('ajaxs/user/download.php?id=' . $att['id']); ?>"
                class="d-flex align-items-center gap-2 border rounded p-2 text-decoration-none">
                 <div class="avatar-xs flex-shrink-0">
@@ -295,7 +305,7 @@ $(function() {
                 </h2>
                 <div id="thread-<?= $ti; ?>" class="accordion-collapse collapse" data-bs-parent="#threadAccordion">
                     <div class="accordion-body fs-13" style="line-height:1.7;">
-                        <?= $te['body_html'] ?: nl2br(htmlspecialchars($te['body_text'] ?? '')); ?>
+                        <?= $te['body_html'] ? sanitize_email_html($te['body_html']) : nl2br(htmlspecialchars($te['body_text'] ?? '')); ?>
                     </div>
                 </div>
             </div>
