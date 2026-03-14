@@ -135,13 +135,24 @@ switch ($action) {
         $domainName = $domain['domain_name'];
         $mailHostname = get_setting('mail_server_hostname', '');
 
+        // Use dig command for reliable DNS lookups (dns_get_record is flaky)
+        function dig_query($name, $type) {
+            $name = escapeshellarg($name);
+            $type = escapeshellarg($type);
+            $output = shell_exec("dig +short +timeout=5 +tries=2 $type $name 2>/dev/null");
+            return trim($output ?? '');
+        }
+
         // Check MX record
         $mx_ok = 0;
         if ($mailHostname) {
-            $mxRecords = @dns_get_record($domainName, DNS_MX);
-            if ($mxRecords) {
-                foreach ($mxRecords as $mx) {
-                    if (isset($mx['target']) && rtrim($mx['target'], '.') === rtrim($mailHostname, '.')) {
+            $mxOutput = dig_query($domainName, 'MX');
+            if ($mxOutput) {
+                $expectedHost = rtrim($mailHostname, '.');
+                foreach (explode("\n", $mxOutput) as $line) {
+                    // MX output format: "10 getcodemail.com."
+                    $parts = preg_split('/\s+/', trim($line), 2);
+                    if (isset($parts[1]) && rtrim($parts[1], '.') === $expectedHost) {
                         $mx_ok = 1;
                         break;
                     }
@@ -151,41 +162,24 @@ switch ($action) {
 
         // Check SPF record
         $spf_ok = 0;
-        $txtRecords = @dns_get_record($domainName, DNS_TXT);
-        if ($txtRecords) {
-            foreach ($txtRecords as $txt) {
-                if (isset($txt['txt']) && stripos($txt['txt'], 'v=spf1') !== false) {
-                    $spf_ok = 1;
-                    break;
-                }
-            }
+        $txtOutput = dig_query($domainName, 'TXT');
+        if ($txtOutput && stripos($txtOutput, 'v=spf1') !== false) {
+            $spf_ok = 1;
         }
 
         // Check DKIM record
         $dkim_ok = 0;
-        $dkimRecords = @dns_get_record('torymail._domainkey.' . $domainName, DNS_TXT);
-        if ($dkimRecords) {
-            foreach ($dkimRecords as $txt) {
-                if (isset($txt['txt']) && stripos($txt['txt'], 'v=DKIM1') !== false) {
-                    $dkim_ok = 1;
-                    break;
-                }
-            }
+        $dkimOutput = dig_query('torymail._domainkey.' . $domainName, 'TXT');
+        if ($dkimOutput && stripos($dkimOutput, 'v=DKIM1') !== false) {
+            $dkim_ok = 1;
         }
 
         // Check DMARC record
         $dmarc_ok = 0;
-        $dmarcRecords = @dns_get_record('_dmarc.' . $domainName, DNS_TXT);
-        if ($dmarcRecords) {
-            foreach ($dmarcRecords as $txt) {
-                if (isset($txt['txt']) && stripos($txt['txt'], 'v=DMARC1') !== false) {
-                    $dmarc_ok = 1;
-                    break;
-                }
-            }
+        $dmarcOutput = dig_query('_dmarc.' . $domainName, 'TXT');
+        if ($dmarcOutput && stripos($dmarcOutput, 'v=DMARC1') !== false) {
+            $dmarc_ok = 1;
         }
-
-        $allVerified = $mx_ok && $spf_ok && $dkim_ok && $dmarc_ok;
 
         $updateData = [
             'mx_verified'    => $mx_ok,
@@ -194,7 +188,8 @@ switch ($action) {
             'dmarc_verified' => $dmarc_ok,
             'updated_at'     => gettime(),
         ];
-        if ($allVerified) {
+        // MX is enough to activate the domain
+        if ($mx_ok && $domain['status'] === 'pending') {
             $updateData['status'] = 'active';
             $updateData['verified_at'] = gettime();
         }
