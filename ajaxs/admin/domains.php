@@ -120,7 +120,7 @@ switch ($action) {
         break;
 
     // -------------------------------------------------------
-    // VERIFY (admin force-verify)
+    // VERIFY (real DNS check)
     // -------------------------------------------------------
     case 'verify':
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') error_response('Invalid request method', 405);
@@ -132,26 +132,95 @@ switch ($action) {
         $domain = $ToryMail->get_row_safe("SELECT * FROM domains WHERE id = ?", [$domain_id]);
         if (!$domain) error_response('Domain not found');
 
-        $ToryMail->update_safe('domains', [
-            'status'         => 'active',
-            'verified_at'    => gettime(),
-            'mx_verified'    => 1,
-            'spf_verified'   => 1,
-            'dkim_verified'  => 1,
-            'dmarc_verified' => 1,
+        $domainName = $domain['domain_name'];
+        $mailHostname = get_setting('mail_server_hostname', '');
+
+        // Check MX record
+        $mx_ok = 0;
+        if ($mailHostname) {
+            $mxRecords = @dns_get_record($domainName, DNS_MX);
+            if ($mxRecords) {
+                foreach ($mxRecords as $mx) {
+                    if (isset($mx['target']) && rtrim($mx['target'], '.') === rtrim($mailHostname, '.')) {
+                        $mx_ok = 1;
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Check SPF record
+        $spf_ok = 0;
+        $txtRecords = @dns_get_record($domainName, DNS_TXT);
+        if ($txtRecords) {
+            foreach ($txtRecords as $txt) {
+                if (isset($txt['txt']) && stripos($txt['txt'], 'v=spf1') !== false) {
+                    $spf_ok = 1;
+                    break;
+                }
+            }
+        }
+
+        // Check DKIM record
+        $dkim_ok = 0;
+        $dkimRecords = @dns_get_record('torymail._domainkey.' . $domainName, DNS_TXT);
+        if ($dkimRecords) {
+            foreach ($dkimRecords as $txt) {
+                if (isset($txt['txt']) && stripos($txt['txt'], 'v=DKIM1') !== false) {
+                    $dkim_ok = 1;
+                    break;
+                }
+            }
+        }
+
+        // Check DMARC record
+        $dmarc_ok = 0;
+        $dmarcRecords = @dns_get_record('_dmarc.' . $domainName, DNS_TXT);
+        if ($dmarcRecords) {
+            foreach ($dmarcRecords as $txt) {
+                if (isset($txt['txt']) && stripos($txt['txt'], 'v=DMARC1') !== false) {
+                    $dmarc_ok = 1;
+                    break;
+                }
+            }
+        }
+
+        $allVerified = $mx_ok && $spf_ok && $dkim_ok && $dmarc_ok;
+
+        $updateData = [
+            'mx_verified'    => $mx_ok,
+            'spf_verified'   => $spf_ok,
+            'dkim_verified'  => $dkim_ok,
+            'dmarc_verified' => $dmarc_ok,
             'updated_at'     => gettime(),
-        ], 'id = ?', [$domain_id]);
+        ];
+        if ($allVerified) {
+            $updateData['status'] = 'active';
+            $updateData['verified_at'] = gettime();
+        }
+
+        $ToryMail->update_safe('domains', $updateData, 'id = ?', [$domain_id]);
+
+        $results = [];
+        $results[] = 'MX: ' . ($mx_ok ? 'OK' : 'FAIL');
+        $results[] = 'SPF: ' . ($spf_ok ? 'OK' : 'FAIL');
+        $results[] = 'DKIM: ' . ($dkim_ok ? 'OK' : 'FAIL');
+        $results[] = 'DMARC: ' . ($dmarc_ok ? 'OK' : 'FAIL');
 
         $ToryMail->insert_safe('activity_logs', [
             'user_id'    => $getAdmin['id'],
             'action'     => 'admin_domain_verify',
-            'details'    => 'Admin force-verified domain: ' . $domain['domain_name'],
+            'details'    => 'DNS check for ' . $domainName . ': ' . implode(', ', $results),
             'ip_address' => get_client_ip(),
             'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? '',
             'created_at' => gettime(),
         ]);
 
-        success_response('Domain verified successfully');
+        if ($allVerified) {
+            success_response('DNS verified: ' . implode(', ', $results));
+        } else {
+            success_response('DNS check: ' . implode(', ', $results), ['partial' => true]);
+        }
         break;
 
     // -------------------------------------------------------
