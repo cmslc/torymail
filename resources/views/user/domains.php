@@ -99,6 +99,9 @@ $statusColors = [
                                 <?= ucfirst($domain['status']); ?>
                             </span>
                         </td>
+                        <?php if (!empty($domain['is_shared'])): ?>
+                        <td class="text-center text-muted" colspan="5"><?= __('managed_by_admin'); ?></td>
+                        <?php else: ?>
                         <td class="text-center">
                             <?php $txtOk = $domain['status'] === 'active' || $domain['verification_token'] === 'verified'; ?>
                             <?php if ($txtOk): ?>
@@ -135,6 +138,7 @@ $statusColors = [
                             <i class="ri-close-line text-danger fs-18"></i>
                             <?php endif; ?>
                         </td>
+                        <?php endif; ?>
                         <td class="text-center">
                             <span class="badge bg-primary-subtle text-primary"><?= $domain['mailbox_count']; ?></span>
                         </td>
