@@ -26,7 +26,8 @@ function __($key, $replacements = [])
  */
 function current_lang()
 {
-    return $_SESSION['lang'] ?? 'vi';
+    global $settings;
+    return $_SESSION['lang'] ?? ($settings['default_language'] ?? 'vi');
 }
 
 /**
@@ -34,8 +35,8 @@ function current_lang()
  */
 function load_language($lang = null)
 {
-    global $_lang;
-    if (!$lang) $lang = $_SESSION['lang'] ?? 'vi';
+    global $_lang, $settings;
+    if (!$lang) $lang = $_SESSION['lang'] ?? ($settings['default_language'] ?? 'vi');
     $file = __DIR__ . '/../langs/' . preg_replace('/[^a-z]/', '', $lang) . '.php';
     if (file_exists($file)) {
         $_lang = require $file;

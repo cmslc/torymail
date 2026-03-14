@@ -583,6 +583,10 @@ return [
     'login_success'     => 'Login successful! Redirecting...',
     'register_success'  => 'Registration successful! Redirecting to login...',
 
+    // ─── Language ────────────────────────────────────────
+    'default_language'      => 'Default Language',
+    'default_language_hint' => 'Default display language for new users.',
+
     // ─── Footer ───────────────────────────────────────
     'footer_system'     => 'Email Management System',
 ];

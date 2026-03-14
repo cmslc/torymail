@@ -582,6 +582,10 @@ return [
     'login_success'     => 'Đăng nhập thành công! Đang chuyển hướng...',
     'register_success'  => 'Đăng ký thành công! Đang chuyển đến trang đăng nhập...',
 
+    // ─── Language ────────────────────────────────────────
+    'default_language'      => 'Ngôn ngữ mặc định',
+    'default_language_hint' => 'Ngôn ngữ hiển thị mặc định cho người dùng mới.',
+
     // ─── Footer ───────────────────────────────────────
     'footer_system'     => 'Hệ thống quản lý Email',
 ];

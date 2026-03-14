@@ -82,6 +82,15 @@ require_once(__DIR__.'/sidebar.php');
                                         <?php endforeach; ?>
                                     </select>
                                 </div>
+                                <div class="col-md-6">
+                                    <label class="form-label"><?= __('default_language'); ?></label>
+                                    <?php $currentLang = get_setting('default_language', 'vi'); ?>
+                                    <select name="settings[default_language]" class="form-select">
+                                        <option value="vi" <?= $currentLang === 'vi' ? 'selected' : ''; ?>>Tiếng Việt</option>
+                                        <option value="en" <?= $currentLang === 'en' ? 'selected' : ''; ?>>English</option>
+                                    </select>
+                                    <small class="text-muted"><?= __('default_language_hint'); ?></small>
+                                </div>
                             </div>
 
                             <hr class="my-4">

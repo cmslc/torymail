@@ -36,6 +36,7 @@ switch ($action) {
             'max_attachment_size', 'max_email_size', 'allow_registration',
             'require_email_verification', 'max_login_attempts', 'session_timeout',
             'mail_server_hostname', 'mx_record_value', 'mx_record_priority',
+            'default_language',
         ];
 
         // MB-to-bytes mapping: form field name => actual setting key
