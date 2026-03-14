@@ -404,8 +404,8 @@ $(document).ready(function() {
 
         $('#dnsDomainName').text(domain.domain_name);
         $('#dnsMxValue').text(serverHost);
-        $('#dnsSpfValue').text('v=spf1 mx a ip4:<?= trim(get_setting("mail_server_hostname", "YOUR_SERVER_IP")); ?> ~all');
-        $('#dnsDkimHost').text((domain.dkim_selector || 'torymail') + '._domainkey');
+        $('#dnsSpfValue').text('v=spf1 mx a include:' + serverHost + ' ~all');
+        $('#dnsDkimHost').text((domain.dkim_selector || 'default') + '._domainkey');
         $('#dnsDkimValue').text(domain.dkim_public_key ? 'v=DKIM1; k=rsa; p=' + domain.dkim_public_key : '<?= __("dkim_not_generated"); ?>');
         $('#dnsDmarcValue').text('v=DMARC1; p=quarantine; rua=mailto:postmaster@' + domain.domain_name);
 
