@@ -41,9 +41,9 @@ switch ($action) {
             error_response('Password must be at least 8 characters');
         }
 
-        // Verify domain ownership and status
+        // Verify domain ownership (or shared) and status
         $domain = $ToryMail->get_row_safe(
-            "SELECT * FROM domains WHERE id = ? AND user_id = ? AND status = 'active'",
+            "SELECT * FROM domains WHERE id = ? AND (user_id = ? OR is_shared = 1) AND status = 'active'",
             [$domain_id, $getUser['id']]
         );
         if (!$domain) error_response('Domain not found, not active, or access denied');

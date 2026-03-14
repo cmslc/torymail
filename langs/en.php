@@ -186,6 +186,13 @@ return [
     'activate_domain'   => 'Activate this domain?',
     'delete_domain'     => 'Delete Domain?',
     'delete_domain_desc' => 'This will permanently delete the domain and all its mailboxes.',
+    'shared'            => 'Shared',
+    'shared_domain'     => 'Shared domain',
+    'shared_domain_desc' => 'Shared domains allow all users to create mailboxes without adding their own domain.',
+    'set_shared'        => 'Set as shared',
+    'unset_shared'      => 'Remove shared',
+    'system'            => 'System',
+    'managed_by_admin'  => 'Managed by admin',
 
     // ─── Admin Mailboxes ──────────────────────────────
     'all_mailboxes'     => 'All Mailboxes',
@@ -571,6 +578,10 @@ return [
     'no_labels_yet'         => 'No labels yet',
     'no_labels_hint'        => 'Create labels to organize your emails by category.',
     'message'               => 'Message',
+
+    // ─── Auth messages ────────────────────────────────
+    'login_success'     => 'Login successful! Redirecting...',
+    'register_success'  => 'Registration successful! Redirecting to login...',
 
     // ─── Footer ───────────────────────────────────────
     'footer_system'     => 'Email Management System',

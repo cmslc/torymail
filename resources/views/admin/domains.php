@@ -64,12 +64,21 @@ require_once(__DIR__.'/sidebar.php');
                         <tbody>
                             <?php foreach ($domains as $domain): ?>
                             <tr>
-                                <td class="fw-semibold"><?= sanitize($domain['domain_name']); ?></td>
+                                <td class="fw-semibold">
+                                    <?= sanitize($domain['domain_name']); ?>
+                                    <?php if (!empty($domain['is_shared'])): ?>
+                                        <span class="badge bg-info-subtle text-info ms-1"><?= __('shared'); ?></span>
+                                    <?php endif; ?>
+                                </td>
                                 <td>
-                                    <a href="<?= admin_url('user-edit&id=' . $domain['user_id']); ?>" class="text-decoration-none">
-                                        <?= sanitize($domain['owner_name'] ?? 'Unknown'); ?>
-                                    </a>
-                                    <br><small class="text-muted"><?= sanitize($domain['owner_email'] ?? ''); ?></small>
+                                    <?php if ($domain['user_id']): ?>
+                                        <a href="<?= admin_url('user-edit/' . $domain['user_id']); ?>" class="text-decoration-none">
+                                            <?= sanitize($domain['owner_name'] ?? 'Unknown'); ?>
+                                        </a>
+                                        <br><small class="text-muted"><?= sanitize($domain['owner_email'] ?? ''); ?></small>
+                                    <?php else: ?>
+                                        <span class="text-muted"><i class="ri-global-line me-1"></i><?= __('system'); ?></span>
+                                    <?php endif; ?>
                                 </td>
                                 <td>
                                     <?php if ($domain['status'] === 'active'): ?>
@@ -99,6 +108,15 @@ require_once(__DIR__.'/sidebar.php');
                                         <button class="btn btn-sm btn-soft-info btn-verify-domain" data-id="<?= $domain['id']; ?>" title="<?= __('verify_dns'); ?>">
                                             <i class="ri-refresh-line"></i>
                                         </button>
+                                        <?php if (!empty($domain['is_shared'])): ?>
+                                            <button class="btn btn-sm btn-soft-secondary btn-toggle-shared" data-id="<?= $domain['id']; ?>" title="<?= __('unset_shared'); ?>">
+                                                <i class="ri-share-forward-fill"></i>
+                                            </button>
+                                        <?php else: ?>
+                                            <button class="btn btn-sm btn-soft-info btn-toggle-shared" data-id="<?= $domain['id']; ?>" title="<?= __('set_shared'); ?>">
+                                                <i class="ri-share-forward-line"></i>
+                                            </button>
+                                        <?php endif; ?>
                                         <?php if ($domain['status'] === 'suspended'): ?>
                                             <button class="btn btn-sm btn-soft-success btn-toggle-domain" data-id="<?= $domain['id']; ?>" data-action="activate" title="<?= __('activate'); ?>">
                                                 <i class="ri-check-line"></i>
@@ -138,6 +156,13 @@ require_once(__DIR__.'/sidebar.php');
                         <input type="text" name="domain_name" class="form-control" placeholder="example.com" required>
                     </div>
                     <div class="mb-3">
+                        <div class="form-check form-switch mb-2">
+                            <input class="form-check-input" type="checkbox" name="is_shared" value="1" id="isSharedDomain">
+                            <label class="form-check-label" for="isSharedDomain"><?= __('shared_domain'); ?></label>
+                            <div class="form-text"><?= __('shared_domain_desc'); ?></div>
+                        </div>
+                    </div>
+                    <div class="mb-3" id="ownerGroup">
                         <label class="form-label"><?= __('owner'); ?></label>
                         <select name="user_id" class="form-select" required>
                             <option value=""><?= __('select_user'); ?></option>
@@ -241,8 +266,44 @@ $(document).ready(function() {
                     } else {
                         showToast('error', res.message);
                     }
+                },
+                error: function() {
+                    showToast('error', '<?= __('server_error'); ?>');
                 }
             });
+        });
+    });
+
+    // Toggle shared domain checkbox - hide/show owner field
+    $('#isSharedDomain').on('change', function() {
+        if ($(this).is(':checked')) {
+            $('#ownerGroup').hide();
+            $('#ownerGroup select').prop('required', false);
+        } else {
+            $('#ownerGroup').show();
+            $('#ownerGroup select').prop('required', true);
+        }
+    });
+
+    // Toggle shared
+    $(document).on('click', '.btn-toggle-shared', function() {
+        var domainId = $(this).data('id');
+        $.ajax({
+            url: '<?= base_url("ajaxs/admin/domains.php?action=toggle_shared"); ?>',
+            method: 'POST',
+            data: { domain_id: domainId },
+            dataType: 'json',
+            success: function(res) {
+                if (res.status === 'success') {
+                    showToast('success', res.message);
+                    setTimeout(function() { location.reload(); }, 1000);
+                } else {
+                    showToast('error', res.message);
+                }
+            },
+            error: function() {
+                showToast('error', '<?= __('server_error'); ?>');
+            }
         });
     });
 
@@ -263,6 +324,9 @@ $(document).ready(function() {
                     } else {
                         showToast('error', res.message);
                     }
+                },
+                error: function() {
+                    showToast('error', '<?= __('server_error'); ?>');
                 }
             });
         });

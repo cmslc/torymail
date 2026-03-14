@@ -62,7 +62,7 @@ require_once(__DIR__.'/sidebar.php');
                                 <td class="fw-semibold"><?= sanitize($mb['email_address']); ?></td>
                                 <td><?= sanitize($mb['domain_name']); ?></td>
                                 <td>
-                                    <a href="<?= admin_url('user-edit&id=' . $mb['user_id']); ?>" class="text-decoration-none">
+                                    <a href="<?= admin_url('user-edit/' . $mb['user_id']); ?>" class="text-decoration-none">
                                         <?= sanitize($mb['owner_name']); ?>
                                     </a>
                                 </td>
@@ -165,6 +165,9 @@ $(document).ready(function() {
                     } else {
                         showToast('error', res.message);
                     }
+                },
+                error: function() {
+                    showToast('error', '<?= __('server_error'); ?>');
                 }
             });
         });
@@ -221,6 +224,9 @@ $(document).ready(function() {
                     } else {
                         showToast('error', res.message);
                     }
+                },
+                error: function() {
+                    showToast('error', '<?= __('server_error'); ?>');
                 }
             });
         });

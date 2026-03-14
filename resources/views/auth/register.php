@@ -76,7 +76,7 @@ $body = ['title' => __('register_title')];
                 </div>
             </div>
         </div>
-        <footer class="footer"><div class="container"><div class="text-center"><p class="mb-0 text-muted">&copy; <script>document.write(new Date().getFullYear())</script> Torymail</p></div></div></footer>
+        <footer class="footer"><div class="container"><div class="text-center"><div class="mb-2"><a href="?lang=en" class="text-muted me-2 <?= current_lang() === 'en' ? 'fw-bold text-primary' : '' ?>">English</a><span class="text-muted">|</span><a href="?lang=vi" class="text-muted ms-2 <?= current_lang() === 'vi' ? 'fw-bold text-primary' : '' ?>">Tiếng Việt</a></div><p class="mb-0 text-muted">&copy; <script>document.write(new Date().getFullYear())</script> Torymail</p></div></div></footer>
     </div>
     <script src="<?= asset_url('material/assets/libs/bootstrap/js/bootstrap.bundle.min.js') ?>"></script>
     <script src="<?= asset_url('js/jquery-3.6.0.js') ?>"></script>
@@ -94,7 +94,8 @@ $body = ['title' => __('register_title')];
             method: 'POST', data: $(this).serialize(), dataType: 'json',
             success: function(res) {
                 if (res.status === 'success') {
-                    window.location.href = '<?= base_url('auth/login') ?>?registered=1';
+                    $('#alert-box').html('<div class="alert alert-success"><i class="ri-check-double-line me-2"></i><?= __("register_success") ?></div>');
+                    setTimeout(function() { window.location.href = '<?= base_url("auth/login") ?>'; }, 1500);
                 } else {
                     $('#alert-box').html('<div class="alert alert-danger">' + res.message + '</div>');
                     btn.prop('disabled', false).html('<?= __('register') ?>');

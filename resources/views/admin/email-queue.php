@@ -179,6 +179,9 @@ $(document).ready(function() {
                 } else {
                     showToast('error', res.message);
                 }
+            },
+            error: function() {
+                showToast('error', '<?= __('server_error'); ?>');
             }
         });
     });
@@ -197,6 +200,9 @@ $(document).ready(function() {
                     } else {
                         showToast('error', res.message);
                     }
+                },
+                error: function() {
+                    showToast('error', '<?= __('server_error'); ?>');
                 }
             });
         });
@@ -216,6 +222,9 @@ $(document).ready(function() {
                     } else {
                         showToast('error', res.message);
                     }
+                },
+                error: function() {
+                    showToast('error', '<?= __('server_error'); ?>');
                 }
             });
         });
@@ -237,6 +246,9 @@ $(document).ready(function() {
                     } else {
                         showToast('error', res.message);
                     }
+                },
+                error: function() {
+                    showToast('error', '<?= __('server_error'); ?>');
                 }
             });
         });

@@ -66,7 +66,7 @@ require_once(__DIR__.'/sidebar.php');
                             <tr>
                                 <td><?= $user['id']; ?></td>
                                 <td>
-                                    <a href="<?= admin_url('user-edit&id=' . $user['id']); ?>" class="fw-semibold text-decoration-none">
+                                    <a href="<?= admin_url('user-edit/' . $user['id']); ?>" class="fw-semibold text-decoration-none">
                                         <?= sanitize($user['fullname']); ?>
                                     </a>
                                 </td>
@@ -102,7 +102,7 @@ require_once(__DIR__.'/sidebar.php');
                                         </button>
                                         <ul class="dropdown-menu dropdown-menu-end">
                                             <li>
-                                                <a class="dropdown-item" href="<?= admin_url('user-edit&id=' . $user['id']); ?>">
+                                                <a class="dropdown-item" href="<?= admin_url('user-edit/' . $user['id']); ?>">
                                                     <i class="ri-edit-line me-2"></i> <?= __('edit'); ?>
                                                 </a>
                                             </li>
@@ -239,6 +239,9 @@ $(document).ready(function() {
                     } else {
                         showToast('error', res.message);
                     }
+                },
+                error: function() {
+                    showToast('error', '<?= __('server_error'); ?>');
                 }
             });
         });
@@ -261,6 +264,9 @@ $(document).ready(function() {
                     } else {
                         showToast('error', res.message);
                     }
+                },
+                error: function() {
+                    showToast('error', '<?= __('server_error'); ?>');
                 }
             });
         });

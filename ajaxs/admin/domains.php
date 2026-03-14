@@ -23,17 +23,20 @@ switch ($action) {
         csrf_verify();
 
         $domain_name = trim(strtolower($_POST['domain_name'] ?? ''));
-        $user_id = intval($_POST['user_id'] ?? 0);
+        $is_shared = intval($_POST['is_shared'] ?? 0);
+        $user_id = $is_shared ? null : intval($_POST['user_id'] ?? 0);
 
         if (empty($domain_name)) error_response('Domain name is required');
         if (!preg_match('/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/', $domain_name)) {
             error_response('Invalid domain name format');
         }
-        if ($user_id <= 0) error_response('Please select a user');
+        if (!$is_shared && $user_id <= 0) error_response('Please select a user');
 
-        // Check user exists
-        $user = $ToryMail->get_row_safe("SELECT id FROM users WHERE id = ?", [$user_id]);
-        if (!$user) error_response('User not found');
+        // Check user exists (if not shared)
+        if (!$is_shared) {
+            $user = $ToryMail->get_row_safe("SELECT id FROM users WHERE id = ?", [$user_id]);
+            if (!$user) error_response('User not found');
+        }
 
         // Check domain not already exists
         $existing = $ToryMail->get_row_safe("SELECT id FROM domains WHERE domain_name = ?", [$domain_name]);
@@ -44,20 +47,25 @@ switch ($action) {
         $ToryMail->insert_safe('domains', [
             'user_id'     => $user_id,
             'domain_name' => $domain_name,
-            'status'      => $auto_verify ? 'active' : 'pending',
-            'verified_at' => $auto_verify ? gettime() : null,
-            'mx_verified'    => $auto_verify ? 1 : 0,
-            'spf_verified'   => $auto_verify ? 1 : 0,
-            'dkim_verified'  => $auto_verify ? 1 : 0,
-            'dmarc_verified' => $auto_verify ? 1 : 0,
+            'is_shared'   => $is_shared,
+            'status'      => ($auto_verify || $is_shared) ? 'active' : 'pending',
+            'verified_at' => ($auto_verify || $is_shared) ? gettime() : null,
+            'mx_verified'    => ($auto_verify || $is_shared) ? 1 : 0,
+            'spf_verified'   => ($auto_verify || $is_shared) ? 1 : 0,
+            'dkim_verified'  => ($auto_verify || $is_shared) ? 1 : 0,
+            'dmarc_verified' => ($auto_verify || $is_shared) ? 1 : 0,
             'created_at'  => gettime(),
             'updated_at'  => gettime(),
         ]);
 
+        $details = $is_shared
+            ? 'Admin added shared domain: ' . $domain_name
+            : 'Admin added domain: ' . $domain_name . ' for user #' . $user_id;
+
         $ToryMail->insert_safe('activity_logs', [
             'user_id'    => $getAdmin['id'],
             'action'     => 'admin_domain_add',
-            'details'    => 'Admin added domain: ' . $domain_name . ' for user #' . $user_id,
+            'details'    => $details,
             'ip_address' => get_client_ip(),
             'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? '',
             'created_at' => gettime(),
@@ -91,7 +99,7 @@ switch ($action) {
         }
 
         $total = $ToryMail->get_value_safe(
-            "SELECT COUNT(*) FROM domains d JOIN users u ON d.user_id = u.id WHERE $where",
+            "SELECT COUNT(*) FROM domains d LEFT JOIN users u ON d.user_id = u.id WHERE $where",
             $params
         );
         $pagination = paginate($total, $per_page, $page);
@@ -101,7 +109,7 @@ switch ($action) {
             "SELECT d.*, u.fullname as owner_name, u.email as owner_email,
                     (SELECT COUNT(*) FROM mailboxes WHERE domain_id = d.id) as mailbox_count
              FROM domains d
-             JOIN users u ON d.user_id = u.id
+             LEFT JOIN users u ON d.user_id = u.id
              WHERE $where
              ORDER BY d.created_at DESC
              LIMIT ? OFFSET ?",
@@ -215,6 +223,41 @@ switch ($action) {
             $ToryMail->rollBack();
             error_response('Failed to delete domain');
         }
+        break;
+
+    // -------------------------------------------------------
+    // TOGGLE SHARED
+    // -------------------------------------------------------
+    case 'toggle_shared':
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') error_response('Invalid request method', 405);
+        csrf_verify();
+
+        $domain_id = intval($_POST['domain_id'] ?? 0);
+        if ($domain_id <= 0) error_response('Invalid domain ID');
+
+        $domain = $ToryMail->get_row_safe("SELECT * FROM domains WHERE id = ?", [$domain_id]);
+        if (!$domain) error_response('Domain not found');
+
+        $newShared = $domain['is_shared'] ? 0 : 1;
+        $updateData = ['is_shared' => $newShared, 'updated_at' => gettime()];
+
+        // If making shared, set user_id to NULL (system-owned)
+        if ($newShared) {
+            $updateData['user_id'] = null;
+        }
+
+        $ToryMail->update_safe('domains', $updateData, 'id = ?', [$domain_id]);
+
+        $ToryMail->insert_safe('activity_logs', [
+            'user_id'    => $getAdmin['id'],
+            'action'     => $newShared ? 'admin_domain_set_shared' : 'admin_domain_unset_shared',
+            'details'    => 'Admin ' . ($newShared ? 'set' : 'unset') . ' shared domain: ' . $domain['domain_name'],
+            'ip_address' => get_client_ip(),
+            'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? '',
+            'created_at' => gettime(),
+        ]);
+
+        success_response($newShared ? 'Domain is now shared' : 'Domain is no longer shared', ['is_shared' => $newShared]);
         break;
 
     default:

@@ -13,11 +13,11 @@ $body['footer'] = '';
 require_once __DIR__ . '/header.php';
 require_once __DIR__ . '/sidebar.php';
 
-// Fetch user's domains for the add mailbox modal
+// Fetch user's domains + shared domains for the add mailbox modal
 $userDomains = $ToryMail->get_list_safe("
-    SELECT `id`, `domain_name`, `status` FROM `domains`
-    WHERE `user_id` = ? AND `status` = 'active'
-    ORDER BY `domain_name` ASC
+    SELECT `id`, `domain_name`, `status`, `is_shared` FROM `domains`
+    WHERE (`user_id` = ? OR `is_shared` = 1) AND `status` = 'active'
+    ORDER BY `is_shared` ASC, `domain_name` ASC
 ", [$getUser['id']]);
 
 // Fetch mailboxes
@@ -163,7 +163,7 @@ $statusColors = [
                         <select name="domain_id" id="mbDomain" class="form-select" required>
                             <option value=""><?= __('select_domain'); ?></option>
                             <?php foreach ($userDomains as $d): ?>
-                            <option value="<?= $d['id']; ?>"><?= htmlspecialchars($d['domain_name']); ?></option>
+                            <option value="<?= $d['id']; ?>"><?= htmlspecialchars($d['domain_name']); ?><?= !empty($d['is_shared']) ? ' (' . __('shared') . ')' : ''; ?></option>
                             <?php endforeach; ?>
                         </select>
                         <?php if (empty($userDomains)): ?>

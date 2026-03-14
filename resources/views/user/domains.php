@@ -13,14 +13,15 @@ $body['footer'] = '';
 require_once __DIR__ . '/header.php';
 require_once __DIR__ . '/sidebar.php';
 
-// Fetch user's domains
+// Fetch user's own domains + shared domains
 $domains = $ToryMail->get_list_safe("
     SELECT d.*,
-           (SELECT COUNT(*) FROM `mailboxes` m WHERE m.`domain_id` = d.`id`) as mailbox_count
+           (SELECT COUNT(*) FROM `mailboxes` m WHERE m.`domain_id` = d.`id`) as mailbox_count,
+           (SELECT COUNT(*) FROM `mailboxes` m WHERE m.`domain_id` = d.`id` AND m.`user_id` = ?) as my_mailbox_count
     FROM `domains` d
-    WHERE d.`user_id` = ?
-    ORDER BY d.`created_at` DESC
-", [$getUser['id']]);
+    WHERE d.`user_id` = ? OR d.`is_shared` = 1
+    ORDER BY d.`is_shared` ASC, d.`created_at` DESC
+", [$getUser['id'], $getUser['id']]);
 
 $statusColors = [
     'pending'   => 'warning',
@@ -89,6 +90,9 @@ $statusColors = [
                     <tr>
                         <td>
                             <span class="fw-semibold"><?= htmlspecialchars($domain['domain_name']); ?></span>
+                            <?php if (!empty($domain['is_shared'])): ?>
+                                <span class="badge bg-info-subtle text-info ms-1"><?= __('shared'); ?></span>
+                            <?php endif; ?>
                         </td>
                         <td>
                             <span class="badge bg-<?= $statusColors[$domain['status']] ?? 'secondary'; ?>-subtle text-<?= $statusColors[$domain['status']] ?? 'secondary'; ?>">
@@ -136,6 +140,7 @@ $statusColors = [
                         </td>
                         <td class="text-muted fs-12"><?= format_date($domain['created_at'], 'M j, Y'); ?></td>
                         <td>
+                            <?php if (empty($domain['is_shared'])): ?>
                             <div class="d-flex gap-1">
                                 <button class="btn btn-soft-secondary btn-sm" onclick="showDnsSetup(<?= htmlspecialchars(json_encode($domain)); ?>)" title="<?= __('dns_setup'); ?>">
                                     <i class="ri-settings-3-line"></i>
@@ -147,6 +152,9 @@ $statusColors = [
                                     <i class="ri-delete-bin-line"></i>
                                 </button>
                             </div>
+                            <?php else: ?>
+                            <span class="text-muted fs-12"><?= __('managed_by_admin'); ?></span>
+                            <?php endif; ?>
                         </td>
                     </tr>
                     <?php endforeach; ?>

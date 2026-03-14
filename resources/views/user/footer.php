@@ -40,7 +40,7 @@
             '<button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>' +
             '</div></div>';
         $('#toastContainer').append(html);
-        var toast = new bootstrap.Toast(document.getElementById(id), { delay: 3000 });
+        var toast = new bootstrap.Toast(document.getElementById(id), { delay: 5000 });
         toast.show();
         document.getElementById(id).addEventListener('hidden.bs.toast', function() { this.remove(); });
     }

@@ -157,7 +157,7 @@ require_once(__DIR__.'/sidebar.php');
                                     </td>
                                     <td>
                                         <?php if ($log['user_id']): ?>
-                                            <a href="<?= admin_url('user-edit&id=' . $log['user_id']); ?>"><?= sanitize($log['fullname'] ?? 'Unknown'); ?></a>
+                                            <a href="<?= admin_url('user-edit/' . $log['user_id']); ?>"><?= sanitize($log['fullname'] ?? 'Unknown'); ?></a>
                                         <?php else: ?>
                                             <span class="text-muted">System</span>
                                         <?php endif; ?>

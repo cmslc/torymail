@@ -186,6 +186,13 @@ return [
     'activate_domain'   => 'Kích hoạt tên miền này?',
     'delete_domain'     => 'Xóa tên miền?',
     'delete_domain_desc' => 'Tên miền và tất cả hộp thư sẽ bị xóa vĩnh viễn.',
+    'shared'            => 'Dùng chung',
+    'shared_domain'     => 'Tên miền dùng chung',
+    'shared_domain_desc' => 'Tên miền dùng chung cho phép tất cả người dùng tạo hộp thư mà không cần thêm tên miền riêng.',
+    'set_shared'        => 'Đặt làm dùng chung',
+    'unset_shared'      => 'Bỏ dùng chung',
+    'system'            => 'Hệ thống',
+    'managed_by_admin'  => 'Quản lý bởi admin',
 
     // ─── Admin Mailboxes ──────────────────────────────
     'all_mailboxes'     => 'Tất cả hộp thư',
@@ -570,6 +577,10 @@ return [
     'no_labels_yet'         => 'Chưa có nhãn nào',
     'no_labels_hint'        => 'Tạo nhãn để sắp xếp email theo danh mục.',
     'message'               => 'Tin nhắn',
+
+    // ─── Auth messages ────────────────────────────────
+    'login_success'     => 'Đăng nhập thành công! Đang chuyển hướng...',
+    'register_success'  => 'Đăng ký thành công! Đang chuyển đến trang đăng nhập...',
 
     // ─── Footer ───────────────────────────────────────
     'footer_system'     => 'Hệ thống quản lý Email',
