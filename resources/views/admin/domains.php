@@ -105,6 +105,9 @@ require_once(__DIR__.'/sidebar.php');
                                 <td><small><?= format_date($domain['created_at']); ?></small></td>
                                 <td>
                                     <div class="d-flex gap-1">
+                                        <button class="btn btn-sm btn-soft-secondary btn-dns-setup" data-domain="<?= htmlspecialchars(json_encode($domain)); ?>" title="<?= __('dns_setup'); ?>">
+                                            <i class="ri-settings-3-line"></i>
+                                        </button>
                                         <button class="btn btn-sm btn-soft-info btn-verify-domain" data-id="<?= $domain['id']; ?>" title="<?= __('verify_dns'); ?>">
                                             <i class="ri-refresh-line"></i>
                                         </button>
@@ -188,9 +191,95 @@ require_once(__DIR__.'/sidebar.php');
     </div>
 </div>
 
+<!-- DNS Setup Modal -->
+<div class="modal fade" id="modalDnsSetup" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="ri-dns-line me-1"></i> <?= __('dns_setup'); ?> - <span id="dnsDomainName"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning fs-13">
+                    <i class="ri-error-warning-line me-1 align-bottom"></i>
+                    <?= __('dns_instructions'); ?> <?= __('dns_propagation'); ?>
+                </div>
+
+                <!-- MX Record -->
+                <div class="mb-4">
+                    <h6 class="fw-semibold d-flex align-items-center gap-2">
+                        <span><?= __('mx_record'); ?></span>
+                        <span id="dnsMxBadge" class="badge"></span>
+                    </h6>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-sm mb-0 fs-13">
+                            <tr><th style="width:100px;"><?= __('type'); ?></th><td>MX</td></tr>
+                            <tr><th><?= __('host'); ?></th><td>@</td></tr>
+                            <tr><th><?= __('value'); ?></th><td id="dnsMxValue" class="user-select-all"></td></tr>
+                            <tr><th><?= __('priority'); ?></th><td>10</td></tr>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- SPF Record -->
+                <div class="mb-4">
+                    <h6 class="fw-semibold d-flex align-items-center gap-2">
+                        <span><?= __('spf_record'); ?></span>
+                        <span id="dnsSpfBadge" class="badge"></span>
+                    </h6>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-sm mb-0 fs-13">
+                            <tr><th style="width:100px;"><?= __('type'); ?></th><td>TXT</td></tr>
+                            <tr><th><?= __('host'); ?></th><td>@</td></tr>
+                            <tr><th><?= __('value'); ?></th><td id="dnsSpfValue" class="user-select-all"></td></tr>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- DKIM Record -->
+                <div class="mb-4">
+                    <h6 class="fw-semibold d-flex align-items-center gap-2">
+                        <span><?= __('dkim_record'); ?></span>
+                        <span id="dnsDkimBadge" class="badge"></span>
+                    </h6>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-sm mb-0 fs-13">
+                            <tr><th style="width:100px;"><?= __('type'); ?></th><td>TXT</td></tr>
+                            <tr><th><?= __('host'); ?></th><td id="dnsDkimHost" class="user-select-all"></td></tr>
+                            <tr><th><?= __('value'); ?></th><td id="dnsDkimValue" class="user-select-all" style="word-break:break-all;"></td></tr>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- DMARC Record -->
+                <div class="mb-4">
+                    <h6 class="fw-semibold d-flex align-items-center gap-2">
+                        <span><?= __('dmarc_record'); ?></span>
+                        <span id="dnsDmarcBadge" class="badge"></span>
+                    </h6>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-sm mb-0 fs-13">
+                            <tr><th style="width:100px;"><?= __('type'); ?></th><td>TXT</td></tr>
+                            <tr><th><?= __('host'); ?></th><td>_dmarc</td></tr>
+                            <tr><th><?= __('value'); ?></th><td id="dnsDmarcValue" class="user-select-all"></td></tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal"><?= __('close'); ?></button>
+                <button type="button" class="btn btn-primary" id="btnVerifyFromModal">
+                    <i class="ri-refresh-line me-1"></i> <?= __('verify_dns_records'); ?>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <?php require_once(__DIR__.'/footer.php'); ?>
 
 <script>
+var currentDnsId = null;
 $(document).ready(function() {
     // Add domain
     $('#formAddDomain').on('submit', function(e) {
@@ -303,6 +392,53 @@ $(document).ready(function() {
             },
             error: function() {
                 showToast('error', '<?= __('server_error'); ?>');
+            }
+        });
+    });
+
+    // DNS Setup modal
+    $(document).on('click', '.btn-dns-setup', function() {
+        var domain = $(this).data('domain');
+        currentDnsId = domain.id;
+        var serverHost = '<?= get_setting("mail_server_hostname") ?: get_setting("mx_record_value") ?: "mail.example.com"; ?>';
+
+        $('#dnsDomainName').text(domain.domain_name);
+        $('#dnsMxValue').text(serverHost);
+        $('#dnsSpfValue').text('v=spf1 mx a ip4:<?= trim(get_setting("mail_server_hostname", "YOUR_SERVER_IP")); ?> ~all');
+        $('#dnsDkimHost').text((domain.dkim_selector || 'torymail') + '._domainkey');
+        $('#dnsDkimValue').text(domain.dkim_public_key ? 'v=DKIM1; k=rsa; p=' + domain.dkim_public_key : '<?= __("dkim_not_generated"); ?>');
+        $('#dnsDmarcValue').text('v=DMARC1; p=quarantine; rua=mailto:postmaster@' + domain.domain_name);
+
+        function badge(ok) {
+            return ok ? 'badge bg-success-subtle text-success' : 'badge bg-danger-subtle text-danger';
+        }
+        function label(ok) { return ok ? '<?= __("verified"); ?>' : '<?= __("not_verified"); ?>'; }
+        $('#dnsMxBadge').attr('class', badge(domain.mx_verified)).text(label(domain.mx_verified));
+        $('#dnsSpfBadge').attr('class', badge(domain.spf_verified)).text(label(domain.spf_verified));
+        $('#dnsDkimBadge').attr('class', badge(domain.dkim_verified)).text(label(domain.dkim_verified));
+        $('#dnsDmarcBadge').attr('class', badge(domain.dmarc_verified)).text(label(domain.dmarc_verified));
+
+        new bootstrap.Modal(document.getElementById('modalDnsSetup')).show();
+    });
+
+    // Verify from DNS modal
+    $('#btnVerifyFromModal').on('click', function() {
+        if (!currentDnsId) return;
+        var btn = $(this);
+        btn.prop('disabled', true).html('<i class="ri-loader-4-line ri-spin me-1"></i> <?= __("verifying"); ?>');
+
+        $.ajax({
+            url: '<?= base_url("ajaxs/admin/domains.php?action=verify"); ?>',
+            method: 'POST',
+            data: { domain_id: currentDnsId },
+            dataType: 'json',
+            success: function(res) {
+                showToast(res.status === 'success' ? 'success' : 'error', res.message);
+                setTimeout(function() { location.reload(); }, 1000);
+            },
+            error: function() {
+                showToast('error', '<?= __("server_error"); ?>');
+                btn.prop('disabled', false).html('<i class="ri-refresh-line me-1"></i> <?= __("verify_dns_records"); ?>');
             }
         });
     });

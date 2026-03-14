@@ -583,6 +583,11 @@ return [
     'login_success'     => 'Login successful! Redirecting...',
     'register_success'  => 'Registration successful! Redirecting to login...',
 
+    // ─── DNS ─────────────────────────────────────────────
+    'not_verified'          => 'Not verified',
+    'dkim_not_generated'    => '(DKIM key will be generated after verification)',
+    'verifying'             => 'Verifying...',
+
     // ─── Language ────────────────────────────────────────
     'default_language'      => 'Default Language',
     'default_language_hint' => 'Default display language for new users.',

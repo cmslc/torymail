@@ -582,6 +582,11 @@ return [
     'login_success'     => 'Đăng nhập thành công! Đang chuyển hướng...',
     'register_success'  => 'Đăng ký thành công! Đang chuyển đến trang đăng nhập...',
 
+    // ─── DNS ─────────────────────────────────────────────
+    'not_verified'          => 'Chưa xác minh',
+    'dkim_not_generated'    => '(Khóa DKIM sẽ được tạo sau khi xác minh)',
+    'verifying'             => 'Đang xác minh...',
+
     // ─── Language ────────────────────────────────────────
     'default_language'      => 'Ngôn ngữ mặc định',
     'default_language_hint' => 'Ngôn ngữ hiển thị mặc định cho người dùng mới.',
