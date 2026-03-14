@@ -107,7 +107,7 @@ $groups = $ToryMail->get_list_safe("
         </form>
     </div>
 
-    <div class="card-body p-0">
+    <div class="card-body">
         <?php if (empty($contacts)): ?>
         <div class="text-center py-5">
             <div class="avatar-lg mx-auto mb-3">

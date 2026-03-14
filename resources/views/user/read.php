@@ -284,7 +284,7 @@ $(function() {
             <?= count($threadEmails); ?> <?= __('earlier_messages'); ?>
         </h6>
     </div>
-    <div class="card-body p-0">
+    <div class="card-body">
         <div class="accordion accordion-flush" id="threadAccordion">
             <?php foreach ($threadEmails as $ti => $te): ?>
             <div class="accordion-item">

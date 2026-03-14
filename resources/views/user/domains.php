@@ -57,7 +57,7 @@ $statusColors = [
         </div>
     </div>
 
-    <div class="card-body p-0">
+    <div class="card-body">
         <?php if (empty($domains)): ?>
         <div class="text-center py-5">
             <div class="avatar-lg mx-auto mb-3">

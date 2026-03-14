@@ -282,7 +282,7 @@
                                                 </div>
                                             </div><!-- end card header -->
 
-                                            <div class="card-body p-0 pb-2">
+                                            <div class="card-body pb-2">
                                                 <div class="w-100">
                                                     <div id="customer_impression_charts"
                                                         data-colors='["--vz-success", "--vz-primary", "--vz-danger"]'
@@ -1038,7 +1038,7 @@
                             <div class="overlay"></div>
                             <div class="layout-rightside">
                                 <div class="card h-100 rounded-0">
-                                    <div class="card-body p-0">
+                                    <div class="card-body">
                                         <div class="p-3">
                                             <h6 class="text-muted mb-0 text-uppercase fw-semibold">Recent Activity</h6>
                                         </div>

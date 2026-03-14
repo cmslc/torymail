@@ -224,7 +224,7 @@ elseif ($draftId) $composeTitle = __('edit_draft');
         </div>
 
         <!-- Editor Body -->
-        <div class="card-body p-0">
+        <div class="card-body">
             <div id="emailBody" contenteditable="true"
                  style="min-height:350px;padding:20px;outline:none;font-size:14px;line-height:1.7;overflow-y:auto;"><?= $prefill['body']; ?></div>
             <input type="hidden" name="body_html" id="bodyHtmlInput">
