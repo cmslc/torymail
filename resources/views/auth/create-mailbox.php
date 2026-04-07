@@ -34,7 +34,8 @@ $siteLogo = get_setting('site_logo', '');
     .app-menu .simplebar-content-wrapper{overflow:hidden}
 
     /* Cards */
-    .tm-card{background:var(--vz-card-bg);border:1px solid var(--vz-border-color);border-radius:12px;overflow:hidden}
+    .tm-card{background:#fff;border:1px solid var(--vz-border-color);border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+    [data-bs-theme="dark"] .tm-card{background:var(--vz-card-bg)}
 
     /* Left Panel */
     .tm-left{position:sticky;top:90px}
