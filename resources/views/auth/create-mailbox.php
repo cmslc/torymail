@@ -175,6 +175,8 @@ $siteLogo = get_setting('site_logo', '');
                     <li class="menu-title"><span><?=__('temp_mail_sidebar_account');?></span></li>
                     <li class="nav-item"><a href="<?=base_url('auth/login');?>" class="nav-link menu-link"><i class="ri-login-box-line"></i><span><?=__('login');?></span></a></li>
                     <li class="nav-item"><a href="<?=base_url('auth/register');?>" class="nav-link menu-link"><i class="ri-user-add-line"></i><span><?=__('register');?></span></a></li>
+                    <li class="menu-title"><span><?=__('temp_mail_sidebar_developer');?></span></li>
+                    <li class="nav-item"><a href="<?=base_url('auth/api-docs');?>" class="nav-link menu-link"><i class="ri-code-s-slash-line"></i><span>API Documentation</span></a></li>
                 </ul>
             </div>
         </div>

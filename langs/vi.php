@@ -663,6 +663,7 @@ return [
     'temp_mail_sidebar_info'    => 'Email của bạn',
     'temp_mail_sidebar_hint'    => 'Nhập tên người dùng ở trên để nhận địa chỉ email tạm thời.',
     'temp_mail_sidebar_account' => 'Tài khoản',
+    'temp_mail_sidebar_developer' => 'Nhà phát triển',
     'create_mailbox_no_domains' => 'Hiện tại không có domain chia sẻ nào khả dụng. Vui lòng thử lại sau.',
     'create_mailbox_link'       => 'Nhận email tạm thời miễn phí',
     'or_create_mailbox'         => 'Hoặc nhận email tạm thời miễn phí',

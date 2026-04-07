@@ -664,6 +664,7 @@ return [
     'temp_mail_sidebar_info'    => 'Your Email',
     'temp_mail_sidebar_hint'    => 'Enter a username above to get your temporary email address.',
     'temp_mail_sidebar_account' => 'Account',
+    'temp_mail_sidebar_developer' => 'Developer',
     'create_mailbox_no_domains' => 'No shared domains are available at this time. Please try again later.',
     'create_mailbox_link'       => 'Get a free temporary email',
     'or_create_mailbox'         => 'Or get a free temporary email',
