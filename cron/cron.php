@@ -147,7 +147,33 @@ if (!$last_dns_check || strtotime($last_dns_check) < strtotime('-1 hour')) {
 }
 
 // ============================================================
-// 7. Clean old activity logs (older than 90 days)
+// 7. Auto-delete expired temp mailboxes
+// ============================================================
+$expiryHours = intval(get_setting('temp_mailbox_expiry_hours', '24'));
+if ($expiryHours > 0) {
+    echo "Cleaning expired temp mailboxes ({$expiryHours}h)...\n";
+    $expired = $ToryMail->get_list_safe(
+        "SELECT id, email_address FROM mailboxes WHERE user_id IS NULL AND created_at < DATE_SUB(NOW(), INTERVAL ? HOUR)",
+        [$expiryHours]
+    );
+    foreach ($expired as $mb) {
+        // Delete attachments files
+        $atts = $ToryMail->get_list_safe(
+            "SELECT ea.storage_path FROM email_attachments ea JOIN emails e ON ea.email_id = e.id WHERE e.mailbox_id = ?",
+            [$mb['id']]
+        );
+        foreach ($atts as $att) {
+            $file_path = __DIR__ . '/../' . $att['storage_path'];
+            if (file_exists($file_path)) @unlink($file_path);
+        }
+        // Cascade delete handles emails + attachments via FK
+        $ToryMail->remove_safe('mailboxes', 'id = ?', [$mb['id']]);
+    }
+    echo "  Removed: " . count($expired) . " temp mailboxes\n";
+}
+
+// ============================================================
+// 8. Clean old activity logs (older than 90 days)
 // ============================================================
 echo "Cleaning old logs...\n";
 $cleaned = $ToryMail->remove_safe('activity_logs', 'created_at < DATE_SUB(NOW(), INTERVAL 90 DAY)');

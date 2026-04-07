@@ -346,6 +346,23 @@ require_once(__DIR__.'/sidebar.php');
                                     <input type="number" name="settings[max_email_size_mb]" class="form-control" value="<?= round(intval(get_setting('max_email_size', '52428800')) / 1048576); ?>" min="1">
                                 </div>
                             </div>
+                            <div class="row g-3 mt-1">
+                                <div class="col-md-6">
+                                    <label class="form-label"><?= __('temp_mail_expiry'); ?></label>
+                                    <select name="settings[temp_mailbox_expiry_hours]" class="form-select">
+                                        <?php $expiry = get_setting('temp_mailbox_expiry_hours', '24'); ?>
+                                        <option value="1" <?= $expiry==='1'?'selected':''; ?>>1 <?= __('hours'); ?></option>
+                                        <option value="6" <?= $expiry==='6'?'selected':''; ?>>6 <?= __('hours'); ?></option>
+                                        <option value="12" <?= $expiry==='12'?'selected':''; ?>>12 <?= __('hours'); ?></option>
+                                        <option value="24" <?= $expiry==='24'?'selected':''; ?>>24 <?= __('hours'); ?></option>
+                                        <option value="72" <?= $expiry==='72'?'selected':''; ?>>3 <?= __('days'); ?></option>
+                                        <option value="168" <?= $expiry==='168'?'selected':''; ?>>7 <?= __('days'); ?></option>
+                                        <option value="720" <?= $expiry==='720'?'selected':''; ?>>30 <?= __('days'); ?></option>
+                                        <option value="0" <?= $expiry==='0'?'selected':''; ?>><?= __('never'); ?></option>
+                                    </select>
+                                    <small class="text-muted"><?= __('temp_mail_expiry_hint'); ?></small>
+                                </div>
+                            </div>
                             <div class="mt-4">
                                 <button type="submit" class="btn btn-primary">
                                     <i class="ri-save-line me-1"></i> <?= __('save_limits'); ?>

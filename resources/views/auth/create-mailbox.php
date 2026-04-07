@@ -129,6 +129,9 @@ $siteLogo = get_setting('site_logo', '');
     .tm-use-card{transition:box-shadow .2s,transform .2s}
     .tm-use-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.08);transform:translateY(-2px)}
 
+    #qr-code{display:inline-block}
+    #qr-code img,#qr-code canvas{border-radius:8px;border:1px solid var(--vz-border-color)}
+
     .refresh-spin{animation:spin .8s linear infinite}
     @keyframes spin{100%{transform:rotate(360deg)}}
 
@@ -207,7 +210,10 @@ $siteLogo = get_setting('site_logo', '');
                                             <?php endforeach; ?>
                                         </select>
                                     </div>
-                                    <button type="submit" class="btn btn-primary btn-gen" id="btnGet"><i class="ri-arrow-right-line me-1"></i><?=__('temp_mail_get_btn');?></button>
+                                    <div class="d-flex gap-2 mt-2">
+                                        <button type="submit" class="btn btn-primary btn-gen flex-grow-1" id="btnGet"><i class="ri-arrow-right-line me-1"></i><?=__('temp_mail_get_btn');?></button>
+                                        <button type="button" class="btn btn-soft-secondary btn-gen" onclick="generateRandom()" title="<?=__('temp_mail_random');?>"><i class="ri-shuffle-line"></i></button>
+                                    </div>
                                 </form>
                                 <?php else: ?>
                                 <div class="alert alert-warning mb-0 small"><i class="ri-information-line me-1"></i><?=__('create_mailbox_no_domains');?></div>
@@ -234,6 +240,23 @@ $siteLogo = get_setting('site_logo', '');
                                         <div class="s-label"><?=__('temp_mail_stat_unread');?></div>
                                     </div>
                                 </div>
+
+                                <!-- QR Code -->
+                                <div class="text-center mt-3 pt-3 border-top">
+                                    <div class="tm-section-label justify-content-center"><i class="ri-qr-code-line"></i> QR Code</div>
+                                    <div id="qr-code"></div>
+                                    <small class="text-muted d-block mt-1"><?=__('temp_mail_qr_hint');?></small>
+                                </div>
+                            </div>
+
+                            <!-- Webhook -->
+                            <div class="tm-card p-3 mb-3 d-none" id="webhook-panel">
+                                <div class="tm-section-label"><i class="ri-webhook-line text-info"></i> Webhook</div>
+                                <div class="input-group input-group-sm">
+                                    <input type="url" class="form-control" id="webhook-url" placeholder="https://your-server.com/hook">
+                                    <button class="btn btn-soft-primary" onclick="saveWebhook()" id="btnWebhook"><i class="ri-save-line"></i></button>
+                                </div>
+                                <small class="text-muted"><?=__('temp_mail_webhook_hint');?></small>
                             </div>
                         </div>
                     </div>
@@ -450,12 +473,70 @@ $siteLogo = get_setting('site_logo', '');
 <script src="<?=base_url('public/material/assets/libs/feather-icons/feather.min.js');?>"></script>
 <script src="<?=base_url('public/material/assets/js/plugins.js');?>"></script>
 <script src="<?=base_url('public/material/assets/js/app.js');?>"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
 <script>
-var B=<?=json_encode(base_url())?>,rT=null,cE='';
+var B=<?=json_encode(base_url())?>,rT=null,cE='',webhookUrl='';
 var cs=['#405189','#0ab39c','#f06548','#f7b84b','#299cdb','#6559cc','#e83e8c','#2b8a3e','#1098ad','#845ef7'];
 function gc(s){var h=0;for(var i=0;i<(s||'').length;i++)h=s.charCodeAt(i)+((h<<5)-h);return cs[Math.abs(h)%cs.length]}
 function gi(s){return(s||'?')[0].toUpperCase()}
 (function(){var e=document.getElementById('scrollbar');if(e&&typeof SimpleBar!=='undefined'&&!e.SimpleBar){e.classList.add('h-100');new SimpleBar(e)}})();
+
+// Activate mailbox UI
+function activateMailbox(email){
+    cE=email;
+    $('#ed-email').text(cE);$('#email-panel').removeClass('d-none');$('#webhook-panel').removeClass('d-none');
+    $('#inbox-empty').addClass('d-none');$('#inbox-active').removeClass('d-none');
+    $('#sb-email').text(cE);$('#sb-on').show();$('#sb-off').hide();
+    $('#alert-box').empty();
+    generateQR(cE);
+    refreshInbox();if(rT)clearInterval(rT);rT=setInterval(refreshInbox,5000);
+}
+
+// Generate QR Code
+function generateQR(email){
+    var qr=qrcode(0,'M');
+    qr.addData('mailto:'+email);
+    qr.make();
+    $('#qr-code').html(qr.createImgTag(4,8));
+}
+
+// Random email — call API
+function generateRandom(){
+    $.ajax({url:B+'/ajaxs/public/mailboxes.php?action=create',method:'POST',
+        data:{local_part:randName(),domain_id:$('#domain_id').val(),_csrf_token:$('meta[name="csrf-token"]').attr('content')},
+        dataType:'json',
+        success:function(r){if(r.status==='success'){$('#local_part').val(r.email_address.split('@')[0]);activateMailbox(r.email_address);}else{$('#alert-box').html('<div class="alert alert-danger small mb-2">'+r.message+'</div>')}}
+    });
+}
+function randName(){var c='abcdefghijklmnopqrstuvwxyz',r='';for(var i=0;i<5;i++)r+=c[Math.floor(Math.random()*c.length)];return r+Math.floor(1000+Math.random()*9000);}
+
+// Webhook
+function saveWebhook(){
+    webhookUrl=$('#webhook-url').val().trim();
+    if(webhookUrl){
+        localStorage.setItem('tm_webhook_'+cE,webhookUrl);
+        var i=$('#btnWebhook i');i.removeClass('ri-save-line').addClass('ri-check-line text-success');
+        setTimeout(function(){i.removeClass('ri-check-line text-success').addClass('ri-save-line')},1500);
+    }
+}
+function loadWebhook(){
+    if(!cE)return;
+    var w=localStorage.getItem('tm_webhook_'+cE);
+    if(w){$('#webhook-url').val(w);webhookUrl=w;}
+}
+function triggerWebhook(emailData){
+    if(!webhookUrl)return;
+    try{
+        fetch(webhookUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({event:'new_email',mailbox:cE,email:emailData}),mode:'no-cors'});
+    }catch(e){}
+}
+
+// Auto-generate random on page load
+$(function(){
+    <?php if (!empty($sharedDomains)): ?>
+    generateRandom();
+    <?php endif; ?>
+});
 
 $('#getEmailForm').submit(function(e){
     e.preventDefault();var b=$('#btnGet');
@@ -463,12 +544,8 @@ $('#getEmailForm').submit(function(e){
     $.ajax({url:B+'/ajaxs/public/mailboxes.php?action=create',method:'POST',data:$(this).serialize(),dataType:'json',
         success:function(r){
             if(r.status==='success'){
-                cE=r.email_address;
-                $('#ed-email').text(cE);$('#email-panel').removeClass('d-none');
-                $('#inbox-empty').addClass('d-none');$('#inbox-active').removeClass('d-none');
-                $('#sb-email').text(cE);$('#sb-on').show();$('#sb-off').hide();
-                $('#alert-box').empty();
-                refreshInbox();if(rT)clearInterval(rT);rT=setInterval(refreshInbox,5000);
+                activateMailbox(r.email_address);
+                loadWebhook();
             }else{$('#alert-box').html('<div class="alert alert-danger alert-dismissible fade show small mb-2">'+r.message+'<button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert"></button></div>')}
             b.prop('disabled',0).html('<i class="ri-arrow-right-line me-1"></i>'+<?=json_encode(__('temp_mail_get_btn'))?>);
         },
@@ -476,6 +553,7 @@ $('#getEmailForm').submit(function(e){
     });
 });
 
+var prevCount=0;
 function refreshInbox(){
     $('#rIcon').addClass('refresh-spin');
     $.ajax({url:B+'/ajaxs/public/mailboxes.php?action=inbox',method:'GET',dataType:'json',
@@ -486,6 +564,12 @@ function refreshInbox(){
             $('#stat-total').text(t);$('#stat-unread').text(u);
             u>0?$('#sb-badge').text(u).removeClass('d-none'):$('#sb-badge').addClass('d-none');
             t>0?$('#ih-badge').text(t).removeClass('d-none'):$('#ih-badge').addClass('d-none');
+            // Webhook: trigger on new emails
+            if(t>prevCount&&prevCount>0){
+                var newEmails=em.slice(0,t-prevCount);
+                newEmails.forEach(function(e){triggerWebhook(e)});
+            }
+            prevCount=t;
             renderList(em);
         },
         error:function(){$('#rIcon').removeClass('refresh-spin')}
