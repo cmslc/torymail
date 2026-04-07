@@ -79,6 +79,8 @@ $baseApi = base_url('api/v1');
                     <li class="menu-title"><span>Endpoints</span></li>
                     <li class="nav-item"><a href="#ep-domains" class="nav-link menu-link"><i class="ri-global-line"></i><span>List Domains</span></a></li>
                     <li class="nav-item"><a href="#ep-create" class="nav-link menu-link"><i class="ri-add-circle-line"></i><span>Create Mailbox</span></a></li>
+                    <li class="nav-item"><a href="#ep-random" class="nav-link menu-link"><i class="ri-shuffle-line"></i><span>Random Mailbox</span></a></li>
+                    <li class="nav-item"><a href="#ep-check" class="nav-link menu-link"><i class="ri-checkbox-circle-line"></i><span>Check Mailbox</span></a></li>
                     <li class="nav-item"><a href="#ep-inbox" class="nav-link menu-link"><i class="ri-inbox-line"></i><span>Get Inbox</span></a></li>
                     <li class="nav-item"><a href="#ep-read" class="nav-link menu-link"><i class="ri-mail-open-line"></i><span>Read Email</span></a></li>
                     <li class="nav-item"><a href="#ep-delete" class="nav-link menu-link"><i class="ri-delete-bin-line"></i><span>Delete Email</span></a></li>
@@ -187,7 +189,66 @@ GET /api/v1/inbox?token=<span class="s">your-token-here</span></pre>
   <span class="k">"token"</span>: <span class="s">"a1b2c3d4e5f6..."</span>,
   <span class="k">"created_at"</span>: <span class="s">"2026-04-07 12:00:00"</span>
 }</pre>
-                                <div class="alert alert-warning small mt-3 mb-0"><i class="ri-error-warning-line me-1"></i><strong>Important:</strong> Save the <code>token</code> — you need it for all other API calls on this mailbox.</div>
+                                <div class="alert alert-warning small mt-3 mb-0"><i class="ri-error-warning-line me-1"></i><strong>Important:</strong> Save the <code>token</code> — you need it for all other API calls on this mailbox. Or use the no-auth endpoints with just the email address.</div>
+                            </div>
+                        </div>
+
+                        <!-- EP: Random -->
+                        <div id="ep-random" class="api-card">
+                            <div class="api-card-head">
+                                <span class="api-method post">POST</span>
+                                <span class="api-path">/api/v1/random</span>
+                                <span class="badge bg-success-subtle text-success ms-auto">No Auth</span>
+                            </div>
+                            <div class="api-card-body">
+                                <p>Create a mailbox with a randomly generated username. Optionally specify a domain, otherwise the first available domain is used.</p>
+                                <h6 class="fw-semibold small text-uppercase text-muted mb-2">Parameters <span class="text-muted fw-normal">(all optional)</span></h6>
+                                <div class="table-responsive">
+                                    <table class="table table-sm api-table">
+                                        <thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead>
+                                        <tbody>
+                                            <tr><td><code>domain_id</code></td><td>integer</td><td>Domain ID (optional)</td></tr>
+                                            <tr><td><code>domain</code></td><td>string</td><td>Domain name (optional)</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <h6 class="fw-semibold small text-uppercase text-muted mt-3 mb-2">Example</h6>
+                                <pre class="api-code"><span class="c"># No parameters needed — fully automatic</span>
+curl -X POST <?= htmlspecialchars($baseApi) ?>/random
+
+<span class="c"># Or specify a domain</span>
+curl -X POST <?= htmlspecialchars($baseApi) ?>/random \
+  -H <span class="s">"Content-Type: application/json"</span> \
+  -d <span class="s">'{"domain": "example.com"}'</span></pre>
+                                <h6 class="fw-semibold small text-uppercase text-muted mt-3 mb-2">Response <span class="badge bg-success-subtle text-success">201</span></h6>
+                                <pre class="api-code">{
+  <span class="k">"success"</span>: <span class="n">true</span>,
+  <span class="k">"email"</span>: <span class="s">"xkwp4827@example.com"</span>,
+  <span class="k">"token"</span>: <span class="s">"a1b2c3d4..."</span>,
+  <span class="k">"created_at"</span>: <span class="s">"2026-04-07 12:00:00"</span>
+}</pre>
+                            </div>
+                        </div>
+
+                        <!-- EP: Check -->
+                        <div id="ep-check" class="api-card">
+                            <div class="api-card-head">
+                                <span class="api-method get">GET</span>
+                                <span class="api-path">/api/v1/check/{email}</span>
+                                <span class="badge bg-success-subtle text-success ms-auto">No Auth</span>
+                            </div>
+                            <div class="api-card-body">
+                                <p>Check if a temporary mailbox exists and how many emails it has.</p>
+                                <h6 class="fw-semibold small text-uppercase text-muted mb-2">Example</h6>
+                                <pre class="api-code">curl <?= htmlspecialchars($baseApi) ?>/check/john@example.com</pre>
+                                <h6 class="fw-semibold small text-uppercase text-muted mt-3 mb-2">Response</h6>
+                                <pre class="api-code">{
+  <span class="k">"success"</span>: <span class="n">true</span>,
+  <span class="k">"email"</span>: <span class="s">"john@example.com"</span>,
+  <span class="k">"exists"</span>: <span class="n">true</span>,
+  <span class="k">"email_count"</span>: <span class="n">3</span>,
+  <span class="k">"created_at"</span>: <span class="s">"2026-04-07 12:00:00"</span>
+}</pre>
                             </div>
                         </div>
 
@@ -195,12 +256,17 @@ GET /api/v1/inbox?token=<span class="s">your-token-here</span></pre>
                         <div id="ep-inbox" class="api-card">
                             <div class="api-card-head">
                                 <span class="api-method get">GET</span>
-                                <span class="api-path">/api/v1/inbox</span>
+                                <span class="api-path">/api/v1/inbox/{email}</span>
+                                <span class="badge bg-success-subtle text-success ms-auto">No Auth</span>
                             </div>
                             <div class="api-card-body">
-                                <p>Retrieve all emails in the mailbox inbox. Returns up to 50 most recent emails.</p>
+                                <p>Retrieve all emails in the mailbox inbox. Returns up to 50 most recent emails. <strong>Two ways to access:</strong></p>
                                 <h6 class="fw-semibold small text-uppercase text-muted mb-2">Example Request</h6>
-                                <pre class="api-code">curl <?= htmlspecialchars($baseApi) ?>/inbox \
+                                <pre class="api-code"><span class="c"># No auth — just pass email address in URL</span>
+curl <?= htmlspecialchars($baseApi) ?>/inbox/john@example.com
+
+<span class="c"># Or with token</span>
+curl <?= htmlspecialchars($baseApi) ?>/inbox \
   -H <span class="s">"Authorization: Bearer your-token"</span></pre>
                                 <h6 class="fw-semibold small text-uppercase text-muted mt-3 mb-2">Response</h6>
                                 <pre class="api-code">{
@@ -226,12 +292,17 @@ GET /api/v1/inbox?token=<span class="s">your-token-here</span></pre>
                         <div id="ep-read" class="api-card">
                             <div class="api-card-head">
                                 <span class="api-method get">GET</span>
-                                <span class="api-path">/api/v1/read/{id}</span>
+                                <span class="api-path">/api/v1/read/{email}/{id}</span>
+                                <span class="badge bg-success-subtle text-success ms-auto">No Auth</span>
                             </div>
                             <div class="api-card-body">
                                 <p>Read a specific email by ID. Automatically marks the email as read.</p>
                                 <h6 class="fw-semibold small text-uppercase text-muted mb-2">Example Request</h6>
-                                <pre class="api-code">curl <?= htmlspecialchars($baseApi) ?>/read/42 \
+                                <pre class="api-code"><span class="c"># No auth</span>
+curl <?= htmlspecialchars($baseApi) ?>/read/john@example.com/42
+
+<span class="c"># Or with token</span>
+curl <?= htmlspecialchars($baseApi) ?>/read/42 \
   -H <span class="s">"Authorization: Bearer your-token"</span></pre>
                                 <h6 class="fw-semibold small text-uppercase text-muted mt-3 mb-2">Response</h6>
                                 <pre class="api-code">{
@@ -254,12 +325,17 @@ GET /api/v1/inbox?token=<span class="s">your-token-here</span></pre>
                         <div id="ep-delete" class="api-card">
                             <div class="api-card-head">
                                 <span class="api-method delete">DELETE</span>
-                                <span class="api-path">/api/v1/delete/{id}</span>
+                                <span class="api-path">/api/v1/delete/{email}/{id}</span>
+                                <span class="badge bg-success-subtle text-success ms-auto">No Auth</span>
                             </div>
                             <div class="api-card-body">
                                 <p>Delete a specific email by ID. This action is permanent.</p>
                                 <h6 class="fw-semibold small text-uppercase text-muted mb-2">Example Request</h6>
-                                <pre class="api-code">curl -X DELETE <?= htmlspecialchars($baseApi) ?>/delete/42 \
+                                <pre class="api-code"><span class="c"># No auth</span>
+curl -X DELETE <?= htmlspecialchars($baseApi) ?>/delete/john@example.com/42
+
+<span class="c"># Or with token</span>
+curl -X DELETE <?= htmlspecialchars($baseApi) ?>/delete/42 \
   -H <span class="s">"Authorization: Bearer your-token"</span></pre>
                                 <h6 class="fw-semibold small text-uppercase text-muted mt-3 mb-2">Response</h6>
                                 <pre class="api-code">{
