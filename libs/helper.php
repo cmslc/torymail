@@ -245,6 +245,22 @@ function format_date($datetime, $format = 'd/m/Y H:i')
 // Email Helpers
 // ============================================================
 
+function decode_mime($str)
+{
+    if (empty($str) || strpos($str, '=?') === false) return $str;
+    $decoded = mb_decode_mimeheader($str);
+    if ($decoded !== $str) return $decoded;
+    // Fallback: manual decode
+    return preg_replace_callback('/=\?([^?]+)\?([BQbq])\?([^?]*)\?=/', function ($m) {
+        $charset = $m[1];
+        $encoding = strtoupper($m[2]);
+        $text = $m[3];
+        if ($encoding === 'B') $text = base64_decode($text);
+        elseif ($encoding === 'Q') $text = quoted_printable_decode(str_replace('_', ' ', $text));
+        return mb_convert_encoding($text, 'UTF-8', $charset);
+    }, $str);
+}
+
 function validate_email($email)
 {
     return filter_var($email, FILTER_VALIDATE_EMAIL) !== false;

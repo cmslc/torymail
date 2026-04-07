@@ -122,6 +122,16 @@ switch ($action) {
             [$mailboxId]
         );
 
+        // Decode MIME encoded headers
+        if ($emails) {
+            foreach ($emails as &$e) {
+                $e['from_name'] = decode_mime($e['from_name'] ?? '');
+                $e['from_address'] = decode_mime($e['from_address'] ?? '');
+                $e['subject'] = decode_mime($e['subject'] ?? '');
+            }
+            unset($e);
+        }
+
         success_response('OK', ['emails' => $emails ?: []]);
         break;
 
@@ -153,6 +163,11 @@ switch ($action) {
         );
 
         $email['attachments'] = $attachments ?: [];
+
+        // Decode MIME encoded headers
+        $email['from_name'] = decode_mime($email['from_name'] ?? '');
+        $email['from_address'] = decode_mime($email['from_address'] ?? '');
+        $email['subject'] = decode_mime($email['subject'] ?? '');
 
         // Sanitize HTML body
         if (!empty($email['body_html'])) {

@@ -25,6 +25,11 @@ if (!$email) {
     exit;
 }
 
+// Decode MIME encoded headers
+$email['from_name'] = decode_mime($email['from_name'] ?? '');
+$email['from_address'] = decode_mime($email['from_address'] ?? '');
+$email['subject'] = decode_mime($email['subject'] ?? '');
+
 $body = [
     'title' => htmlspecialchars($email['subject'] ?: __('no_subject')) . ' - ' . get_setting('site_name', 'Torymail'),
     'desc'  => __('read_email'),
@@ -302,11 +307,11 @@ $(function() {
                         <div class="d-flex align-items-center gap-2">
                             <div class="avatar-xs flex-shrink-0">
                                 <div class="avatar-title bg-primary-subtle text-primary rounded-circle fs-12">
-                                    <?= strtoupper(substr($te['from_name'] ?: $te['from_address'], 0, 1)); ?>
+                                    <?= strtoupper(substr(decode_mime($te['from_name'] ?: $te['from_address']), 0, 1)); ?>
                                 </div>
                             </div>
                             <div>
-                                <span class="fw-medium fs-13"><?= htmlspecialchars($te['from_name'] ?: $te['from_address']); ?></span>
+                                <span class="fw-medium fs-13"><?= htmlspecialchars(decode_mime($te['from_name'] ?: $te['from_address'])); ?></span>
                                 <span class="text-muted ms-2 fs-12"><?= format_date($te['created_at']); ?></span>
                             </div>
                         </div>

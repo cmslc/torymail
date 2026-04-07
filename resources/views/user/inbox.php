@@ -248,13 +248,13 @@ $folderIcons = [
                         </td>
                         <td style="width:180px;" onclick="window.location='<?= base_url('read/' . $email['id']); ?>'">
                             <span class="text-truncate d-inline-block" style="max-width:170px;">
-                                <?= htmlspecialchars($email['from_name'] ?: $email['from_address']); ?>
+                                <?= htmlspecialchars(decode_mime($email['from_name'] ?: $email['from_address'])); ?>
                             </span>
                         </td>
                         <td onclick="window.location='<?= base_url('read/' . $email['id']); ?>'">
                             <div class="d-flex align-items-center gap-2">
                                 <span class="text-truncate d-inline-block <?= !$email['is_read'] ? 'text-body' : 'text-muted'; ?>" style="max-width:350px;">
-                                    <?= htmlspecialchars($email['subject'] ?: __('no_subject')); ?>
+                                    <?= htmlspecialchars(decode_mime($email['subject'] ?: __('no_subject'))); ?>
                                 </span>
                                 <span class="text-muted fw-normal text-truncate d-none d-lg-inline-block" style="max-width:250px;">
                                     - <?= htmlspecialchars(str_truncate($email['body_text'] ?? '', 80)); ?>
