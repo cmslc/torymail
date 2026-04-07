@@ -52,8 +52,20 @@ if (isset($_GET['lang']) && in_array($_GET['lang'], ['en', 'vi'])) {
 load_language();
 
 // Route handling
-$module = isset($_GET['module']) ? preg_replace('/[^a-zA-Z0-9_-]/', '', $_GET['module']) : 'user';
-$action = isset($_GET['action']) ? preg_replace('/[^a-zA-Z0-9_-]/', '', $_GET['action']) : 'inbox';
+$module = isset($_GET['module']) ? preg_replace('/[^a-zA-Z0-9_-]/', '', $_GET['module']) : '';
+$action = isset($_GET['action']) ? preg_replace('/[^a-zA-Z0-9_-]/', '', $_GET['action']) : '';
+
+// Default: show temp mail page as homepage
+if ($module === '' && $action === '') {
+    $module = 'auth';
+    $action = 'create-mailbox';
+} elseif ($module === 'user' && $action === '') {
+    $action = 'inbox';
+} elseif ($module === 'admin' && $action === '') {
+    $action = 'home';
+} elseif ($module === 'auth' && $action === '') {
+    $action = 'create-mailbox';
+}
 $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 
 // Module routing
