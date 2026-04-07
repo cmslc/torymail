@@ -599,6 +599,7 @@ return [
     'temp_mail_get_btn'         => 'Nhận Email',
     'temp_mail_no_email'        => 'Không có email mới',
     'temp_mail_select_email'    => 'Chọn email để đọc',
+    'temp_mail_waiting'         => 'Đang chờ email đến...',
     'temp_mail_copy'            => 'Sao chép địa chỉ email',
     'temp_mail_unknown'         => 'Người gửi không xác định',
     'temp_mail_username_required' => 'Vui lòng nhập tên người dùng.',

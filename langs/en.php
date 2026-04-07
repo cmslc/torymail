@@ -600,6 +600,7 @@ return [
     'temp_mail_get_btn'         => 'Get Email',
     'temp_mail_no_email'        => 'No new email',
     'temp_mail_select_email'    => 'Select an email to read',
+    'temp_mail_waiting'         => 'Waiting for incoming emails...',
     'temp_mail_copy'            => 'Copy email address',
     'temp_mail_unknown'         => 'Unknown sender',
     'temp_mail_username_required' => 'Please enter a username.',
