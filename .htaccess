@@ -18,6 +18,9 @@
     RewriteRule ^admin/([a-zA-Z0-9_-]+)$ index.php?module=admin&action=$1 [QSA,L]
     RewriteRule ^admin/?$ index.php?module=admin&action=home [QSA,L]
 
+    # API v1 routes
+    RewriteRule ^api/v1/(.*)$ api/v1/tempmail.php?endpoint=$1 [QSA,L]
+
     # Auth routes
     RewriteRule ^auth/([a-zA-Z0-9_-]+)$ index.php?module=auth&action=$1 [QSA,L]
 
