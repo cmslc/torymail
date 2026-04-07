@@ -1,6 +1,6 @@
 <?php
 /**
- * Public mailbox creation — shared domains only, no auth required
+ * Public temp-mail API — shared domains only, no auth required
  */
 require_once __DIR__ . "/../bootstrap.php";
 
@@ -9,25 +9,22 @@ $action = isset($_GET['action']) ? preg_replace('/[^a-zA-Z0-9_-]/', '', $_GET['a
 switch ($action) {
 
     // -------------------------------------------------------
-    // CREATE MAILBOX (public, shared domains only)
+    // GET EMAIL — create or access a mailbox instantly
     // -------------------------------------------------------
     case 'create':
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') error_response('Invalid request method', 405);
         csrf_verify();
 
-        // Rate limit: 5 mailbox creations per IP per 10 minutes
-        rate_limit('public_mailbox_' . get_client_ip(), 5, 600);
+        // Rate limit: 10 per IP per 10 minutes
+        rate_limit('public_mailbox_' . get_client_ip(), 10, 600);
 
-        $local_part   = strtolower(trim($_POST['local_part'] ?? ''));
-        $domain_id    = intval($_POST['domain_id'] ?? 0);
-        $password     = $_POST['password'] ?? '';
-        $display_name = sanitize($_POST['display_name'] ?? '');
+        $local_part = strtolower(trim($_POST['local_part'] ?? ''));
+        $domain_id  = intval($_POST['domain_id'] ?? 0);
 
-        if (empty($local_part) || $domain_id <= 0 || empty($password)) {
-            error_response(__('public_mailbox_required_fields'));
+        if (empty($local_part) || $domain_id <= 0) {
+            error_response(__('temp_mail_username_required'));
         }
 
-        // Validate local part
         if (!preg_match('/^[a-z0-9._-]+$/', $local_part)) {
             error_response(__('public_mailbox_invalid_local'));
         }
@@ -36,18 +33,33 @@ switch ($action) {
             error_response(__('public_mailbox_local_min'));
         }
 
-        if (mb_strlen($password) < 8) {
-            error_response(__('password_min'));
-        }
-
-        // Only allow shared domains
+        // Only shared domains
         $domain = $ToryMail->get_row_safe(
             "SELECT * FROM domains WHERE id = ? AND is_shared = 1 AND status = 'active'",
             [$domain_id]
         );
         if (!$domain) error_response(__('public_mailbox_domain_not_found'));
 
-        // Check mailbox limit per domain (use global setting)
+        $emailAddress = $local_part . '@' . $domain['domain_name'];
+
+        // Check if mailbox already exists
+        $mailbox = $ToryMail->get_row_safe(
+            "SELECT * FROM mailboxes WHERE email_address = ? AND status = 'active'",
+            [$emailAddress]
+        );
+
+        if ($mailbox) {
+            // Mailbox exists — open it
+            $_SESSION['temp_mailbox_id'] = $mailbox['id'];
+            $_SESSION['temp_mailbox_email'] = $mailbox['email_address'];
+            success_response('OK', [
+                'email_address' => $mailbox['email_address'],
+                'mailbox_id'    => $mailbox['id'],
+            ]);
+            break;
+        }
+
+        // Check limit
         $maxPerDomain = intval(get_setting('max_mailboxes_per_domain', 50));
         $mailboxCount = $ToryMail->get_value_safe(
             "SELECT COUNT(*) FROM mailboxes WHERE domain_id = ?",
@@ -57,20 +69,16 @@ switch ($action) {
             error_response(__('public_mailbox_domain_full'));
         }
 
-        $emailAddress = $local_part . '@' . $domain['domain_name'];
-
-        // Check unique
-        $exists = $ToryMail->get_value_safe("SELECT COUNT(*) FROM mailboxes WHERE email_address = ?", [$emailAddress]);
-        if ($exists > 0) error_response(__('public_mailbox_exists'));
-
+        // Create new mailbox (auto-generated password)
+        $autoPassword = bin2hex(random_bytes(16));
         $defaultQuota = intval(get_setting('default_quota', '1073741824'));
 
         $mailboxId = $ToryMail->insert_safe('mailboxes', [
             'user_id'            => null,
             'domain_id'          => $domain_id,
             'email_address'      => $emailAddress,
-            'display_name'       => $display_name ?: $local_part,
-            'password_encrypted' => encrypt_string($password),
+            'display_name'       => $local_part,
+            'password_encrypted' => encrypt_string($autoPassword),
             'quota'              => $defaultQuota,
             'used_space'         => 0,
             'status'             => 'active',
@@ -80,10 +88,13 @@ switch ($action) {
 
         if (!$mailboxId) error_response(__('public_mailbox_create_failed'));
 
+        $_SESSION['temp_mailbox_id'] = $mailboxId;
+        $_SESSION['temp_mailbox_email'] = $emailAddress;
+
         $ToryMail->insert_safe('activity_logs', [
             'user_id'    => null,
-            'action'     => 'public_mailbox_add',
-            'details'    => 'Public mailbox created: ' . $emailAddress,
+            'action'     => 'temp_mailbox_create',
+            'details'    => 'Temp mailbox created: ' . $emailAddress,
             'ip_address' => get_client_ip(),
             'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? '',
             'created_at' => gettime(),
@@ -91,11 +102,91 @@ switch ($action) {
 
         success_response(__('public_mailbox_created'), [
             'email_address' => $emailAddress,
+            'mailbox_id'    => $mailboxId,
         ]);
         break;
 
     // -------------------------------------------------------
-    // LIST SHARED DOMAINS (public)
+    // INBOX — fetch emails for current temp mailbox
+    // -------------------------------------------------------
+    case 'inbox':
+        $mailboxId = intval($_SESSION['temp_mailbox_id'] ?? 0);
+        if ($mailboxId <= 0) error_response('No active mailbox', 401);
+
+        $emails = $ToryMail->get_list_safe(
+            "SELECT id, from_address, from_name, subject, is_read, has_attachments, received_at, created_at
+             FROM emails
+             WHERE mailbox_id = ? AND folder = 'inbox'
+             ORDER BY created_at DESC
+             LIMIT 50",
+            [$mailboxId]
+        );
+
+        success_response('OK', ['emails' => $emails ?: []]);
+        break;
+
+    // -------------------------------------------------------
+    // READ — get a specific email
+    // -------------------------------------------------------
+    case 'read':
+        $mailboxId = intval($_SESSION['temp_mailbox_id'] ?? 0);
+        if ($mailboxId <= 0) error_response('No active mailbox', 401);
+
+        $emailId = intval($_GET['id'] ?? 0);
+        if ($emailId <= 0) error_response('Invalid email ID');
+
+        $email = $ToryMail->get_row_safe(
+            "SELECT * FROM emails WHERE id = ? AND mailbox_id = ?",
+            [$emailId, $mailboxId]
+        );
+        if (!$email) error_response('Email not found', 404);
+
+        // Mark as read
+        if (!$email['is_read']) {
+            $ToryMail->update_safe('emails', ['is_read' => 1], 'id = ?', [$emailId]);
+        }
+
+        // Get attachments
+        $attachments = $ToryMail->get_list_safe(
+            "SELECT id, original_filename, mime_type, size FROM email_attachments WHERE email_id = ?",
+            [$emailId]
+        );
+
+        $email['attachments'] = $attachments ?: [];
+
+        // Sanitize HTML body
+        if (!empty($email['body_html'])) {
+            $email['body_html'] = sanitize_email_html($email['body_html']);
+        }
+
+        success_response('OK', ['email' => $email]);
+        break;
+
+    // -------------------------------------------------------
+    // DELETE — delete a specific email
+    // -------------------------------------------------------
+    case 'delete':
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') error_response('Invalid request method', 405);
+        csrf_verify();
+
+        $mailboxId = intval($_SESSION['temp_mailbox_id'] ?? 0);
+        if ($mailboxId <= 0) error_response('No active mailbox', 401);
+
+        $emailId = intval($_POST['email_id'] ?? 0);
+        if ($emailId <= 0) error_response('Invalid email ID');
+
+        $email = $ToryMail->get_row_safe(
+            "SELECT id FROM emails WHERE id = ? AND mailbox_id = ?",
+            [$emailId, $mailboxId]
+        );
+        if (!$email) error_response('Email not found', 404);
+
+        $ToryMail->remove_safe('emails', 'id = ?', [$emailId]);
+        success_response('Email deleted');
+        break;
+
+    // -------------------------------------------------------
+    // LIST SHARED DOMAINS
     // -------------------------------------------------------
     case 'domains':
         $domains = $ToryMail->get_list_safe(
