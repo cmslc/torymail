@@ -9,12 +9,12 @@
                 <div class="navbar-brand-box horizontal-logo">
                     <a href="<?= admin_url('home'); ?>" class="logo logo-dark">
                         <span class="logo-lg" style="font-size:18px;font-weight:700;color:#405189;">
-                            <i class="ri-mail-line"></i> Torymail
+                            <i class="ri-mail-line"></i> <?= htmlspecialchars(get_setting('site_name', 'Torymail')) ?>
                         </span>
                     </a>
                     <a href="<?= admin_url('home'); ?>" class="logo logo-light">
                         <span class="logo-lg" style="font-size:18px;font-weight:700;color:#fff;">
-                            <i class="ri-mail-line"></i> Torymail
+                            <i class="ri-mail-line"></i> <?= htmlspecialchars(get_setting('site_name', 'Torymail')) ?>
                         </span>
                     </a>
                 </div>

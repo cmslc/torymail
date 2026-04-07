@@ -4,7 +4,7 @@ if (!defined('IN_SITE')) {
 }
 
 $body = [
-    'title' => __('domains') . ' - Torymail',
+    'title' => __('domains') . ' - ' . get_setting('site_name', 'Torymail'),
     'desc'  => __('manage_domains'),
 ];
 $body['header'] = '';
@@ -303,22 +303,29 @@ var currentDomainId = null;
 
 $('#addDomainBtn').on('click', function() {
     var domain = $('#domainName').val().trim();
-    if (!domain) { tmToast('warning', '<?= __("enter_domain_warning"); ?>'); return; }
+    if (!domain) { tmToast('warning', <?= json_encode(__("enter_domain_warning")); ?>); return; }
 
     var $btn = $(this);
-    $btn.prop('disabled', true).html('<i class="ri-loader-4-line ri-spin me-1"></i> <?= __("adding"); ?>');
+    $btn.prop('disabled', true).html('<i class="ri-loader-4-line ri-spin me-1"><\/i> ' + <?= json_encode(__("adding")); ?>);
 
-    $.post('<?= base_url("ajaxs/user/domains.php"); ?>?action=add', {
-        domain_name: domain
-    }, function(res) {
-        if (res.success) {
-            tmToast('success', '<?= __("domain_added"); ?>');
-            setTimeout(function() { location.reload(); }, 1000);
-        } else {
-            tmToast('error', res.message || '<?= __("domain_add_fail"); ?>');
-            $btn.prop('disabled', false).html('<i class="ri-add-line me-1"></i> <?= __("add_domain"); ?>');
+    $.ajax({
+        url: '<?= base_url("ajaxs/user/domains.php"); ?>?action=add',
+        method: 'POST', data: { domain_name: domain }, dataType: 'json',
+        success: function(res) {
+            if (res.success) {
+                tmToast('success', <?= json_encode(__("domain_added")); ?>);
+                setTimeout(function() { location.reload(); }, 1000);
+            } else {
+                tmToast('error', res.message || <?= json_encode(__("domain_add_fail")); ?>);
+                $btn.prop('disabled', false).html('<i class="ri-add-line me-1"><\/i> ' + <?= json_encode(__("add_domain")); ?>);
+            }
+        },
+        error: function(xhr) {
+            var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : <?= json_encode(__("domain_add_fail")); ?>;
+            tmToast('error', msg);
+            $btn.prop('disabled', false).html('<i class="ri-add-line me-1"><\/i> ' + <?= json_encode(__("add_domain")); ?>);
         }
-    }, 'json');
+    });
 });
 
 function showDnsSetup(domain) {
@@ -338,7 +345,7 @@ function showDnsSetup(domain) {
     function dnsStatus(verified) {
         return verified ? 'bg-success-subtle text-success' : 'bg-warning-subtle text-warning';
     }
-    function dnsLabel(verified) { return verified ? '<?= __("verified"); ?>' : '<?= __("pending"); ?>'; }
+    function dnsLabel(verified) { return verified ? <?= json_encode(__("verified")); ?> : <?= json_encode(__("pending")); ?>; }
     $('#dnsTxt').attr('class', 'badge ' + dnsStatus(txtVerified)).text(dnsLabel(txtVerified));
     $('#dnsMx').attr('class', 'badge ' + dnsStatus(domain.mx_verified)).text(dnsLabel(domain.mx_verified));
     $('#dnsSpf').attr('class', 'badge ' + dnsStatus(domain.spf_verified)).text(dnsLabel(domain.spf_verified));
@@ -353,30 +360,42 @@ $('#verifyDnsBtn').on('click', function() {
 });
 
 function verifyDomain(id) {
-    $.post('<?= base_url("ajaxs/user/domains.php"); ?>?action=verify', {
-        domain_id: id
-    }, function(res) {
-        if (res.success) {
-            tmToast('success', res.message || '<?= __("dns_complete"); ?>');
-            setTimeout(function() { location.reload(); }, 1200);
-        } else {
-            tmToast('error', res.message || '<?= __("dns_failed"); ?>');
+    $.ajax({
+        url: '<?= base_url("ajaxs/user/domains.php"); ?>?action=verify',
+        method: 'POST', data: { domain_id: id }, dataType: 'json',
+        success: function(res) {
+            if (res.success) {
+                tmToast('success', res.message || <?= json_encode(__("dns_complete")); ?>);
+                setTimeout(function() { location.reload(); }, 1200);
+            } else {
+                tmToast('error', res.message || <?= json_encode(__("dns_failed")); ?>);
+            }
+        },
+        error: function(xhr) {
+            var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : <?= json_encode(__("dns_failed")); ?>;
+            tmToast('error', msg);
         }
-    }, 'json');
+    });
 }
 
 function deleteDomain(id, name) {
-    tmConfirm('<?= __("delete_domain_user"); ?>', '<?= __("delete_domain_user_desc"); ?>', function() {
-        $.post('<?= base_url("ajaxs/user/domains.php"); ?>?action=delete', {
-            domain_id: id
-        }, function(res) {
-            if (res.success) {
-                tmToast('success', '<?= __("domain_deleted"); ?>');
-                setTimeout(function() { location.reload(); }, 800);
-            } else {
-                tmToast('error', res.message || '<?= __("domain_delete_fail"); ?>');
+    tmConfirm(<?= json_encode(__("delete_domain_user")); ?>, <?= json_encode(__("delete_domain_user_desc")); ?>, function() {
+        $.ajax({
+            url: '<?= base_url("ajaxs/user/domains.php"); ?>?action=delete',
+            method: 'POST', data: { domain_id: id }, dataType: 'json',
+            success: function(res) {
+                if (res.success) {
+                    tmToast('success', <?= json_encode(__("domain_deleted")); ?>);
+                    setTimeout(function() { location.reload(); }, 800);
+                } else {
+                    tmToast('error', res.message || <?= json_encode(__("domain_delete_fail")); ?>);
+                }
+            },
+            error: function(xhr) {
+                var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : <?= json_encode(__("domain_delete_fail")); ?>;
+                tmToast('error', msg);
             }
-        }, 'json');
+        });
     });
 }
 </script>

@@ -138,7 +138,8 @@ function rate_limit($key, $max_attempts = 5, $window_seconds = 300)
     if (count($attempts) >= $max_attempts) {
         $oldest = min($attempts);
         $retry_after = $window_seconds - ($now - $oldest);
-        error_response('Too many attempts. Please try again in ' . ceil($retry_after / 60) . ' minutes.', 429);
+        $minutes = ceil($retry_after / 60);
+        error_response('Too many attempts. Please try again in ' . $minutes . ($minutes == 1 ? ' minute' : ' minutes') . '.', 429);
     }
 
     $attempts[] = $now;

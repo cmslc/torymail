@@ -211,6 +211,7 @@ switch ($action) {
             'created_at' => gettime(),
         ]);
 
+        $allVerified = $mx_ok && $spf_ok && $dkim_ok && $dmarc_ok;
         if ($allVerified) {
             success_response('DNS verified: ' . implode(', ', $results));
         } else {
@@ -249,7 +250,7 @@ switch ($action) {
             'created_at' => gettime(),
         ]);
 
-        success_response('Domain ' . $newStatus, ['status' => $newStatus]);
+        success_response('Domain ' . $newStatus, ['domain_status' => $newStatus]);
         break;
 
     // -------------------------------------------------------

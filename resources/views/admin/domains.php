@@ -7,6 +7,208 @@ $body = [
     'footer' => '',
 ];
 
+ob_start();
+?>
+<script>
+var currentDnsId = null;
+$(document).ready(function() {
+    // Add domain
+    $('#formAddDomain').on('submit', function(e) {
+        e.preventDefault();
+        var form = $(this);
+        var btn = form.find('button[type=submit]');
+        btn.prop('disabled', true).html('<i class="ri-loader-4-line ri-spin"></i> ' + <?= json_encode(__('adding')); ?>);
+
+        $.ajax({
+            url: '<?= base_url("ajaxs/admin/domains.php?action=add"); ?>',
+            method: 'POST',
+            data: form.serialize(),
+            dataType: 'json',
+            success: function(res) {
+                if (res.status === 'success') {
+                    showToast('success', res.message);
+                    setTimeout(function() { location.reload(); }, 1000);
+                } else {
+                    showToast('error', res.message);
+                    btn.prop('disabled', false).html('<i class="ri-add-line me-1"></i> ' + <?= json_encode(__('add_domain')); ?>);
+                }
+            },
+            error: function(xhr) {
+                var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : <?= json_encode(__('server_error')); ?>;
+                showToast('error', msg);
+                btn.prop('disabled', false).html('<i class="ri-add-line me-1"></i> ' + <?= json_encode(__('add_domain')); ?>);
+            }
+        });
+    });
+
+    // Verify domain DNS
+    $(document).on('click', '.btn-verify-domain', function() {
+        var btn = $(this);
+        var domainId = btn.data('id');
+        btn.prop('disabled', true).html('<i class="ri-loader-4-line ri-spin"></i>');
+
+        $.ajax({
+            url: '<?= base_url("ajaxs/admin/domains.php?action=verify"); ?>',
+            method: 'POST',
+            data: { domain_id: domainId },
+            dataType: 'json',
+            success: function(res) {
+                if (res.status === 'success') {
+                    showToast('success', res.message);
+                    setTimeout(function() { location.reload(); }, 1000);
+                } else {
+                    showToast('error', res.message);
+                    btn.prop('disabled', false).html('<i class="ri-refresh-line"></i>');
+                }
+            },
+            error: function(xhr) {
+                var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : <?= json_encode(__('server_error')); ?>;
+                showToast('error', msg);
+                btn.prop('disabled', false).html('<i class="ri-refresh-line"></i>');
+            }
+        });
+    });
+
+    // Suspend/Activate domain
+    $(document).on('click', '.btn-toggle-domain', function() {
+        var domainId = $(this).data('id');
+        var action = $(this).data('action');
+        var label = action === 'suspend' ? <?= json_encode(__('suspend_domain')); ?> : <?= json_encode(__('activate_domain')); ?>;
+
+        confirmAction(label, <?= json_encode(__('suspend_domain_desc')); ?>, function() {
+            $.ajax({
+                url: '<?= base_url("ajaxs/admin/domains.php?action=toggle_status"); ?>',
+                method: 'POST',
+                data: { domain_id: domainId, domain_action: action },
+                dataType: 'json',
+                success: function(res) {
+                    if (res.status === 'success') {
+                        showToast('success', res.message);
+                        setTimeout(function() { location.reload(); }, 1000);
+                    } else {
+                        showToast('error', res.message);
+                    }
+                },
+                error: function(xhr) {
+                    var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : <?= json_encode(__('server_error')); ?>;
+                    showToast('error', msg);
+                }
+            });
+        });
+    });
+
+    // Toggle shared domain checkbox - hide/show owner field
+    $('#isSharedDomain').on('change', function() {
+        if ($(this).is(':checked')) {
+            $('#ownerGroup').hide();
+            $('#ownerGroup select').prop('required', false);
+        } else {
+            $('#ownerGroup').show();
+            $('#ownerGroup select').prop('required', true);
+        }
+    });
+
+    // Toggle shared
+    $(document).on('click', '.btn-toggle-shared', function() {
+        var domainId = $(this).data('id');
+        $.ajax({
+            url: '<?= base_url("ajaxs/admin/domains.php?action=toggle_shared"); ?>',
+            method: 'POST',
+            data: { domain_id: domainId },
+            dataType: 'json',
+            success: function(res) {
+                if (res.status === 'success') {
+                    showToast('success', res.message);
+                    setTimeout(function() { location.reload(); }, 1000);
+                } else {
+                    showToast('error', res.message);
+                }
+            },
+            error: function(xhr) {
+                var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : <?= json_encode(__('server_error')); ?>;
+                showToast('error', msg);
+            }
+        });
+    });
+
+    // DNS Setup modal
+    $(document).on('click', '.btn-dns-setup', function() {
+        var domain = $(this).data('domain');
+        currentDnsId = domain.id;
+        var serverHost = '<?= get_setting("mail_server_hostname") ?: get_setting("mx_record_value") ?: "mail.example.com"; ?>';
+
+        $('#dnsDomainName').text(domain.domain_name);
+        $('#dnsMxValue').text(serverHost);
+        $('#dnsSpfValue').text('v=spf1 mx a include:' + serverHost + ' ~all');
+        $('#dnsDkimHost').text((domain.dkim_selector || 'default') + '._domainkey');
+        $('#dnsDkimValue').text(domain.dkim_public_key ? 'v=DKIM1; k=rsa; p=' + domain.dkim_public_key : <?= json_encode(__('dkim_not_generated')); ?>);
+        $('#dnsDmarcValue').text('v=DMARC1; p=quarantine; rua=mailto:postmaster@' + domain.domain_name);
+
+        function badge(ok) {
+            return ok ? 'badge bg-success-subtle text-success' : 'badge bg-danger-subtle text-danger';
+        }
+        function label(ok) { return ok ? <?= json_encode(__('verified')); ?> : <?= json_encode(__('not_verified')); ?>; }
+        $('#dnsMxBadge').attr('class', badge(domain.mx_verified)).text(label(domain.mx_verified));
+        $('#dnsSpfBadge').attr('class', badge(domain.spf_verified)).text(label(domain.spf_verified));
+        $('#dnsDkimBadge').attr('class', badge(domain.dkim_verified)).text(label(domain.dkim_verified));
+        $('#dnsDmarcBadge').attr('class', badge(domain.dmarc_verified)).text(label(domain.dmarc_verified));
+
+        new bootstrap.Modal(document.getElementById('modalDnsSetup')).show();
+    });
+
+    // Verify from DNS modal
+    $('#btnVerifyFromModal').on('click', function() {
+        if (!currentDnsId) return;
+        var btn = $(this);
+        btn.prop('disabled', true).html('<i class="ri-loader-4-line ri-spin me-1"></i> ' + <?= json_encode(__('verifying')); ?>);
+
+        $.ajax({
+            url: '<?= base_url("ajaxs/admin/domains.php?action=verify"); ?>',
+            method: 'POST',
+            data: { domain_id: currentDnsId },
+            dataType: 'json',
+            success: function(res) {
+                showToast(res.status === 'success' ? 'success' : 'error', res.message);
+                setTimeout(function() { location.reload(); }, 1000);
+            },
+            error: function(xhr) {
+                var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : <?= json_encode(__('server_error')); ?>;
+                showToast('error', msg);
+                btn.prop('disabled', false).html('<i class="ri-refresh-line me-1"></i> ' + <?= json_encode(__('verify_dns_records')); ?>);
+            }
+        });
+    });
+
+    // Delete domain
+    $(document).on('click', '.btn-delete-domain', function() {
+        var domainId = $(this).data('id');
+
+        confirmAction(<?= json_encode(__('delete_domain')); ?>, <?= json_encode(__('delete_domain_desc')); ?>, function() {
+            $.ajax({
+                url: '<?= base_url("ajaxs/admin/domains.php?action=delete"); ?>',
+                method: 'POST',
+                data: { domain_id: domainId },
+                dataType: 'json',
+                success: function(res) {
+                    if (res.status === 'success') {
+                        showToast('success', res.message);
+                        setTimeout(function() { location.reload(); }, 1000);
+                    } else {
+                        showToast('error', res.message);
+                    }
+                },
+                error: function(xhr) {
+                    var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : <?= json_encode(__('server_error')); ?>;
+                    showToast('error', msg);
+                }
+            });
+        });
+    });
+});
+</script>
+<?php
+$body['footer'] = ob_get_clean();
+
 // Get all domains with owner info
 $domains = $ToryMail->get_list_safe("
     SELECT d.*, u.fullname as owner_name, u.email as owner_email,
@@ -277,195 +479,3 @@ require_once(__DIR__.'/sidebar.php');
 </div>
 
 <?php require_once(__DIR__.'/footer.php'); ?>
-
-<script>
-var currentDnsId = null;
-$(document).ready(function() {
-    // Add domain
-    $('#formAddDomain').on('submit', function(e) {
-        e.preventDefault();
-        var form = $(this);
-        var btn = form.find('button[type=submit]');
-        btn.prop('disabled', true).html('<i class="ri-loader-4-line ri-spin"></i> <?= __('adding'); ?>');
-
-        $.ajax({
-            url: '<?= base_url("ajaxs/admin/domains.php?action=add"); ?>',
-            method: 'POST',
-            data: form.serialize(),
-            dataType: 'json',
-            success: function(res) {
-                if (res.status === 'success') {
-                    showToast('success', res.message);
-                    setTimeout(function() { location.reload(); }, 1000);
-                } else {
-                    showToast('error', res.message);
-                    btn.prop('disabled', false).html('<i class="ri-add-line me-1"></i> <?= __('add_domain'); ?>');
-                }
-            },
-            error: function() {
-                showToast('error', '<?= __('server_error'); ?>');
-                btn.prop('disabled', false).html('<i class="ri-add-line me-1"></i> <?= __('add_domain'); ?>');
-            }
-        });
-    });
-
-    // Verify domain DNS
-    $(document).on('click', '.btn-verify-domain', function() {
-        var btn = $(this);
-        var domainId = btn.data('id');
-        btn.prop('disabled', true).html('<i class="ri-loader-4-line ri-spin"></i>');
-
-        $.ajax({
-            url: '<?= base_url("ajaxs/admin/domains.php?action=verify"); ?>',
-            method: 'POST',
-            data: { domain_id: domainId },
-            dataType: 'json',
-            success: function(res) {
-                if (res.status === 'success') {
-                    showToast('success', res.message);
-                    setTimeout(function() { location.reload(); }, 1000);
-                } else {
-                    showToast('error', res.message);
-                    btn.prop('disabled', false).html('<i class="ri-refresh-line"></i>');
-                }
-            },
-            error: function() {
-                showToast('error', '<?= __('server_error'); ?>');
-                btn.prop('disabled', false).html('<i class="ri-refresh-line"></i>');
-            }
-        });
-    });
-
-    // Suspend/Activate domain
-    $(document).on('click', '.btn-toggle-domain', function() {
-        var domainId = $(this).data('id');
-        var action = $(this).data('action');
-        var label = action === 'suspend' ? '<?= __('suspend_domain'); ?>' : '<?= __('activate_domain'); ?>';
-
-        confirmAction(label, '<?= __('suspend_domain_desc'); ?>', function() {
-            $.ajax({
-                url: '<?= base_url("ajaxs/admin/domains.php?action=toggle_status"); ?>',
-                method: 'POST',
-                data: { domain_id: domainId, domain_action: action },
-                dataType: 'json',
-                success: function(res) {
-                    if (res.status === 'success') {
-                        showToast('success', res.message);
-                        setTimeout(function() { location.reload(); }, 1000);
-                    } else {
-                        showToast('error', res.message);
-                    }
-                },
-                error: function() {
-                    showToast('error', '<?= __('server_error'); ?>');
-                }
-            });
-        });
-    });
-
-    // Toggle shared domain checkbox - hide/show owner field
-    $('#isSharedDomain').on('change', function() {
-        if ($(this).is(':checked')) {
-            $('#ownerGroup').hide();
-            $('#ownerGroup select').prop('required', false);
-        } else {
-            $('#ownerGroup').show();
-            $('#ownerGroup select').prop('required', true);
-        }
-    });
-
-    // Toggle shared
-    $(document).on('click', '.btn-toggle-shared', function() {
-        var domainId = $(this).data('id');
-        $.ajax({
-            url: '<?= base_url("ajaxs/admin/domains.php?action=toggle_shared"); ?>',
-            method: 'POST',
-            data: { domain_id: domainId },
-            dataType: 'json',
-            success: function(res) {
-                if (res.status === 'success') {
-                    showToast('success', res.message);
-                    setTimeout(function() { location.reload(); }, 1000);
-                } else {
-                    showToast('error', res.message);
-                }
-            },
-            error: function() {
-                showToast('error', '<?= __('server_error'); ?>');
-            }
-        });
-    });
-
-    // DNS Setup modal
-    $(document).on('click', '.btn-dns-setup', function() {
-        var domain = $(this).data('domain');
-        currentDnsId = domain.id;
-        var serverHost = '<?= get_setting("mail_server_hostname") ?: get_setting("mx_record_value") ?: "mail.example.com"; ?>';
-
-        $('#dnsDomainName').text(domain.domain_name);
-        $('#dnsMxValue').text(serverHost);
-        $('#dnsSpfValue').text('v=spf1 mx a include:' + serverHost + ' ~all');
-        $('#dnsDkimHost').text((domain.dkim_selector || 'default') + '._domainkey');
-        $('#dnsDkimValue').text(domain.dkim_public_key ? 'v=DKIM1; k=rsa; p=' + domain.dkim_public_key : '<?= __("dkim_not_generated"); ?>');
-        $('#dnsDmarcValue').text('v=DMARC1; p=quarantine; rua=mailto:postmaster@' + domain.domain_name);
-
-        function badge(ok) {
-            return ok ? 'badge bg-success-subtle text-success' : 'badge bg-danger-subtle text-danger';
-        }
-        function label(ok) { return ok ? '<?= __("verified"); ?>' : '<?= __("not_verified"); ?>'; }
-        $('#dnsMxBadge').attr('class', badge(domain.mx_verified)).text(label(domain.mx_verified));
-        $('#dnsSpfBadge').attr('class', badge(domain.spf_verified)).text(label(domain.spf_verified));
-        $('#dnsDkimBadge').attr('class', badge(domain.dkim_verified)).text(label(domain.dkim_verified));
-        $('#dnsDmarcBadge').attr('class', badge(domain.dmarc_verified)).text(label(domain.dmarc_verified));
-
-        new bootstrap.Modal(document.getElementById('modalDnsSetup')).show();
-    });
-
-    // Verify from DNS modal
-    $('#btnVerifyFromModal').on('click', function() {
-        if (!currentDnsId) return;
-        var btn = $(this);
-        btn.prop('disabled', true).html('<i class="ri-loader-4-line ri-spin me-1"></i> <?= __("verifying"); ?>');
-
-        $.ajax({
-            url: '<?= base_url("ajaxs/admin/domains.php?action=verify"); ?>',
-            method: 'POST',
-            data: { domain_id: currentDnsId },
-            dataType: 'json',
-            success: function(res) {
-                showToast(res.status === 'success' ? 'success' : 'error', res.message);
-                setTimeout(function() { location.reload(); }, 1000);
-            },
-            error: function() {
-                showToast('error', '<?= __("server_error"); ?>');
-                btn.prop('disabled', false).html('<i class="ri-refresh-line me-1"></i> <?= __("verify_dns_records"); ?>');
-            }
-        });
-    });
-
-    // Delete domain
-    $(document).on('click', '.btn-delete-domain', function() {
-        var domainId = $(this).data('id');
-
-        confirmAction('<?= __('delete_domain'); ?>', '<?= __('delete_domain_desc'); ?>', function() {
-            $.ajax({
-                url: '<?= base_url("ajaxs/admin/domains.php?action=delete"); ?>',
-                method: 'POST',
-                data: { domain_id: domainId },
-                dataType: 'json',
-                success: function(res) {
-                    if (res.status === 'success') {
-                        showToast('success', res.message);
-                        setTimeout(function() { location.reload(); }, 1000);
-                    } else {
-                        showToast('error', res.message);
-                    }
-                },
-                error: function() {
-                    showToast('error', '<?= __('server_error'); ?>');
-                }
-            });
-        });
-    });
-});
-</script>

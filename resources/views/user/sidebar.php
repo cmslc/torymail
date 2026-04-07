@@ -5,22 +5,30 @@ if (!defined('IN_SITE')) {
 
 $currentAction = $action ?? ($_GET['action'] ?? '');
 $currentFolder = $_GET['folder'] ?? 'inbox';
+$isMailboxLogin = !empty($_SESSION['mailbox_id']);
 
-// Folder counts
+// Folder counts — scope to single mailbox if mailbox login
 $folderCounts = [];
+if ($isMailboxLogin) {
+    $sidebarMailboxFilter = "`mailbox_id` = ?";
+    $mailboxParam = [$_SESSION['mailbox_id']];
+} else {
+    $sidebarMailboxFilter = "`mailbox_id` IN (SELECT id FROM mailboxes WHERE user_id = ?)";
+    $mailboxParam = [$getUser['id']];
+}
 $countRows = $ToryMail->get_list_safe("
     SELECT `folder`, COUNT(*) as cnt
     FROM `emails`
-    WHERE `mailbox_id` IN (SELECT id FROM mailboxes WHERE user_id = ?) AND `is_read` = 0 AND `folder` IN ('inbox','spam')
+    WHERE {$sidebarMailboxFilter} AND `is_read` = 0 AND `folder` IN ('inbox','spam')
     GROUP BY `folder`
-", [$getUser['id']]);
+", $mailboxParam);
 foreach ($countRows as $row) {
     $folderCounts[$row['folder']] = (int)$row['cnt'];
 }
 $draftCount = $ToryMail->get_row_safe("
     SELECT COUNT(*) as cnt FROM `emails`
-    WHERE `mailbox_id` IN (SELECT id FROM mailboxes WHERE user_id = ?) AND `folder` = 'drafts'
-", [$getUser['id']])['cnt'] ?? 0;
+    WHERE {$sidebarMailboxFilter} AND `folder` = 'drafts'
+", $mailboxParam)['cnt'] ?? 0;
 
 $unreadInbox = $folderCounts['inbox'] ?? ($getUser['unread_count'] ?? 0);
 $unreadSpam = $folderCounts['spam'] ?? 0;
@@ -167,6 +175,7 @@ $sidebarLabels = $ToryMail->get_list_safe("
                         <?php endforeach; ?>
                         <?php endif; ?>
 
+                        <?php if (!$isMailboxLogin): ?>
                         <li class="menu-title"><span><?= __('management'); ?></span></li>
 
                         <!-- Domains -->
@@ -224,6 +233,7 @@ $sidebarLabels = $ToryMail->get_list_safe("
                                 <span><?= __('settings'); ?></span>
                             </a>
                         </li>
+                        <?php endif; ?>
 
                     </ul>
                 </div>

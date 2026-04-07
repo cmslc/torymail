@@ -6,6 +6,107 @@ $body = [
     'header' => '',
     'footer' => '',
 ];
+ob_start();
+?>
+<script>
+$(document).ready(function() {
+    // Retry single
+    $(document).on('click', '.btn-retry-queue', function() {
+        var itemId = $(this).data('id');
+        $.ajax({
+            url: '<?= base_url("ajaxs/admin/queue.php?action=retry"); ?>',
+            method: 'POST',
+            data: { queue_id: itemId },
+            dataType: 'json',
+            success: function(res) {
+                if (res.status === 'success') {
+                    showToast('success', res.message);
+                    setTimeout(function() { location.reload(); }, 1000);
+                } else {
+                    showToast('error', res.message);
+                }
+            },
+            error: function(xhr) {
+                var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : <?= json_encode(__('server_error')); ?>;
+                showToast('error', msg);
+            }
+        });
+    });
+
+    // Retry all failed
+    $('#btnRetryAllFailed').on('click', function() {
+        confirmAction(<?= json_encode(__('retry_all_confirm')); ?>, <?= json_encode(__('retry_all_desc')); ?>, function() {
+            $.ajax({
+                url: '<?= base_url("ajaxs/admin/queue.php?action=retry_all_failed"); ?>',
+                method: 'POST',
+                dataType: 'json',
+                success: function(res) {
+                    if (res.status === 'success') {
+                        showToast('success', res.message);
+                        setTimeout(function() { location.reload(); }, 1000);
+                    } else {
+                        showToast('error', res.message);
+                    }
+                },
+                error: function(xhr) {
+                    var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : <?= json_encode(__('server_error')); ?>;
+                    showToast('error', msg);
+                }
+            });
+        });
+    });
+
+    // Clear sent
+    $('#btnClearSent').on('click', function() {
+        confirmAction(<?= json_encode(__('clear_sent_confirm')); ?>, <?= json_encode(__('clear_sent_desc')); ?>, function() {
+            $.ajax({
+                url: '<?= base_url("ajaxs/admin/queue.php?action=clear_sent"); ?>',
+                method: 'POST',
+                dataType: 'json',
+                success: function(res) {
+                    if (res.status === 'success') {
+                        showToast('success', res.message);
+                        setTimeout(function() { location.reload(); }, 1000);
+                    } else {
+                        showToast('error', res.message);
+                    }
+                },
+                error: function(xhr) {
+                    var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : <?= json_encode(__('server_error')); ?>;
+                    showToast('error', msg);
+                }
+            });
+        });
+    });
+
+    // Delete single
+    $(document).on('click', '.btn-delete-queue', function() {
+        var itemId = $(this).data('id');
+        confirmAction(<?= json_encode(__('delete_queue')); ?>, '', function() {
+            $.ajax({
+                url: '<?= base_url("ajaxs/admin/queue.php?action=delete"); ?>',
+                method: 'POST',
+                data: { queue_id: itemId },
+                dataType: 'json',
+                success: function(res) {
+                    if (res.status === 'success') {
+                        showToast('success', res.message);
+                        setTimeout(function() { location.reload(); }, 1000);
+                    } else {
+                        showToast('error', res.message);
+                    }
+                },
+                error: function(xhr) {
+                    var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : <?= json_encode(__('server_error')); ?>;
+                    showToast('error', msg);
+                }
+            });
+        });
+    });
+});
+</script>
+<?php
+$body['footer'] = ob_get_clean();
 
 // Get queue items
 $queueItems = $ToryMail->get_list_safe("
@@ -161,97 +262,3 @@ require_once(__DIR__.'/sidebar.php');
 </div>
 
 <?php require_once(__DIR__.'/footer.php'); ?>
-
-<script>
-$(document).ready(function() {
-    // Retry single
-    $(document).on('click', '.btn-retry-queue', function() {
-        var itemId = $(this).data('id');
-        $.ajax({
-            url: '<?= base_url("ajaxs/admin/queue.php?action=retry"); ?>',
-            method: 'POST',
-            data: { queue_id: itemId },
-            dataType: 'json',
-            success: function(res) {
-                if (res.status === 'success') {
-                    showToast('success', res.message);
-                    setTimeout(function() { location.reload(); }, 1000);
-                } else {
-                    showToast('error', res.message);
-                }
-            },
-            error: function() {
-                showToast('error', '<?= __('server_error'); ?>');
-            }
-        });
-    });
-
-    // Retry all failed
-    $('#btnRetryAllFailed').on('click', function() {
-        confirmAction('<?= __('retry_all_confirm'); ?>', '<?= __('retry_all_desc'); ?>', function() {
-            $.ajax({
-                url: '<?= base_url("ajaxs/admin/queue.php?action=retry_all_failed"); ?>',
-                method: 'POST',
-                dataType: 'json',
-                success: function(res) {
-                    if (res.status === 'success') {
-                        showToast('success', res.message);
-                        setTimeout(function() { location.reload(); }, 1000);
-                    } else {
-                        showToast('error', res.message);
-                    }
-                },
-                error: function() {
-                    showToast('error', '<?= __('server_error'); ?>');
-                }
-            });
-        });
-    });
-
-    // Clear sent
-    $('#btnClearSent').on('click', function() {
-        confirmAction('<?= __('clear_sent_confirm'); ?>', '<?= __('clear_sent_desc'); ?>', function() {
-            $.ajax({
-                url: '<?= base_url("ajaxs/admin/queue.php?action=clear_sent"); ?>',
-                method: 'POST',
-                dataType: 'json',
-                success: function(res) {
-                    if (res.status === 'success') {
-                        showToast('success', res.message);
-                        setTimeout(function() { location.reload(); }, 1000);
-                    } else {
-                        showToast('error', res.message);
-                    }
-                },
-                error: function() {
-                    showToast('error', '<?= __('server_error'); ?>');
-                }
-            });
-        });
-    });
-
-    // Delete single
-    $(document).on('click', '.btn-delete-queue', function() {
-        var itemId = $(this).data('id');
-        confirmAction('<?= __('delete_queue'); ?>', '', function() {
-            $.ajax({
-                url: '<?= base_url("ajaxs/admin/queue.php?action=delete"); ?>',
-                method: 'POST',
-                data: { queue_id: itemId },
-                dataType: 'json',
-                success: function(res) {
-                    if (res.status === 'success') {
-                        showToast('success', res.message);
-                        setTimeout(function() { location.reload(); }, 1000);
-                    } else {
-                        showToast('error', res.message);
-                    }
-                },
-                error: function() {
-                    showToast('error', '<?= __('server_error'); ?>');
-                }
-            });
-        });
-    });
-});
-</script>

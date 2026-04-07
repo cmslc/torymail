@@ -7,6 +7,97 @@ $body = [
     'footer' => '',
 ];
 
+ob_start();
+?>
+<script>
+$(document).ready(function() {
+    // Add user
+    $('#addUserForm').on('submit', function(e) {
+        e.preventDefault();
+        var btn = $(this).find('button[type=submit]');
+        btn.prop('disabled', true).html('<i class="ri-loader-4-line ri-spin"><\/i> ' + <?= json_encode(__('creating')); ?>);
+
+        $.ajax({
+            url: '<?= base_url("ajaxs/admin/users.php?action=add"); ?>',
+            method: 'POST',
+            data: $(this).serialize(),
+            dataType: 'json',
+            success: function(res) {
+                if (res.status === 'success') {
+                    showToast('success', res.message);
+                    window.location.reload();
+                } else {
+                    showToast('error', res.message);
+                    btn.prop('disabled', false).html('<i class="ri-save-line me-1"><\/i> ' + <?= json_encode(__('create_user')); ?>);
+                }
+            },
+            error: function(xhr) {
+                var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : <?= json_encode(__('server_error')); ?>;
+                showToast('error', msg);
+                btn.prop('disabled', false).html('<i class="ri-save-line me-1"><\/i> ' + <?= json_encode(__('create_user')); ?>);
+            }
+        });
+    });
+
+    // Ban/Unban user
+    $(document).on('click', '.btn-toggle-ban', function() {
+        var userId = $(this).data('id');
+        var action = $(this).data('action');
+        var label = action === 'ban' ? <?= json_encode(__('ban_confirm')); ?> : <?= json_encode(__('unban_confirm')); ?>;
+
+        confirmAction(label, <?= json_encode(__('ban_desc')); ?>, function() {
+            $.ajax({
+                url: '<?= base_url("ajaxs/admin/users.php?action=toggle_status"); ?>',
+                method: 'POST',
+                data: { user_id: userId, ban_action: action, _csrf_token: $('meta[name="csrf-token"]').attr('content') },
+                dataType: 'json',
+                success: function(res) {
+                    if (res.status === 'success') {
+                        showToast('success', res.message);
+                        window.location.reload();
+                    } else {
+                        showToast('error', res.message);
+                    }
+                },
+                error: function(xhr) {
+                    var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : <?= json_encode(__('server_error')); ?>;
+                    showToast('error', msg);
+                }
+            });
+        });
+    });
+
+    // Delete user
+    $(document).on('click', '.btn-delete-user', function(e) {
+        e.preventDefault();
+        var userId = $(this).data('id');
+
+        confirmAction(<?= json_encode(__('delete_user')); ?>, <?= json_encode(__('delete_user_desc')); ?>, function() {
+            $.ajax({
+                url: '<?= base_url("ajaxs/admin/users.php?action=delete"); ?>',
+                method: 'POST',
+                data: { user_id: userId, _csrf_token: $('meta[name="csrf-token"]').attr('content') },
+                dataType: 'json',
+                success: function(res) {
+                    if (res.status === 'success') {
+                        showToast('success', res.message);
+                        window.location.reload();
+                    } else {
+                        showToast('error', res.message);
+                    }
+                },
+                error: function(xhr) {
+                    var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : <?= json_encode(__('server_error')); ?>;
+                    showToast('error', msg);
+                }
+            });
+        });
+    });
+});
+</script>
+<?php
+$body['footer'] = ob_get_clean();
+
 // Get all users with counts
 $users = $ToryMail->get_list_safe("
     SELECT u.*,
@@ -175,7 +266,7 @@ require_once(__DIR__.'/sidebar.php');
                     </div>
                     <div class="mt-3">
                         <label class="form-label"><?= __('storage_quota_mb'); ?></label>
-                        <input type="number" name="storage_quota_mb" class="form-control" value="1024" min="1">
+                        <input type="number" name="storage_quota_mb" class="form-control" value="<?= round((int)get_setting('default_quota', '52428800') / 1024 / 1024) ?>" min="1">
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -190,86 +281,3 @@ require_once(__DIR__.'/sidebar.php');
 </div>
 
 <?php require_once(__DIR__.'/footer.php'); ?>
-
-<script>
-$(document).ready(function() {
-    // Add user
-    $('#addUserForm').on('submit', function(e) {
-        e.preventDefault();
-        var btn = $(this).find('button[type=submit]');
-        btn.prop('disabled', true).html('<i class="ri-loader-4-line ri-spin"></i> <?= __('creating'); ?>');
-
-        $.ajax({
-            url: '<?= base_url("ajaxs/admin/users.php?action=add"); ?>',
-            method: 'POST',
-            data: $(this).serialize(),
-            dataType: 'json',
-            success: function(res) {
-                if (res.status === 'success') {
-                    showToast('success', res.message);
-                    setTimeout(function() { location.reload(); }, 1000);
-                } else {
-                    showToast('error', res.message);
-                    btn.prop('disabled', false).html('<i class="ri-save-line me-1"></i> <?= __('create_user'); ?>');
-                }
-            },
-            error: function() {
-                showToast('error', '<?= __('server_error'); ?>');
-                btn.prop('disabled', false).html('<i class="ri-save-line me-1"></i> <?= __('create_user'); ?>');
-            }
-        });
-    });
-
-    // Ban/Unban user
-    $(document).on('click', '.btn-toggle-ban', function() {
-        var userId = $(this).data('id');
-        var action = $(this).data('action');
-        var label = action === 'ban' ? '<?= __('ban_confirm'); ?>' : '<?= __('unban_confirm'); ?>';
-
-        confirmAction(label, '<?= __('ban_desc'); ?>', function() {
-            $.ajax({
-                url: '<?= base_url("ajaxs/admin/users.php?action=toggle_status"); ?>',
-                method: 'POST',
-                data: { user_id: userId, ban_action: action },
-                dataType: 'json',
-                success: function(res) {
-                    if (res.status === 'success') {
-                        showToast('success', res.message);
-                        setTimeout(function() { location.reload(); }, 1000);
-                    } else {
-                        showToast('error', res.message);
-                    }
-                },
-                error: function() {
-                    showToast('error', '<?= __('server_error'); ?>');
-                }
-            });
-        });
-    });
-
-    // Delete user
-    $(document).on('click', '.btn-delete-user', function() {
-        var userId = $(this).data('id');
-
-        confirmAction('<?= __('delete_user'); ?>', '<?= __('delete_user_desc'); ?>', function() {
-            $.ajax({
-                url: '<?= base_url("ajaxs/admin/users.php?action=delete"); ?>',
-                method: 'POST',
-                data: { user_id: userId },
-                dataType: 'json',
-                success: function(res) {
-                    if (res.status === 'success') {
-                        showToast('success', res.message);
-                        setTimeout(function() { location.reload(); }, 1000);
-                    } else {
-                        showToast('error', res.message);
-                    }
-                },
-                error: function() {
-                    showToast('error', '<?= __('server_error'); ?>');
-                }
-            });
-        });
-    });
-});
-</script>

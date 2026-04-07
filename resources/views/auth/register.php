@@ -1,5 +1,5 @@
 <?php
-$body = ['title' => __('register_title')];
+$body = ['title' => __('register') . ' — ' . get_setting('site_name', 'Torymail')];
 ?>
 <!doctype html>
 <html lang="<?= current_lang() ?>" data-bs-theme="light">
@@ -29,7 +29,7 @@ $body = ['title' => __('register_title')];
                 <div class="row">
                     <div class="col-lg-12">
                         <div class="text-center mt-sm-5 mb-4 text-white-50">
-                            <h3 class="text-white"><i class="ri-mail-line"></i> Torymail</h3>
+                            <h3 class="text-white"><i class="ri-mail-line"></i> <?= htmlspecialchars(get_setting('site_name', 'Torymail')) ?></h3>
                             <p class="mt-2 fs-15 fw-medium"><?= __('register_subtitle') ?></p>
                         </div>
                     </div>
@@ -76,7 +76,7 @@ $body = ['title' => __('register_title')];
                 </div>
             </div>
         </div>
-        <footer class="footer"><div class="container"><div class="text-center"><div class="mb-2"><a href="?lang=en" class="text-muted me-2 <?= current_lang() === 'en' ? 'fw-bold text-primary' : '' ?>">English</a><span class="text-muted">|</span><a href="?lang=vi" class="text-muted ms-2 <?= current_lang() === 'vi' ? 'fw-bold text-primary' : '' ?>">Tiếng Việt</a></div><p class="mb-0 text-muted">&copy; <script>document.write(new Date().getFullYear())</script> Torymail</p></div></div></footer>
+        <footer class="footer"><div class="container"><div class="text-center"><div class="mb-2"><a href="?lang=en" class="text-muted me-2 <?= current_lang() === 'en' ? 'fw-bold text-primary' : '' ?>">English</a><span class="text-muted">|</span><a href="?lang=vi" class="text-muted ms-2 <?= current_lang() === 'vi' ? 'fw-bold text-primary' : '' ?>">Tiếng Việt</a></div><p class="mb-0 text-muted">&copy; <script>document.write(new Date().getFullYear())</script> <?= htmlspecialchars(get_setting('site_name', 'Torymail')) ?></p></div></div></footer>
     </div>
     <script src="<?= asset_url('material/assets/libs/bootstrap/js/bootstrap.bundle.min.js') ?>"></script>
     <script src="<?= asset_url('js/jquery-3.6.0.js') ?>"></script>
@@ -101,8 +101,9 @@ $body = ['title' => __('register_title')];
                     btn.prop('disabled', false).html('<?= __('register') ?>');
                 }
             },
-            error: function() {
-                $('#alert-box').html('<div class="alert alert-danger"><?= __('server_error') ?></div>');
+            error: function(xhr) {
+                var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : <?= json_encode(__('server_error')) ?>;
+                $('#alert-box').html('<div class="alert alert-danger">' + msg + '</div>');
                 btn.prop('disabled', false).html('<?= __('register') ?>');
             }
         });

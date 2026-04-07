@@ -7,6 +7,88 @@ $body = [
     'footer' => '',
 ];
 
+ob_start(); ?>
+<script>
+$(document).ready(function() {
+    // Save settings - each tab independently
+    $('.settings-form').on('submit', function(e) {
+        e.preventDefault();
+        var form = $(this);
+        var tab = form.data('tab');
+        var btn = form.find('button[type=submit]');
+        btn.prop('disabled', true).html('<i class="ri-loader-4-line ri-spin"></i> ' + <?= json_encode(__('saving')); ?>);
+
+        $.ajax({
+            url: '<?= base_url("ajaxs/admin/settings.php?action=save"); ?>',
+            method: 'POST',
+            data: form.serialize() + '&tab=' + tab,
+            dataType: 'json',
+            success: function(res) {
+                if (res.status === 'success') {
+                    showToast('success', res.message);
+                } else {
+                    showToast('error', res.message);
+                }
+                btn.prop('disabled', false).html('<i class="ri-save-line me-1"></i> Save ' + tab.charAt(0).toUpperCase() + tab.slice(1) + ' Settings');
+            },
+            error: function(xhr) {
+                var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : <?= json_encode(__('server_error')); ?>;
+                showToast('error', msg);
+                btn.prop('disabled', false).html('<i class="ri-save-line me-1"></i> Save ' + tab.charAt(0).toUpperCase() + tab.slice(1) + ' Settings');
+            }
+        });
+    });
+
+    // Logo upload
+    $('#logoFile').on('change', function() {
+        var file = this.files[0];
+        if (!file) return;
+        if (file.size > 2 * 1024 * 1024) {
+            showToast('error', <?= json_encode(__('logo_max_size')); ?>);
+            return;
+        }
+        var fd = new FormData();
+        fd.append('logo', file);
+        $.ajax({
+            url: '<?= base_url("ajaxs/admin/settings.php?action=upload_logo"); ?>',
+            method: 'POST',
+            data: fd,
+            processData: false,
+            contentType: false,
+            dataType: 'json',
+            success: function(res) {
+                if (res.success) {
+                    showToast('success', res.message);
+                    $('#logoPreview').html('<img src="' + res.data.logo_url + '" style="max-width:100%;max-height:100%;object-fit:contain;">');
+                    setTimeout(function() { location.reload(); }, 800);
+                } else {
+                    showToast('error', res.message);
+                }
+            },
+            error: function(xhr) { var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : <?= json_encode(__('upload_failed')); ?>; showToast('error', msg); }
+        });
+    });
+
+    // Remove logo
+    $('#btnRemoveLogo').on('click', function() {
+        $.ajax({
+            url: '<?= base_url("ajaxs/admin/settings.php?action=remove_logo"); ?>',
+            method: 'POST',
+            dataType: 'json',
+            success: function(res) {
+                if (res.success) {
+                    showToast('success', res.message);
+                    setTimeout(function() { location.reload(); }, 800);
+                } else {
+                    showToast('error', res.message);
+                }
+            }
+        });
+    });
+});
+</script>
+<?php $body['footer'] = ob_get_clean();
+
 require_once(__DIR__.'/header.php');
 require_once(__DIR__.'/sidebar.php');
 ?>
@@ -278,82 +360,3 @@ require_once(__DIR__.'/sidebar.php');
 </div>
 
 <?php require_once(__DIR__.'/footer.php'); ?>
-
-<script>
-$(document).ready(function() {
-    // Save settings - each tab independently
-    $('.settings-form').on('submit', function(e) {
-        e.preventDefault();
-        var form = $(this);
-        var tab = form.data('tab');
-        var btn = form.find('button[type=submit]');
-        btn.prop('disabled', true).html('<i class="ri-loader-4-line ri-spin"></i> <?= __('saving'); ?>');
-
-        $.ajax({
-            url: '<?= base_url("ajaxs/admin/settings.php?action=save"); ?>',
-            method: 'POST',
-            data: form.serialize() + '&tab=' + tab,
-            dataType: 'json',
-            success: function(res) {
-                if (res.status === 'success') {
-                    showToast('success', res.message);
-                } else {
-                    showToast('error', res.message);
-                }
-                btn.prop('disabled', false).html('<i class="ri-save-line me-1"></i> Save ' + tab.charAt(0).toUpperCase() + tab.slice(1) + ' Settings');
-            },
-            error: function() {
-                showToast('error', '<?= __('server_error'); ?>');
-                btn.prop('disabled', false).html('<i class="ri-save-line me-1"></i> Save ' + tab.charAt(0).toUpperCase() + tab.slice(1) + ' Settings');
-            }
-        });
-    });
-
-    // Logo upload
-    $('#logoFile').on('change', function() {
-        var file = this.files[0];
-        if (!file) return;
-        if (file.size > 2 * 1024 * 1024) {
-            showToast('error', '<?= __('logo_max_size'); ?>');
-            return;
-        }
-        var fd = new FormData();
-        fd.append('logo', file);
-        $.ajax({
-            url: '<?= base_url("ajaxs/admin/settings.php?action=upload_logo"); ?>',
-            method: 'POST',
-            data: fd,
-            processData: false,
-            contentType: false,
-            dataType: 'json',
-            success: function(res) {
-                if (res.success) {
-                    showToast('success', res.message);
-                    $('#logoPreview').html('<img src="' + res.data.logo_url + '" style="max-width:100%;max-height:100%;object-fit:contain;">');
-                    setTimeout(function() { location.reload(); }, 800);
-                } else {
-                    showToast('error', res.message);
-                }
-            },
-            error: function() { showToast('error', '<?= __('upload_failed'); ?>'); }
-        });
-    });
-
-    // Remove logo
-    $('#btnRemoveLogo').on('click', function() {
-        $.ajax({
-            url: '<?= base_url("ajaxs/admin/settings.php?action=remove_logo"); ?>',
-            method: 'POST',
-            dataType: 'json',
-            success: function(res) {
-                if (res.success) {
-                    showToast('success', res.message);
-                    setTimeout(function() { location.reload(); }, 800);
-                } else {
-                    showToast('error', res.message);
-                }
-            }
-        });
-    });
-});
-</script>

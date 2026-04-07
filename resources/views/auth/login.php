@@ -1,6 +1,6 @@
 <?php
 $body = [
-    'title' => __('login_title'),
+    'title' => __('login') . ' — ' . get_setting('site_name', 'Torymail'),
     'desc' => __('login_subtitle')
 ];
 ?>
@@ -34,7 +34,7 @@ $body = [
                         <div class="text-center mt-sm-5 mb-4 text-white-50">
                             <div>
                                 <a href="<?= base_url() ?>" class="d-inline-block auth-logo">
-                                    <h3 class="text-white"><i class="ri-mail-line"></i> Torymail</h3>
+                                    <h3 class="text-white"><i class="ri-mail-line"></i> <?= htmlspecialchars(get_setting('site_name', 'Torymail')) ?></h3>
                                 </a>
                             </div>
                             <p class="mt-2 fs-15 fw-medium"><?= __('system_tagline') ?></p>
@@ -88,6 +88,7 @@ $body = [
 
                         <div class="mt-4 text-center">
                             <p class="mb-0"><?= __('no_account') ?> <a href="<?= base_url('auth/register') ?>" class="fw-semibold text-primary text-decoration-underline"><?= __('register_now') ?></a></p>
+                            <p class="mb-0 mt-2"><?= __('or_create_mailbox') ?> <a href="<?= base_url('auth/create-mailbox') ?>" class="fw-semibold text-primary text-decoration-underline"><?= __('create_mailbox_link') ?></a></p>
                         </div>
                     </div>
                 </div>
@@ -102,7 +103,7 @@ $body = [
                         <span class="text-muted">|</span>
                         <a href="?lang=vi" class="text-muted ms-2 <?= current_lang() === 'vi' ? 'fw-bold text-primary' : '' ?>">Tiếng Việt</a>
                     </div>
-                    <p class="mb-0 text-muted">&copy; <script>document.write(new Date().getFullYear())</script> Torymail</p>
+                    <p class="mb-0 text-muted">&copy; <script>document.write(new Date().getFullYear())</script> <?= htmlspecialchars(get_setting('site_name', 'Torymail')) ?></p>
                 </div>
             </div>
         </footer>
@@ -153,8 +154,9 @@ $body = [
                     btn.prop('disabled', false).html('<?= __('login') ?>');
                 }
             },
-            error: function() {
-                $('#alert-box').html('<div class="alert alert-danger"><?= __('server_error') ?></div>');
+            error: function(xhr) {
+                var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : <?= json_encode(__('server_error')) ?>;
+                $('#alert-box').html('<div class="alert alert-danger alert-dismissible fade show"><i class="ri-error-warning-line me-2"></i>' + msg + '<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>');
                 btn.prop('disabled', false).html('<?= __('login') ?>');
             }
         });

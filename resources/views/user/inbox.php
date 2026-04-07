@@ -22,8 +22,8 @@ $folderNames = [
 ];
 
 $body = [
-    'title' => ($folderNames[$folder] ?? ucfirst($folder)) . ' - Torymail',
-    'desc'  => 'Torymail email management',
+    'title' => ($folderNames[$folder] ?? ucfirst($folder)) . ' - ' . get_setting('site_name', 'Torymail'),
+    'desc'  => get_setting('site_name', 'Torymail') . ' email management',
 ];
 $body['header'] = '';
 $body['footer'] = '';
@@ -38,15 +38,28 @@ if (!in_array($folder, $validFolders)) {
 }
 
 // Fetch user's mailboxes for selector
-$userMailboxes = $ToryMail->get_list_safe("
-    SELECT `id`, `email_address`, `display_name` FROM `mailboxes`
-    WHERE `user_id` = ? AND `status` = 'active'
-    ORDER BY `email_address` ASC
-", [$getUser['id']]);
+$isMailboxLogin = !empty($_SESSION['mailbox_id']);
+if ($isMailboxLogin) {
+    $userMailboxes = $ToryMail->get_list_safe("
+        SELECT `id`, `email_address`, `display_name` FROM `mailboxes`
+        WHERE `id` = ? AND `status` = 'active'
+    ", [$_SESSION['mailbox_id']]);
+} else {
+    $userMailboxes = $ToryMail->get_list_safe("
+        SELECT `id`, `email_address`, `display_name` FROM `mailboxes`
+        WHERE `user_id` = ? AND `status` = 'active'
+        ORDER BY `email_address` ASC
+    ", [$getUser['id']]);
+}
 
-// Build query
-$where = ["e.`mailbox_id` IN (SELECT id FROM mailboxes WHERE user_id = ?)"];
-$params = [$getUser['id']];
+// Build query — scope to single mailbox if mailbox login
+if ($isMailboxLogin) {
+    $where = ["e.`mailbox_id` = ?"];
+    $params = [$_SESSION['mailbox_id']];
+} else {
+    $where = ["e.`mailbox_id` IN (SELECT id FROM mailboxes WHERE user_id = ?)"];
+    $params = [$getUser['id']];
+}
 
 if ($folder === 'starred') {
     $where[] = "e.`is_starred` = 1";
@@ -315,16 +328,17 @@ $('#mailboxSelector').on('change', function() {
 
 // Toggle star
 function toggleStar(emailId, el) {
-    $.post('<?= base_url("ajaxs/user/email_action.php"); ?>', {
-        action: 'toggle_star',
-        email_id: emailId
-    }, function(res) {
-        if (res.success) {
-            var $el = $(el);
-            $el.toggleClass('text-warning text-muted');
-            $el.find('i').toggleClass('ri-star-line ri-star-fill');
+    $.ajax({
+        url: '<?= base_url("ajaxs/user/email_action.php"); ?>',
+        method: 'POST', data: { action: 'toggle_star', email_id: emailId }, dataType: 'json',
+        success: function(res) {
+            if (res.success) {
+                var $el = $(el);
+                $el.toggleClass('text-warning text-muted');
+                $el.find('i').toggleClass('ri-star-line ri-star-fill');
+            }
         }
-    }, 'json');
+    });
 }
 
 // Get selected email IDs
@@ -340,12 +354,12 @@ function getSelectedIds() {
 function bulkAction(action, target) {
     var ids = getSelectedIds();
     if (ids.length === 0) {
-        tmToast('warning', '<?= __("select_emails_warning"); ?>');
+        tmToast('warning', <?= json_encode(__("select_emails_warning")); ?>);
         return;
     }
 
     if (action === 'delete') {
-        tmConfirm('<?= __("delete_emails_confirm"); ?>', '<?= __("delete_emails_desc"); ?>', function() {
+        tmConfirm(<?= json_encode(__("delete_emails_confirm")); ?>, <?= json_encode(__("delete_emails_desc")); ?>, function() {
             doBulkAction(action, ids, target);
         });
         return;
@@ -355,18 +369,22 @@ function bulkAction(action, target) {
 }
 
 function doBulkAction(action, ids, target) {
-    $.post('<?= base_url("ajaxs/user/email_action.php"); ?>', {
-        action: 'bulk_' + action,
-        email_ids: ids,
-        target: target || ''
-    }, function(res) {
-        if (res.success) {
-            tmToast('success', res.message || '<?= __("done"); ?>');
-            setTimeout(function() { location.reload(); }, 800);
-        } else {
-            tmToast('error', res.message || '<?= __("error_occurred"); ?>');
+    $.ajax({
+        url: '<?= base_url("ajaxs/user/email_action.php"); ?>',
+        method: 'POST', data: { action: 'bulk_' + action, email_ids: ids, target: target || '' }, dataType: 'json',
+        success: function(res) {
+            if (res.success) {
+                tmToast('success', res.message || <?= json_encode(__("done")); ?>);
+                setTimeout(function() { location.reload(); }, 800);
+            } else {
+                tmToast('error', res.message || <?= json_encode(__("error_occurred")); ?>);
+            }
+        },
+        error: function(xhr) {
+            var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : <?= json_encode(__("error_occurred")); ?>;
+            tmToast('error', msg);
         }
-    }, 'json');
+    });
 }
 
 // Refresh

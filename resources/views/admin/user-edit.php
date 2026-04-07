@@ -7,6 +7,38 @@ $body = [
     'footer' => '',
 ];
 
+ob_start(); ?>
+<script>
+$(document).ready(function() {
+    $('#editUserForm').on('submit', function(e) {
+        e.preventDefault();
+        var btn = $('#btnSaveUser');
+        btn.prop('disabled', true).html('<i class="ri-loader-4-line ri-spin"></i> ' + <?= json_encode(__('saving')); ?>);
+
+        $.ajax({
+            url: '<?= base_url("ajaxs/admin/users.php?action=edit"); ?>',
+            method: 'POST',
+            data: $(this).serialize(),
+            dataType: 'json',
+            success: function(res) {
+                if (res.status === 'success') {
+                    showToast('success', res.message);
+                } else {
+                    showToast('error', res.message);
+                }
+                btn.prop('disabled', false).html('<i class="ri-save-line me-1"></i> ' + <?= json_encode(__('save_changes')); ?>);
+            },
+            error: function(xhr) {
+                var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : <?= json_encode(__('server_error')); ?>;
+                showToast('error', msg);
+                btn.prop('disabled', false).html('<i class="ri-save-line me-1"></i> ' + <?= json_encode(__('save_changes')); ?>);
+            }
+        });
+    });
+});
+</script>
+<?php $body['footer'] = ob_get_clean();
+
 if (!$id) {
     redirect(admin_url('users'));
 }
@@ -302,32 +334,3 @@ require_once(__DIR__.'/sidebar.php');
 </div>
 
 <?php require_once(__DIR__.'/footer.php'); ?>
-
-<script>
-$(document).ready(function() {
-    $('#editUserForm').on('submit', function(e) {
-        e.preventDefault();
-        var btn = $('#btnSaveUser');
-        btn.prop('disabled', true).html('<i class="ri-loader-4-line ri-spin"></i> <?= __('saving'); ?>');
-
-        $.ajax({
-            url: '<?= base_url("ajaxs/admin/users.php?action=edit"); ?>',
-            method: 'POST',
-            data: $(this).serialize(),
-            dataType: 'json',
-            success: function(res) {
-                if (res.status === 'success') {
-                    showToast('success', res.message);
-                } else {
-                    showToast('error', res.message);
-                }
-                btn.prop('disabled', false).html('<i class="ri-save-line me-1"></i> <?= __('save_changes'); ?>');
-            },
-            error: function() {
-                showToast('error', '<?= __('server_error'); ?>');
-                btn.prop('disabled', false).html('<i class="ri-save-line me-1"></i> <?= __('save_changes'); ?>');
-            }
-        });
-    });
-});
-</script>

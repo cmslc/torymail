@@ -4,7 +4,7 @@ if (!defined('IN_SITE')) {
 }
 
 $body = [
-    'title' => __('templates') . ' - Torymail',
+    'title' => __('templates') . ' - ' . get_setting('site_name', 'Torymail'),
     'desc'  => __('email_templates'),
 ];
 $body['header'] = '';
@@ -148,7 +148,7 @@ function tplExecCmd(cmd) {
 }
 
 function resetTemplateForm() {
-    $('#templateModalTitle').text('<?= __("add_template"); ?>');
+    $('#templateModalTitle').text(<?= json_encode(__('add_template')); ?>);
     $('#tplId').val('');
     $('#tplName').val('');
     $('#tplSubject').val('');
@@ -156,7 +156,7 @@ function resetTemplateForm() {
 }
 
 function editTemplate(tpl) {
-    $('#templateModalTitle').text('<?= __("edit_template"); ?>');
+    $('#templateModalTitle').text(<?= json_encode(__('edit_template')); ?>);
     $('#tplId').val(tpl.id);
     $('#tplName').val(tpl.name || '');
     $('#tplSubject').val(tpl.subject || '');
@@ -170,28 +170,42 @@ $('#saveTemplateBtn').on('click', function() {
     var isEdit = !!$('#tplId').val();
     var act = isEdit ? 'edit' : 'add';
 
-    $.post('<?= base_url("ajaxs/user/templates.php"); ?>?action=' + act, data, function(res) {
-        if (res.success) {
-            tmToast('success', res.message || '<?= __("template_saved"); ?>');
-            setTimeout(function() { location.reload(); }, 800);
-        } else {
-            tmToast('error', res.message || '<?= __("template_save_fail"); ?>');
+    $.ajax({
+        url: '<?= base_url("ajaxs/user/templates.php"); ?>?action=' + act,
+        method: 'POST', data: data, dataType: 'json',
+        success: function(res) {
+            if (res.success) {
+                tmToast('success', res.message || <?= json_encode(__('template_saved')); ?>);
+                setTimeout(function() { location.reload(); }, 800);
+            } else {
+                tmToast('error', res.message || <?= json_encode(__('template_save_fail')); ?>);
+            }
+        },
+        error: function(xhr) {
+            var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : <?= json_encode(__('template_save_fail')); ?>;
+            tmToast('error', msg);
         }
-    }, 'json');
+    });
 });
 
 function deleteTemplate(id) {
-    tmConfirm('<?= __("delete_template"); ?>', '<?= __("delete_template_desc"); ?>', function() {
-        $.post('<?= base_url("ajaxs/user/templates.php"); ?>?action=delete', {
-            template_id: id
-        }, function(res) {
-            if (res.success) {
-                tmToast('success', '<?= __("template_deleted"); ?>');
-                setTimeout(function() { location.reload(); }, 800);
-            } else {
-                tmToast('error', res.message || '<?= __("template_delete_fail"); ?>');
+    tmConfirm(<?= json_encode(__('delete_template')); ?>, <?= json_encode(__('delete_template_desc')); ?>, function() {
+        $.ajax({
+            url: '<?= base_url("ajaxs/user/templates.php"); ?>?action=delete',
+            method: 'POST', data: { template_id: id }, dataType: 'json',
+            success: function(res) {
+                if (res.success) {
+                    tmToast('success', <?= json_encode(__('template_deleted')); ?>);
+                    setTimeout(function() { location.reload(); }, 800);
+                } else {
+                    tmToast('error', res.message || <?= json_encode(__('template_delete_fail')); ?>);
+                }
+            },
+            error: function(xhr) {
+                var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : <?= json_encode(__('template_delete_fail')); ?>;
+                tmToast('error', msg);
             }
-        }, 'json');
+        });
     });
 }
 </script>

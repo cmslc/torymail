@@ -9,7 +9,7 @@
                 <div class="container-fluid">
                     <div class="row">
                         <div class="col-sm-6">
-                            <script>document.write(new Date().getFullYear())</script> &copy; Torymail
+                            <script>document.write(new Date().getFullYear())</script> &copy; <?= htmlspecialchars(get_setting('site_name', 'Torymail')) ?>
                         </div>
                         <div class="col-sm-6">
                             <div class="text-sm-end d-none d-sm-block">

@@ -4,7 +4,7 @@ if (!defined('IN_SITE')) {
 }
 
 $body = [
-    'title' => __('labels') . ' - Torymail',
+    'title' => __('labels') . ' - ' . get_setting('site_name', 'Torymail'),
     'desc'  => __('manage_labels'),
 ];
 $body['header'] = '';
@@ -143,7 +143,7 @@ function selectColor(color) {
 }
 
 function resetLabelForm() {
-    $('#labelModalTitle').text('<?= __("add_label_btn"); ?>');
+    $('#labelModalTitle').text(<?= json_encode(__("add_label_btn")); ?>);
     $('#lblId').val('');
     $('#labelForm')[0].reset();
     $('#lblColor').val('#4F46E5');
@@ -152,7 +152,7 @@ function resetLabelForm() {
 }
 
 function editLabel(label) {
-    $('#labelModalTitle').text('<?= __("edit_label"); ?>');
+    $('#labelModalTitle').text(<?= json_encode(__("edit_label")); ?>);
     $('#lblId').val(label.id);
     $('#lblName').val(label.name || '');
     $('#lblColor').val(label.color || '#4F46E5');
@@ -166,28 +166,42 @@ $('#saveLabelBtn').on('click', function() {
     var isEdit = !!$('#lblId').val();
     var act = isEdit ? 'edit' : 'add';
 
-    $.post('<?= base_url("ajaxs/user/labels.php"); ?>?action=' + act, data, function(res) {
-        if (res.success) {
-            tmToast('success', res.message || '<?= __("label_saved"); ?>');
-            setTimeout(function() { location.reload(); }, 800);
-        } else {
-            tmToast('error', res.message || '<?= __("label_save_fail"); ?>');
+    $.ajax({
+        url: '<?= base_url("ajaxs/user/labels.php"); ?>?action=' + act,
+        method: 'POST', data: data, dataType: 'json',
+        success: function(res) {
+            if (res.success) {
+                tmToast('success', res.message || <?= json_encode(__("label_saved")); ?>);
+                setTimeout(function() { location.reload(); }, 800);
+            } else {
+                tmToast('error', res.message || <?= json_encode(__("label_save_fail")); ?>);
+            }
+        },
+        error: function(xhr) {
+            var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : <?= json_encode(__("label_save_fail")); ?>;
+            tmToast('error', msg);
         }
-    }, 'json');
+    });
 });
 
 function deleteLabel(id, name) {
-    tmConfirm('<?= __("delete_label"); ?>', '<?= __("delete_label_desc"); ?>', function() {
-        $.post('<?= base_url("ajaxs/user/labels.php"); ?>?action=delete', {
-            label_id: id
-        }, function(res) {
-            if (res.success) {
-                tmToast('success', '<?= __("label_deleted"); ?>');
-                setTimeout(function() { location.reload(); }, 800);
-            } else {
-                tmToast('error', res.message || '<?= __("label_delete_fail"); ?>');
+    tmConfirm(<?= json_encode(__("delete_label")); ?>, <?= json_encode(__("delete_label_desc")); ?>, function() {
+        $.ajax({
+            url: '<?= base_url("ajaxs/user/labels.php"); ?>?action=delete',
+            method: 'POST', data: { label_id: id }, dataType: 'json',
+            success: function(res) {
+                if (res.success) {
+                    tmToast('success', <?= json_encode(__("label_deleted")); ?>);
+                    setTimeout(function() { location.reload(); }, 800);
+                } else {
+                    tmToast('error', res.message || <?= json_encode(__("label_delete_fail")); ?>);
+                }
+            },
+            error: function(xhr) {
+                var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : <?= json_encode(__("label_delete_fail")); ?>;
+                tmToast('error', msg);
             }
-        }, 'json');
+        });
     });
 }
 </script>

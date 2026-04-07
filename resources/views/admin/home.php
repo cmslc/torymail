@@ -43,6 +43,53 @@ foreach ($emailStats as $stat) {
     $chartReceived[] = (int)$stat['received_count'];
 }
 
+ob_start(); ?>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var ctx = document.getElementById('emailChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: <?= json_encode($chartLabels); ?>,
+            datasets: [
+                {
+                    label: <?= json_encode(__('sent')); ?>,
+                    data: <?= json_encode($chartSent); ?>,
+                    borderColor: '#405189',
+                    backgroundColor: 'rgba(64,81,137,0.08)',
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 3,
+                    pointBackgroundColor: '#405189',
+                    borderWidth: 2
+                },
+                {
+                    label: <?= json_encode(__('received')); ?>,
+                    data: <?= json_encode($chartReceived); ?>,
+                    borderColor: '#0ab39c',
+                    backgroundColor: 'rgba(10,179,156,0.08)',
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 3,
+                    pointBackgroundColor: '#0ab39c',
+                    borderWidth: 2
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'top' }
+            },
+            scales: {
+                y: { beginAtZero: true, ticks: { stepSize: 1 } }
+            }
+        }
+    });
+});
+</script>
+<?php $body['footer'] = ob_get_clean();
+
 // =====================================================
 // Recent activity logs (last 20)
 // =====================================================
@@ -177,48 +224,3 @@ require_once(__DIR__.'/sidebar.php');
 </div>
 
 <?php require_once(__DIR__.'/footer.php'); ?>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    var ctx = document.getElementById('emailChart').getContext('2d');
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: <?= json_encode($chartLabels); ?>,
-            datasets: [
-                {
-                    label: '<?= __('sent'); ?>',
-                    data: <?= json_encode($chartSent); ?>,
-                    borderColor: '#405189',
-                    backgroundColor: 'rgba(64,81,137,0.08)',
-                    fill: true,
-                    tension: 0.4,
-                    pointRadius: 3,
-                    pointBackgroundColor: '#405189',
-                    borderWidth: 2
-                },
-                {
-                    label: '<?= __('received'); ?>',
-                    data: <?= json_encode($chartReceived); ?>,
-                    borderColor: '#0ab39c',
-                    backgroundColor: 'rgba(10,179,156,0.08)',
-                    fill: true,
-                    tension: 0.4,
-                    pointRadius: 3,
-                    pointBackgroundColor: '#0ab39c',
-                    borderWidth: 2
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: { position: 'top' }
-            },
-            scales: {
-                y: { beginAtZero: true, ticks: { stepSize: 1 } }
-            }
-        }
-    });
-});
-</script>

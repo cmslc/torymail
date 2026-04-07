@@ -4,7 +4,7 @@ if (!defined('IN_SITE')) {
 }
 
 $body = [
-    'title' => __('contacts') . ' - Torymail',
+    'title' => __('contacts') . ' - ' . get_setting('site_name', 'Torymail'),
     'desc'  => __('contacts'),
 ];
 $body['header'] = '';
@@ -239,13 +239,13 @@ $groups = $ToryMail->get_list_safe("
 
 <script>
 function resetContactForm() {
-    $('#contactModalTitle').text('<?= __("add_contact"); ?>');
+    $('#contactModalTitle').text(<?= json_encode(__("add_contact")); ?>);
     $('#contactId').val('');
     $('#contactForm')[0].reset();
 }
 
 function editContact(contact) {
-    $('#contactModalTitle').text('<?= __("edit_contact"); ?>');
+    $('#contactModalTitle').text(<?= json_encode(__("edit_contact")); ?>);
     $('#contactId').val(contact.id);
     $('#contactName').val(contact.name || '');
     $('#contactEmail').val(contact.email || '');
@@ -261,28 +261,42 @@ $('#saveContactBtn').on('click', function() {
     var isEdit = !!$('#contactId').val();
     var act = isEdit ? 'edit' : 'add';
 
-    $.post('<?= base_url("ajaxs/user/contacts.php"); ?>?action=' + act, data, function(res) {
-        if (res.success) {
-            tmToast('success', res.message || '<?= __("contact_saved"); ?>');
-            setTimeout(function() { location.reload(); }, 800);
-        } else {
-            tmToast('error', res.message || '<?= __("contact_save_fail"); ?>');
+    $.ajax({
+        url: '<?= base_url("ajaxs/user/contacts.php"); ?>?action=' + act,
+        method: 'POST', data: data, dataType: 'json',
+        success: function(res) {
+            if (res.success) {
+                tmToast('success', res.message || <?= json_encode(__("contact_saved")); ?>);
+                setTimeout(function() { location.reload(); }, 800);
+            } else {
+                tmToast('error', res.message || <?= json_encode(__("contact_save_fail")); ?>);
+            }
+        },
+        error: function(xhr) {
+            var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : <?= json_encode(__("contact_save_fail")); ?>;
+            tmToast('error', msg);
         }
-    }, 'json');
+    });
 });
 
 function deleteContact(id) {
-    tmConfirm('<?= __("delete_contact"); ?>', '<?= __("delete_contact_desc"); ?>', function() {
-        $.post('<?= base_url("ajaxs/user/contacts.php"); ?>?action=delete', {
-            contact_id: id
-        }, function(res) {
-            if (res.success) {
-                tmToast('success', '<?= __("contact_deleted"); ?>');
-                setTimeout(function() { location.reload(); }, 800);
-            } else {
-                tmToast('error', res.message || '<?= __("contact_delete_fail"); ?>');
+    tmConfirm(<?= json_encode(__("delete_contact")); ?>, <?= json_encode(__("delete_contact_desc")); ?>, function() {
+        $.ajax({
+            url: '<?= base_url("ajaxs/user/contacts.php"); ?>?action=delete',
+            method: 'POST', data: { contact_id: id }, dataType: 'json',
+            success: function(res) {
+                if (res.success) {
+                    tmToast('success', <?= json_encode(__("contact_deleted")); ?>);
+                    setTimeout(function() { location.reload(); }, 800);
+                } else {
+                    tmToast('error', res.message || <?= json_encode(__("contact_delete_fail")); ?>);
+                }
+            },
+            error: function(xhr) {
+                var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : <?= json_encode(__("contact_delete_fail")); ?>;
+                tmToast('error', msg);
             }
-        }, 'json');
+        });
     });
 }
 </script>

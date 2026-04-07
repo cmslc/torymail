@@ -135,13 +135,19 @@
                                 <?= strtoupper(substr($getUser['fullname'] ?? $getUser['email'] ?? 'U', 0, 1)); ?>
                             </span>
                             <span class="text-start ms-xl-2">
+                                <?php if (!empty($_SESSION['mailbox_email'])): ?>
+                                <span class="d-none d-xl-inline-block ms-1 fw-medium user-name-text"><?= htmlspecialchars($_SESSION['mailbox_email']); ?></span>
+                                <span class="d-none d-xl-block ms-1 fs-12 text-muted user-name-sub-text">Mailbox</span>
+                                <?php else: ?>
                                 <span class="d-none d-xl-inline-block ms-1 fw-medium user-name-text"><?= htmlspecialchars($getUser['fullname'] ?? $getUser['email'] ?? 'User'); ?></span>
                                 <span class="d-none d-xl-block ms-1 fs-12 text-muted user-name-sub-text"><?= htmlspecialchars($getUser['role'] ?? 'User'); ?></span>
+                                <?php endif; ?>
                             </span>
                         </span>
                     </button>
                     <div class="dropdown-menu dropdown-menu-end">
                         <h6 class="dropdown-header">Welcome!</h6>
+                        <?php if (empty($_SESSION['mailbox_id'])): ?>
                         <a class="dropdown-item" href="<?= base_url('settings'); ?>">
                             <i class="ri-user-settings-line text-muted fs-16 align-middle me-1"></i>
                             <span class="align-middle">Settings</span>
@@ -151,6 +157,7 @@
                             <i class="ri-admin-line text-muted fs-16 align-middle me-1"></i>
                             <span class="align-middle">Admin Panel</span>
                         </a>
+                        <?php endif; ?>
                         <?php endif; ?>
                         <div class="dropdown-divider"></div>
                         <a class="dropdown-item text-danger" href="<?= base_url('auth/logout'); ?>">
@@ -168,8 +175,12 @@
 // Mark all notifications as read
 $(document).on('click', '#markAllNotifRead', function(e) {
     e.preventDefault();
-    $.post('<?= base_url("ajaxs/user/notifications.php"); ?>', { action: 'mark_all_read' }, function(res) {
-        if (res.success) location.reload();
-    }, 'json');
+    $.ajax({
+        url: '<?= base_url("ajaxs/user/notifications.php"); ?>',
+        method: 'POST', data: { action: 'mark_all_read' }, dataType: 'json',
+        success: function(res) {
+            if (res.success) location.reload();
+        }
+    });
 });
 </script>

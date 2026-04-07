@@ -7,6 +7,101 @@ $body = [
     'footer' => '',
 ];
 
+ob_start(); ?>
+<script>
+$(document).ready(function() {
+    // Enable/Disable mailbox
+    $(document).on('click', '.btn-toggle-mailbox', function() {
+        var mbId = $(this).data('id');
+        var action = $(this).data('action');
+        var label = action === 'disable' ? <?= json_encode(__('disable_mailbox')); ?> : <?= json_encode(__('enable_mailbox')); ?>;
+
+        confirmAction(label, '', function() {
+            $.ajax({
+                url: '<?= base_url("ajaxs/admin/mailboxes.php?action=toggle_status"); ?>',
+                method: 'POST',
+                data: { mailbox_id: mbId, mb_action: action },
+                dataType: 'json',
+                success: function(res) {
+                    if (res.status === 'success') {
+                        showToast('success', res.message);
+                        setTimeout(function() { location.reload(); }, 1000);
+                    } else {
+                        showToast('error', res.message);
+                    }
+                },
+                error: function(xhr) {
+                    var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : <?= json_encode(__('server_error')); ?>;
+                    showToast('error', msg);
+                }
+            });
+        });
+    });
+
+    // Reset password modal
+    $(document).on('click', '.btn-reset-password', function() {
+        $('#resetMailboxId').val($(this).data('id'));
+        $('#resetMailboxEmail').text($(this).data('email'));
+        new bootstrap.Modal('#resetPasswordModal').show();
+    });
+
+    // Reset password submit
+    $('#resetPasswordForm').on('submit', function(e) {
+        e.preventDefault();
+        var btn = $(this).find('button[type=submit]');
+        btn.prop('disabled', true).html('<i class="ri-loader-4-line ri-spin"></i> ' + <?= json_encode(__('resetting')); ?>);
+
+        $.ajax({
+            url: '<?= base_url("ajaxs/admin/mailboxes.php?action=reset_password"); ?>',
+            method: 'POST',
+            data: $(this).serialize(),
+            dataType: 'json',
+            success: function(res) {
+                if (res.status === 'success') {
+                    showToast('success', res.message);
+                    bootstrap.Modal.getInstance('#resetPasswordModal').hide();
+                } else {
+                    showToast('error', res.message);
+                }
+                btn.prop('disabled', false).html('<i class="ri-save-line me-1"></i> ' + <?= json_encode(__('reset')); ?>);
+            },
+            error: function(xhr) {
+                var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : <?= json_encode(__('server_error')); ?>;
+                showToast('error', msg);
+                btn.prop('disabled', false).html('<i class="ri-save-line me-1"></i> ' + <?= json_encode(__('reset')); ?>);
+            }
+        });
+    });
+
+    // Delete mailbox
+    $(document).on('click', '.btn-delete-mailbox', function() {
+        var mbId = $(this).data('id');
+
+        confirmAction(<?= json_encode(__('delete_mailbox')); ?>, <?= json_encode(__('delete_mailbox_desc')); ?>, function() {
+            $.ajax({
+                url: '<?= base_url("ajaxs/admin/mailboxes.php?action=delete"); ?>',
+                method: 'POST',
+                data: { mailbox_id: mbId },
+                dataType: 'json',
+                success: function(res) {
+                    if (res.status === 'success') {
+                        showToast('success', res.message);
+                        setTimeout(function() { location.reload(); }, 1000);
+                    } else {
+                        showToast('error', res.message);
+                    }
+                },
+                error: function(xhr) {
+                    var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : <?= json_encode(__('server_error')); ?>;
+                    showToast('error', msg);
+                }
+            });
+        });
+    });
+});
+</script>
+<?php $body['footer'] = ob_get_clean();
+
 // Get all mailboxes with domain and owner info
 $mailboxes = $ToryMail->get_list_safe("
     SELECT m.*, d.domain_name, u.fullname as owner_name, u.email as owner_email
@@ -143,93 +238,3 @@ require_once(__DIR__.'/sidebar.php');
 </div>
 
 <?php require_once(__DIR__.'/footer.php'); ?>
-
-<script>
-$(document).ready(function() {
-    // Enable/Disable mailbox
-    $(document).on('click', '.btn-toggle-mailbox', function() {
-        var mbId = $(this).data('id');
-        var action = $(this).data('action');
-        var label = action === 'disable' ? '<?= __('disable_mailbox'); ?>' : '<?= __('enable_mailbox'); ?>';
-
-        confirmAction(label, '', function() {
-            $.ajax({
-                url: '<?= base_url("ajaxs/admin/mailboxes.php?action=toggle_status"); ?>',
-                method: 'POST',
-                data: { mailbox_id: mbId, mb_action: action },
-                dataType: 'json',
-                success: function(res) {
-                    if (res.status === 'success') {
-                        showToast('success', res.message);
-                        setTimeout(function() { location.reload(); }, 1000);
-                    } else {
-                        showToast('error', res.message);
-                    }
-                },
-                error: function() {
-                    showToast('error', '<?= __('server_error'); ?>');
-                }
-            });
-        });
-    });
-
-    // Reset password modal
-    $(document).on('click', '.btn-reset-password', function() {
-        $('#resetMailboxId').val($(this).data('id'));
-        $('#resetMailboxEmail').text($(this).data('email'));
-        new bootstrap.Modal('#resetPasswordModal').show();
-    });
-
-    // Reset password submit
-    $('#resetPasswordForm').on('submit', function(e) {
-        e.preventDefault();
-        var btn = $(this).find('button[type=submit]');
-        btn.prop('disabled', true).html('<i class="ri-loader-4-line ri-spin"></i> <?= __('resetting'); ?>');
-
-        $.ajax({
-            url: '<?= base_url("ajaxs/admin/mailboxes.php?action=reset_password"); ?>',
-            method: 'POST',
-            data: $(this).serialize(),
-            dataType: 'json',
-            success: function(res) {
-                if (res.status === 'success') {
-                    showToast('success', res.message);
-                    bootstrap.Modal.getInstance('#resetPasswordModal').hide();
-                } else {
-                    showToast('error', res.message);
-                }
-                btn.prop('disabled', false).html('<i class="ri-save-line me-1"></i> <?= __('reset'); ?>');
-            },
-            error: function() {
-                showToast('error', '<?= __('server_error'); ?>');
-                btn.prop('disabled', false).html('<i class="ri-save-line me-1"></i> <?= __('reset'); ?>');
-            }
-        });
-    });
-
-    // Delete mailbox
-    $(document).on('click', '.btn-delete-mailbox', function() {
-        var mbId = $(this).data('id');
-
-        confirmAction('<?= __('delete_mailbox'); ?>', '<?= __('delete_mailbox_desc'); ?>', function() {
-            $.ajax({
-                url: '<?= base_url("ajaxs/admin/mailboxes.php?action=delete"); ?>',
-                method: 'POST',
-                data: { mailbox_id: mbId },
-                dataType: 'json',
-                success: function(res) {
-                    if (res.status === 'success') {
-                        showToast('success', res.message);
-                        setTimeout(function() { location.reload(); }, 1000);
-                    } else {
-                        showToast('error', res.message);
-                    }
-                },
-                error: function() {
-                    showToast('error', '<?= __('server_error'); ?>');
-                }
-            });
-        });
-    });
-});
-</script>

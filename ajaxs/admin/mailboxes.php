@@ -92,7 +92,7 @@ switch ($action) {
             'created_at' => gettime(),
         ]);
 
-        success_response('Mailbox ' . $newStatus, ['status' => $newStatus]);
+        success_response('Mailbox ' . $newStatus, ['mailbox_status' => $newStatus]);
         break;
 
     // -------------------------------------------------------

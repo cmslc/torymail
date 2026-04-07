@@ -316,26 +316,40 @@ function saveSettings(section) {
     var actionMap = {'profile': 'update_profile', 'security': 'change_password', 'display': 'update_profile'};
     var act = actionMap[section] || 'update_profile';
 
-    $.post('<?= base_url("ajaxs/user/settings.php"); ?>?action=' + act, data, function(res) {
-        if (res.success) {
-            tmToast('success', res.message || '<?= __("settings_saved"); ?>');
-        } else {
-            tmToast('error', res.message || '<?= __("settings_failed"); ?>');
+    $.ajax({
+        url: '<?= base_url("ajaxs/user/settings.php"); ?>?action=' + act,
+        method: 'POST', data: data, dataType: 'json',
+        success: function(res) {
+            if (res.success) {
+                tmToast('success', res.message || <?= json_encode(__('settings_saved')); ?>);
+            } else {
+                tmToast('error', res.message || <?= json_encode(__('settings_failed')); ?>);
+            }
+        },
+        error: function(xhr) {
+            var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : <?= json_encode(__('settings_failed')); ?>;
+            tmToast('error', msg);
         }
-    }, 'json');
+    });
 }
 
 function toggle2FA(action) {
-    $.post('<?= base_url("ajaxs/user/settings.php"); ?>?action=toggle_2fa', {
-        mode: action
-    }, function(res) {
-        if (res.success) {
-            tmToast('success', res.message || '<?= __("settings_saved"); ?>');
-            setTimeout(function() { location.reload(); }, 1000);
-        } else {
-            tmToast('error', res.message || '<?= __("settings_failed"); ?>');
+    $.ajax({
+        url: '<?= base_url("ajaxs/user/settings.php"); ?>?action=toggle_2fa',
+        method: 'POST', data: { mode: action }, dataType: 'json',
+        success: function(res) {
+            if (res.success) {
+                tmToast('success', res.message || <?= json_encode(__('settings_saved')); ?>);
+                setTimeout(function() { location.reload(); }, 1000);
+            } else {
+                tmToast('error', res.message || <?= json_encode(__('settings_failed')); ?>);
+            }
+        },
+        error: function(xhr) {
+            var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : <?= json_encode(__('settings_failed')); ?>;
+            tmToast('error', msg);
         }
-    }, 'json');
+    });
 }
 
 // Signature is user-level, not per-mailbox
@@ -344,16 +358,21 @@ function saveSignature() {
     var mailboxId = $('#signatureMailbox').val();
     var signature = $('#signatureEditor').html();
 
-    $.post('<?= base_url("ajaxs/user/settings.php"); ?>?action=update_signature', {
-        mailbox_id: mailboxId,
-        signature: signature
-    }, function(res) {
-        if (res.success) {
-            tmToast('success', '<?= __("settings_saved"); ?>');
-        } else {
-            tmToast('error', res.message || '<?= __("settings_failed"); ?>');
+    $.ajax({
+        url: '<?= base_url("ajaxs/user/settings.php"); ?>?action=update_signature',
+        method: 'POST', data: { mailbox_id: mailboxId, signature: signature }, dataType: 'json',
+        success: function(res) {
+            if (res.success) {
+                tmToast('success', <?= json_encode(__('settings_saved')); ?>);
+            } else {
+                tmToast('error', res.message || <?= json_encode(__('settings_failed')); ?>);
+            }
+        },
+        error: function(xhr) {
+            var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : <?= json_encode(__('settings_failed')); ?>;
+            tmToast('error', msg);
         }
-    }, 'json');
+    });
 }
 
 // Auto-reply mailbox switcher
@@ -371,13 +390,21 @@ function saveAutoReply() {
         data += '&auto_reply_enabled=0';
     }
 
-    $.post('<?= base_url("ajaxs/user/mailboxes.php"); ?>?action=set_auto_reply', data, function(res) {
-        if (res.success) {
-            tmToast('success', '<?= __("settings_saved"); ?>');
-        } else {
-            tmToast('error', res.message || '<?= __("settings_failed"); ?>');
+    $.ajax({
+        url: '<?= base_url("ajaxs/user/mailboxes.php"); ?>?action=set_auto_reply',
+        method: 'POST', data: data, dataType: 'json',
+        success: function(res) {
+            if (res.success) {
+                tmToast('success', <?= json_encode(__('settings_saved')); ?>);
+            } else {
+                tmToast('error', res.message || <?= json_encode(__('settings_failed')); ?>);
+            }
+        },
+        error: function(xhr) {
+            var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : <?= json_encode(__('settings_failed')); ?>;
+            tmToast('error', msg);
         }
-    }, 'json');
+    });
 }
 </script>
 

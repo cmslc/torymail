@@ -13,14 +13,24 @@ $body['footer'] = '';
 require_once __DIR__ . '/header.php';
 require_once __DIR__ . '/sidebar.php';
 
-// Fetch user's active mailboxes
-$userMailboxes = $ToryMail->get_list_safe("
-    SELECT m.`id`, m.`email_address`, m.`display_name`
-    FROM `mailboxes` m
-    JOIN `domains` d ON m.`domain_id` = d.`id`
-    WHERE m.`user_id` = ? AND m.`status` = 'active' AND d.`status` = 'active'
-    ORDER BY m.`email_address` ASC
-", [$getUser['id']]);
+// Fetch user's active mailboxes — scope to single mailbox if mailbox login
+$isMailboxLogin = !empty($_SESSION['mailbox_id']);
+if ($isMailboxLogin) {
+    $userMailboxes = $ToryMail->get_list_safe("
+        SELECT m.`id`, m.`email_address`, m.`display_name`
+        FROM `mailboxes` m
+        JOIN `domains` d ON m.`domain_id` = d.`id`
+        WHERE m.`id` = ? AND m.`status` = 'active' AND d.`status` = 'active'
+    ", [$_SESSION['mailbox_id']]);
+} else {
+    $userMailboxes = $ToryMail->get_list_safe("
+        SELECT m.`id`, m.`email_address`, m.`display_name`
+        FROM `mailboxes` m
+        JOIN `domains` d ON m.`domain_id` = d.`id`
+        WHERE m.`user_id` = ? AND m.`status` = 'active' AND d.`status` = 'active'
+        ORDER BY m.`email_address` ASC
+    ", [$getUser['id']]);
+}
 
 // Check for reply/forward
 $replyTo = sanitize($_GET['reply_to'] ?? '');
@@ -359,7 +369,7 @@ $(document).on('click', function(e) {
 });
 
 // Attachment handling
-$('#attachmentZone').on('click', function() { $('#attachmentInput').click(); });
+$('#attachmentZone').on('click', function(e) { if (e.target.id !== 'attachmentInput') $('#attachmentInput').click(); });
 $('#attachmentZone').on('dragover', function(e) { e.preventDefault(); $(this).addClass('dragover'); })
     .on('dragleave drop', function(e) { e.preventDefault(); $(this).removeClass('dragover'); });
 $('#attachmentZone').on('drop', function(e) { e.preventDefault(); addFiles(e.originalEvent.dataTransfer.files); });
@@ -394,7 +404,7 @@ function submitCompose(action) {
 
     var $btn = action === 'send' ? $('#btnSend') : $('#btnSaveDraft');
     var origText = $btn.html();
-    $btn.html('<i class="ri-loader-4-line ri-spin me-1"></i> ' + (action === 'send' ? '<?= __("sending"); ?>' : '<?= __("saving"); ?>')).prop('disabled', true);
+    $btn.html('<i class="ri-loader-4-line ri-spin me-1"><\/i> ' + (action === 'send' ? <?= json_encode(__("sending")); ?> : <?= json_encode(__("saving")); ?>)).prop('disabled', true);
 
     $.ajax({
         url: '<?= base_url("ajaxs/user/compose.php"); ?>',
@@ -405,17 +415,18 @@ function submitCompose(action) {
         dataType: 'json',
         success: function(res) {
             if (res.success) {
-                tmToast('success', res.message || (action === 'send' ? '<?= __("email_sent"); ?>' : '<?= __("draft_saved"); ?>'));
+                tmToast('success', res.message || (action === 'send' ? <?= json_encode(__("email_sent")); ?> : <?= json_encode(__("draft_saved")); ?>));
                 setTimeout(function() {
                     window.location.href = '<?= base_url("inbox"); ?>?folder=' + (action === 'send' ? 'sent' : 'drafts');
                 }, 1000);
             } else {
-                tmToast('error', res.message || '<?= __("send_failed"); ?>');
+                tmToast('error', res.message || <?= json_encode(__("send_failed")); ?>);
                 $btn.html(origText).prop('disabled', false);
             }
         },
-        error: function() {
-            tmToast('error', '<?= __("network_error"); ?>');
+        error: function(xhr) {
+            var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : <?= json_encode(__("network_error")); ?>;
+            tmToast('error', msg);
             $btn.html(origText).prop('disabled', false);
         }
     });

@@ -3,13 +3,22 @@ if (!defined('IN_SITE')) {
     die('The Request Not Found');
 }
 
-// Load email by $id
-$email = $ToryMail->get_row_safe("
-    SELECT e.*, m.`email_address` as mailbox_email, m.`display_name` as mailbox_name
-    FROM `emails` e
-    LEFT JOIN `mailboxes` m ON e.`mailbox_id` = m.`id`
-    WHERE e.`id` = ? AND m.`user_id` = ?
-", [$id, $getUser['id']]);
+// Load email by $id — scope to single mailbox if mailbox login
+if (!empty($_SESSION['mailbox_id'])) {
+    $email = $ToryMail->get_row_safe("
+        SELECT e.*, m.`email_address` as mailbox_email, m.`display_name` as mailbox_name
+        FROM `emails` e
+        LEFT JOIN `mailboxes` m ON e.`mailbox_id` = m.`id`
+        WHERE e.`id` = ? AND m.`id` = ?
+    ", [$id, $_SESSION['mailbox_id']]);
+} else {
+    $email = $ToryMail->get_row_safe("
+        SELECT e.*, m.`email_address` as mailbox_email, m.`display_name` as mailbox_name
+        FROM `emails` e
+        LEFT JOIN `mailboxes` m ON e.`mailbox_id` = m.`id`
+        WHERE e.`id` = ? AND m.`user_id` = ?
+    ", [$id, $getUser['id']]);
+}
 
 if (!$email) {
     header('Location: ' . base_url('inbox'));
@@ -17,7 +26,7 @@ if (!$email) {
 }
 
 $body = [
-    'title' => htmlspecialchars($email['subject'] ?: __('no_subject')) . ' - Torymail',
+    'title' => htmlspecialchars($email['subject'] ?: __('no_subject')) . ' - ' . get_setting('site_name', 'Torymail'),
     'desc'  => __('read_email'),
 ];
 $body['header'] = '';
@@ -75,9 +84,9 @@ $folderNames = [
 <!-- Mark as read on load -->
 <script>
 $(function() {
-    $.post('<?= base_url("ajaxs/user/email_action.php"); ?>', {
-        action: 'mark_read',
-        email_id: <?= (int)$email['id']; ?>
+    $.ajax({
+        url: '<?= base_url("ajaxs/user/email_action.php"); ?>',
+        method: 'POST', data: { action: 'mark_read', email_id: <?= (int)$email['id']; ?> }
     });
 });
 </script>
@@ -318,7 +327,7 @@ $(function() {
 <script>
 function emailAction(action, target) {
     if (action === 'delete') {
-        tmConfirm('<?= __("delete_email"); ?>', '<?= __("delete_email_desc"); ?>', function() {
+        tmConfirm(<?= json_encode(__('delete_email')); ?>, <?= json_encode(__('delete_email_desc')); ?>, function() {
             doEmailAction(action, target);
         });
         return;
@@ -327,44 +336,49 @@ function emailAction(action, target) {
 }
 
 function doEmailAction(action, target) {
-    $.post('<?= base_url("ajaxs/user/email_action.php"); ?>', {
-        action: action === 'move' ? 'move' : action,
-        email_id: <?= (int)$email['id']; ?>,
-        target: target || ''
-    }, function(res) {
-        if (res.success) {
-            tmToast('success', res.message || '<?= __("done"); ?>');
-            setTimeout(function() {
-                window.location.href = '<?= base_url("inbox"); ?>';
-            }, 800);
-        } else {
-            tmToast('error', res.message || '<?= __("error_occurred"); ?>');
+    $.ajax({
+        url: '<?= base_url("ajaxs/user/email_action.php"); ?>',
+        method: 'POST', data: { action: action === 'move' ? 'move' : action, email_id: <?= (int)$email['id']; ?>, target: target || '' }, dataType: 'json',
+        success: function(res) {
+            if (res.success) {
+                tmToast('success', res.message || <?= json_encode(__('done')); ?>);
+                setTimeout(function() {
+                    window.location.href = '<?= base_url("inbox"); ?>';
+                }, 800);
+            } else {
+                tmToast('error', res.message || <?= json_encode(__('error_occurred')); ?>);
+            }
+        },
+        error: function(xhr) {
+            var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : <?= json_encode(__('error_occurred')); ?>;
+            tmToast('error', msg);
         }
-    }, 'json');
+    });
 }
 
 function toggleStarRead() {
-    $.post('<?= base_url("ajaxs/user/email_action.php"); ?>', {
-        action: 'toggle_star',
-        email_id: <?= (int)$email['id']; ?>
-    }, function(res) {
-        if (res.success) {
-            var $btn = $('#starBtn');
-            $btn.toggleClass('btn-warning btn-soft-warning');
-            var $i = $btn.find('i');
-            $i.toggleClass('ri-star-line ri-star-fill');
+    $.ajax({
+        url: '<?= base_url("ajaxs/user/email_action.php"); ?>',
+        method: 'POST', data: { action: 'toggle_star', email_id: <?= (int)$email['id']; ?> }, dataType: 'json',
+        success: function(res) {
+            if (res.success) {
+                var $btn = $('#starBtn');
+                $btn.toggleClass('btn-warning btn-soft-warning');
+                var $i = $btn.find('i');
+                $i.toggleClass('ri-star-line ri-star-fill');
+            }
         }
-    }, 'json');
+    });
 }
 
 function toggleLabel(emailId, labelId, isApplied) {
-    $.post('<?= base_url("ajaxs/user/email_action.php"); ?>', {
-        action: isApplied ? 'remove_label' : 'add_label',
-        email_id: emailId,
-        label_id: labelId
-    }, function(res) {
-        if (res.success) location.reload();
-    }, 'json');
+    $.ajax({
+        url: '<?= base_url("ajaxs/user/email_action.php"); ?>',
+        method: 'POST', data: { action: isApplied ? 'remove_label' : 'add_label', email_id: emailId, label_id: labelId }, dataType: 'json',
+        success: function(res) {
+            if (res.success) location.reload();
+        }
+    });
 }
 </script>
 

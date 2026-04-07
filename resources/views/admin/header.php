@@ -6,7 +6,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title><?= sanitize($body['title'] ?? 'Admin Panel'); ?> - Torymail Admin</title>
+    <title><?= sanitize($body['title'] ?? 'Admin Panel'); ?> - <?= htmlspecialchars(get_setting('site_name', 'Torymail')) ?> Admin</title>
     <link rel="shortcut icon" href="<?= asset_url('images/favicon.ico'); ?>">
     <!-- Layout config Js (MUST be first) -->
     <script src="<?= asset_url('material/assets/js/layout.js'); ?>"></script>

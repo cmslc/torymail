@@ -213,7 +213,7 @@ switch ($action) {
             'created_at' => gettime(),
         ]);
 
-        success_response('User ' . ($newStatus === 'banned' ? 'banned' : 'activated'), ['status' => $newStatus]);
+        success_response('User ' . ($newStatus === 'banned' ? 'banned' : 'activated'), ['user_status' => $newStatus]);
         break;
 
     // -------------------------------------------------------

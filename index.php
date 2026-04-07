@@ -79,6 +79,15 @@ if ($authFile) {
     require_once $authFile;
 }
 
+// Mailbox login restriction — only allow inbox, compose, read pages
+if ($module === 'user' && (!empty($_SESSION['mailbox_id']) || !empty($_SESSION['public_mailbox_id']))) {
+    $allowedMailboxPages = ['inbox', 'compose', 'read'];
+    if (!in_array($action, $allowedMailboxPages)) {
+        header('Location: ' . base_url('inbox'));
+        exit;
+    }
+}
+
 // Load view
 $viewFile = $viewDir . $action . '.php';
 if (file_exists($viewFile)) {

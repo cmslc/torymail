@@ -16,8 +16,9 @@ $notif_count = count($notifications);
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title><?= isset($body['title']) ? htmlspecialchars($body['title']) : 'Torymail'; ?></title>
-    <meta name="description" content="<?= isset($body['desc']) ? htmlspecialchars($body['desc']) : 'Torymail - Email Management'; ?>">
+    <?php $__siteName = get_setting('site_name', 'Torymail'); ?>
+    <title><?= isset($body['title']) ? htmlspecialchars($body['title']) : htmlspecialchars($__siteName); ?></title>
+    <meta name="description" content="<?= isset($body['desc']) ? htmlspecialchars($body['desc']) : htmlspecialchars($__siteName . ' - Email Management'); ?>">
     <meta name="csrf-token" content="<?= csrf_token(); ?>">
     <!-- Layout config Js (MUST be first) -->
     <script src="<?= base_url('public/material/assets/js/layout.js'); ?>"></script>

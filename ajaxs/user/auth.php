@@ -11,7 +11,7 @@ switch ($action) {
     case 'login':
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') error_response('Invalid request method', 405);
         csrf_verify();
-        rate_limit('login:' . get_client_ip(), 5, 300); // 5 attempts per 5 minutes
+        rate_limit('login:' . get_client_ip(), 10, 300); // 10 attempts per 5 minutes
 
         $email = trim($_POST['email'] ?? '');
         $password = $_POST['password'] ?? '';
@@ -25,28 +25,87 @@ switch ($action) {
         }
 
         $user = $ToryMail->get_row_safe("SELECT * FROM users WHERE email = ?", [$email]);
-        if (!$user) {
-            error_response('Invalid email or password');
-        }
+        $loginViaMailbox = false;
 
-        if ($user['status'] === 'banned') {
-            error_response('Your account has been suspended');
-        }
-        if ($user['status'] === 'inactive') {
-            error_response('Your account is inactive');
-        }
+        if ($user) {
+            // Login via user account
+            if ($user['status'] === 'banned') {
+                error_response('Your account has been suspended');
+            }
+            if ($user['status'] === 'inactive') {
+                error_response('Your account is inactive');
+            }
 
-        if (!verify_password($password, $user['password'])) {
-            // Log failed attempt
-            $ToryMail->insert_safe('activity_logs', [
-                'user_id'    => $user['id'],
-                'action'     => 'login_failed',
-                'details'    => 'Invalid password attempt',
-                'ip_address' => get_client_ip(),
-                'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? '',
-                'created_at' => gettime(),
-            ]);
-            error_response('Invalid email or password');
+            if (!verify_password($password, $user['password'])) {
+                $ToryMail->insert_safe('activity_logs', [
+                    'user_id'    => $user['id'],
+                    'action'     => 'login_failed',
+                    'details'    => 'Invalid password attempt',
+                    'ip_address' => get_client_ip(),
+                    'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? '',
+                    'created_at' => gettime(),
+                ]);
+                error_response('Invalid email or password');
+            }
+        } else {
+            // Try login via mailbox email with mailbox's own password
+            $mailbox = $ToryMail->get_row_safe(
+                "SELECT m.* FROM mailboxes m WHERE m.email_address = ? AND m.status = 'active'",
+                [$email]
+            );
+
+            if (!$mailbox) {
+                error_response('Invalid email or password');
+            }
+
+            // Verify mailbox password
+            $decryptedPassword = decrypt_string($mailbox['password_encrypted']);
+            if ($password !== $decryptedPassword) {
+                $ToryMail->insert_safe('activity_logs', [
+                    'user_id'    => $mailbox['user_id'],
+                    'action'     => 'login_failed',
+                    'details'    => 'Invalid mailbox password for ' . $email,
+                    'ip_address' => get_client_ip(),
+                    'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? '',
+                    'created_at' => gettime(),
+                ]);
+                error_response('Invalid email or password');
+            }
+
+            // Public mailbox (no owner user) — direct mailbox session
+            if (empty($mailbox['user_id'])) {
+                $_SESSION['public_mailbox_id'] = $mailbox['id'];
+                $_SESSION['public_mailbox_email'] = $mailbox['email_address'];
+                $_SESSION['mailbox_id'] = $mailbox['id'];
+                $_SESSION['mailbox_email'] = $mailbox['email_address'];
+
+                $ToryMail->insert_safe('activity_logs', [
+                    'user_id'    => null,
+                    'action'     => 'login',
+                    'details'    => 'Login via public mailbox: ' . $email,
+                    'ip_address' => get_client_ip(),
+                    'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? '',
+                    'created_at' => gettime(),
+                ]);
+
+                success_response('Login successful', ['redirect' => base_url('inbox')]);
+                break;
+            }
+
+            // Mailbox with owner user — check owner status
+            $ownerUser = $ToryMail->get_row_safe("SELECT * FROM users WHERE id = ?", [$mailbox['user_id']]);
+            if (!$ownerUser) {
+                error_response('Account not found');
+            }
+            if ($ownerUser['status'] === 'banned') {
+                error_response('Your account has been suspended');
+            }
+            if ($ownerUser['status'] === 'inactive') {
+                error_response('Your account is inactive');
+            }
+
+            $user = $ownerUser;
+            $loginViaMailbox = true;
         }
 
         // Generate token and set session
@@ -60,7 +119,15 @@ switch ($action) {
         $expiry = $remember ? time() + (30 * 24 * 60 * 60) : 0;
         setcookie('torymail_token', $token, $expiry, '/', '', true, true);
 
-        if ($user['role'] === 'admin') {
+        // If login via mailbox, store mailbox context (limited access)
+        if ($loginViaMailbox) {
+            $_SESSION['mailbox_id'] = $mailbox['id'];
+            $_SESSION['mailbox_email'] = $mailbox['email_address'];
+        } else {
+            unset($_SESSION['mailbox_id'], $_SESSION['mailbox_email']);
+        }
+
+        if (!$loginViaMailbox && $user['role'] === 'admin') {
             $_SESSION['admin_login'] = $token;
             setcookie('torymail_admin_token', $token, $expiry, '/', '', true, true);
         }
@@ -69,14 +136,22 @@ switch ($action) {
         $ToryMail->insert_safe('activity_logs', [
             'user_id'    => $user['id'],
             'action'     => 'login',
-            'details'    => 'Successful login',
+            'details'    => $loginViaMailbox ? 'Login via mailbox: ' . $email : 'Successful login',
             'ip_address' => get_client_ip(),
             'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? '',
             'created_at' => gettime(),
         ]);
 
+        if ($loginViaMailbox) {
+            $redirect = base_url('inbox');
+        } elseif ($user['role'] === 'admin') {
+            $redirect = base_url('admin');
+        } else {
+            $redirect = base_url('inbox');
+        }
+
         success_response('Login successful', [
-            'redirect' => ($user['role'] === 'admin') ? base_url('admin') : base_url('inbox'),
+            'redirect' => $redirect,
         ]);
         break;
 
@@ -161,6 +236,10 @@ switch ($action) {
         // Clear session
         unset($_SESSION['user_login']);
         unset($_SESSION['admin_login']);
+        unset($_SESSION['public_mailbox_id']);
+        unset($_SESSION['public_mailbox_email']);
+        unset($_SESSION['mailbox_id']);
+        unset($_SESSION['mailbox_email']);
         session_destroy();
 
         // Clear cookies

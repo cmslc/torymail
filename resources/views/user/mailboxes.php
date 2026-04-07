@@ -4,7 +4,7 @@ if (!defined('IN_SITE')) {
 }
 
 $body = [
-    'title' => __('mailboxes') . ' - Torymail',
+    'title' => __('mailboxes') . ' - ' . get_setting('site_name', 'Torymail'),
     'desc'  => __('manage_mailboxes'),
 ];
 $body['header'] = '';
@@ -192,7 +192,7 @@ $statusColors = [
 
                     <div class="mb-3">
                         <label class="form-label"><?= __('quota_mb'); ?></label>
-                        <input type="number" name="quota_mb" id="mbQuota" class="form-control" value="1024" min="0" step="1">
+                        <input type="number" name="quota_mb" id="mbQuota" class="form-control" value="<?= round((int)get_setting('default_quota', '52428800') / 1024 / 1024) ?>" min="0" step="1">
                         <div class="form-text"><?= __('quota_hint'); ?></div>
                     </div>
                 </form>
@@ -212,69 +212,102 @@ $('#mbDomain').on('change', function() {
 });
 
 function resetMailboxForm() {
-    $('#mailboxModalTitle').text('<?= __("add_mailbox"); ?>');
+    $('#mailboxModalTitle').text(<?= json_encode(__('add_mailbox')); ?>);
     $('#mbId').val('');
     $('#mailboxForm')[0].reset();
     $('#domainSelectGroup, #localPartGroup').show();
+    $('#passwordGroup').show();
     $('#pwdRequired').show();
-    $('#pwdHint').text('<?= __("password_min_hint"); ?>');
+    $('#pwdHint').text(<?= json_encode(__('password_min_hint')); ?>);
     $('#domainSuffix').text('@domain.com');
 }
 
 function editMailbox(mb) {
-    $('#mailboxModalTitle').text('<?= __("edit_mailbox"); ?>');
+    $('#mailboxModalTitle').text(<?= json_encode(__('edit_mailbox')); ?>);
     $('#mbId').val(mb.id);
     $('#mbDisplayName').val(mb.display_name || '');
     $('#mbQuota').val(Math.round((mb.quota || 0) / 1024 / 1024));
     $('#mbPassword').val('');
     $('#domainSelectGroup, #localPartGroup').hide();
+    $('#passwordGroup').show();
     $('#pwdRequired').hide();
-    $('#pwdHint').text('<?= __("password_keep_hint"); ?>');
+    $('#pwdHint').text(<?= json_encode(__('password_keep_hint')); ?>);
     new bootstrap.Modal(document.getElementById('mailboxModal')).show();
 }
 
 $('#saveMailboxBtn').on('click', function() {
+    var btn = $(this);
+    if (btn.prop('disabled')) return;
+    btn.prop('disabled', true);
+
     var data = $('#mailboxForm').serialize();
     var isEdit = !!$('#mbId').val();
     var act = isEdit ? 'edit' : 'add';
 
-    $.post('<?= base_url("ajaxs/user/mailboxes.php"); ?>?action=' + act, data, function(res) {
-        if (res.success) {
-            tmToast('success', res.message || '<?= __("mailbox_saved"); ?>');
-            setTimeout(function() { location.reload(); }, 800);
-        } else {
-            tmToast('error', res.message || '<?= __("mailbox_save_fail"); ?>');
+    $.ajax({
+        url: '<?= base_url("ajaxs/user/mailboxes.php"); ?>?action=' + act,
+        method: 'POST',
+        data: data,
+        dataType: 'json',
+        success: function(res) {
+            if (res.success) {
+                tmToast('success', res.message || <?= json_encode(__('mailbox_saved')); ?>);
+                setTimeout(function() { location.reload(); }, 800);
+            } else {
+                tmToast('error', res.message || <?= json_encode(__('mailbox_save_fail')); ?>);
+                btn.prop('disabled', false);
+            }
+        },
+        error: function(xhr) {
+            var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : <?= json_encode(__('mailbox_save_fail')); ?>;
+            tmToast('error', msg);
+            btn.prop('disabled', false);
         }
-    }, 'json');
+    });
 });
 
 function toggleMailbox(id, currentStatus) {
     var newStatus = currentStatus === 'active' ? 'disabled' : 'active';
-    $.post('<?= base_url("ajaxs/user/mailboxes.php"); ?>?action=toggle_status', {
-        mailbox_id: id,
-        status: newStatus
-    }, function(res) {
-        if (res.success) {
-            tmToast('success', res.message || '<?= __("done"); ?>');
-            setTimeout(function() { location.reload(); }, 800);
-        } else {
-            tmToast('error', res.message || '<?= __("mailbox_save_fail"); ?>');
+    $.ajax({
+        url: '<?= base_url("ajaxs/user/mailboxes.php"); ?>?action=toggle_status',
+        method: 'POST',
+        data: { mailbox_id: id, status: newStatus },
+        dataType: 'json',
+        success: function(res) {
+            if (res.success) {
+                tmToast('success', res.message || <?= json_encode(__('done')); ?>);
+                setTimeout(function() { location.reload(); }, 800);
+            } else {
+                tmToast('error', res.message || <?= json_encode(__('mailbox_save_fail')); ?>);
+            }
+        },
+        error: function(xhr) {
+            var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : <?= json_encode(__('mailbox_save_fail')); ?>;
+            tmToast('error', msg);
         }
-    }, 'json');
+    });
 }
 
 function deleteMailbox(id, email) {
-    tmConfirm('<?= __("delete_mailbox_user"); ?>', '<?= __("delete_mailbox_user_desc"); ?>', function() {
-        $.post('<?= base_url("ajaxs/user/mailboxes.php"); ?>?action=delete', {
-            mailbox_id: id
-        }, function(res) {
-            if (res.success) {
-                tmToast('success', '<?= __("mailbox_deleted"); ?>');
-                setTimeout(function() { location.reload(); }, 800);
-            } else {
-                tmToast('error', res.message || '<?= __("mailbox_delete_fail"); ?>');
+    tmConfirm(<?= json_encode(__('delete_mailbox_user')); ?>, <?= json_encode(__('delete_mailbox_user_desc')); ?>, function() {
+        $.ajax({
+            url: '<?= base_url("ajaxs/user/mailboxes.php"); ?>?action=delete',
+            method: 'POST',
+            data: { mailbox_id: id },
+            dataType: 'json',
+            success: function(res) {
+                if (res.success) {
+                    tmToast('success', <?= json_encode(__('mailbox_deleted')); ?>);
+                    setTimeout(function() { location.reload(); }, 800);
+                } else {
+                    tmToast('error', res.message || <?= json_encode(__('mailbox_delete_fail')); ?>);
+                }
+            },
+            error: function(xhr) {
+                var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : <?= json_encode(__('mailbox_delete_fail')); ?>;
+                tmToast('error', msg);
             }
-        }, 'json');
+        });
     });
 }
 </script>

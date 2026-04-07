@@ -25,8 +25,13 @@ switch ($action) {
         $local_part   = strtolower(trim($_POST['local_part'] ?? ''));
         $domain_id    = intval($_POST['domain_id'] ?? 0);
         $display_name = sanitize($_POST['display_name'] ?? '');
+        if (isset($_POST['quota_mb'])) {
+            $quota = intval($_POST['quota_mb']) * 1048576;
+        } else {
+            $quota = intval($_POST['quota'] ?? get_setting('default_quota', '1073741824'));
+        }
+
         $password     = $_POST['password'] ?? '';
-        $quota        = intval($_POST['quota'] ?? get_setting('default_quota', '1073741824'));
 
         if (empty($local_part) || $domain_id <= 0 || empty($password)) {
             error_response('Email address, domain, and password are required');
@@ -188,7 +193,7 @@ switch ($action) {
         $newStatus = ($mailbox['status'] === 'active') ? 'disabled' : 'active';
         $ToryMail->update_safe('mailboxes', ['status' => $newStatus, 'updated_at' => gettime()], 'id = ?', [$mailbox_id]);
 
-        success_response('Mailbox ' . $newStatus, ['status' => $newStatus]);
+        success_response('Mailbox ' . $newStatus, ['mailbox_status' => $newStatus]);
         break;
 
     // -------------------------------------------------------

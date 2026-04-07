@@ -4,7 +4,7 @@ if (!defined('IN_SITE')) {
 }
 
 $body = [
-    'title' => __('filters') . ' - Torymail',
+    'title' => __('filters') . ' - ' . get_setting('site_name', 'Torymail'),
     'desc'  => __('email_filters'),
 ];
 $body['header'] = '';
@@ -240,23 +240,23 @@ $('#filterActType').on('change', function() {
     var $text = $('#filterActValueText');
 
     if (act === 'move_to_folder') {
-        $select.html('<option value="inbox"><?= __("inbox"); ?></option><option value="archive"><?= __("archive"); ?></option><option value="spam"><?= __("spam"); ?></option><option value="trash"><?= __("trash"); ?></option>').removeClass('d-none');
+        $select.html('<option value="inbox">' + <?= json_encode(__("inbox")); ?> + '<\/option><option value="archive">' + <?= json_encode(__("archive")); ?> + '<\/option><option value="spam">' + <?= json_encode(__("spam")); ?> + '<\/option><option value="trash">' + <?= json_encode(__("trash")); ?> + '<\/option>').removeClass('d-none');
         $text.addClass('d-none');
-        $('#actValueLabel').text('<?= __("folder"); ?>');
+        $('#actValueLabel').text(<?= json_encode(__("folder")); ?>);
         $('#actValueGroup').show();
     } else if (act === 'add_label') {
         var opts = '';
         labelsData.forEach(function(l) {
             opts += '<option value="' + l.id + '">' + l.name + '</option>';
         });
-        $select.html(opts || '<option value=""><?= __("no_labels"); ?></option>').removeClass('d-none');
+        $select.html(opts || '<option value="">' + <?= json_encode(__("no_labels")); ?> + '<\/option>').removeClass('d-none');
         $text.addClass('d-none');
-        $('#actValueLabel').text('<?= __("label"); ?>');
+        $('#actValueLabel').text(<?= json_encode(__("label")); ?>);
         $('#actValueGroup').show();
     } else if (act === 'forward_to') {
         $select.addClass('d-none');
-        $text.removeClass('d-none').attr('placeholder', '<?= __("forward_to"); ?>');
-        $('#actValueLabel').text('<?= __("email"); ?>');
+        $text.removeClass('d-none').attr('placeholder', <?= json_encode(__("forward_to")); ?>);
+        $('#actValueLabel').text(<?= json_encode(__("email")); ?>);
         $('#actValueGroup').show();
     } else {
         $('#actValueGroup').hide();
@@ -264,7 +264,7 @@ $('#filterActType').on('change', function() {
 });
 
 function resetFilterForm() {
-    $('#filterModalTitle').text('<?= __("add_filter"); ?>');
+    $('#filterModalTitle').text(<?= json_encode(__("add_filter")); ?>);
     $('#filterId').val('');
     $('#filterForm')[0].reset();
     $('#condValueGroup').show();
@@ -272,7 +272,7 @@ function resetFilterForm() {
 }
 
 function editFilter(filter) {
-    $('#filterModalTitle').text('<?= __("edit_filter"); ?>');
+    $('#filterModalTitle').text(<?= json_encode(__("edit_filter")); ?>);
     $('#filterId').val(filter.id);
     $('#filterName').val(filter.name || '');
     $('#filterPriority').val(filter.priority_order || 0);
@@ -321,40 +321,60 @@ $('#saveFilterBtn').on('click', function() {
     data.conditions = JSON.stringify([{type: condType, value: condValue}]);
     data.actions = JSON.stringify([{type: actType, value: actValue}]);
 
-    $.post('<?= base_url("ajaxs/user/filters.php"); ?>?action=' + data.action, data, function(res) {
-        if (res.success) {
-            tmToast('success', res.message || '<?= __("filter_saved"); ?>');
-            setTimeout(function() { location.reload(); }, 800);
-        } else {
-            tmToast('error', res.message || '<?= __("filter_save_fail"); ?>');
+    $.ajax({
+        url: '<?= base_url("ajaxs/user/filters.php"); ?>?action=' + data.action,
+        method: 'POST', data: data, dataType: 'json',
+        success: function(res) {
+            if (res.success) {
+                tmToast('success', res.message || <?= json_encode(__("filter_saved")); ?>);
+                setTimeout(function() { location.reload(); }, 800);
+            } else {
+                tmToast('error', res.message || <?= json_encode(__("filter_save_fail")); ?>);
+            }
+        },
+        error: function(xhr) {
+            var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : <?= json_encode(__("filter_save_fail")); ?>;
+            tmToast('error', msg);
         }
-    }, 'json');
+    });
 });
 
 function toggleFilter(id, active) {
-    $.post('<?= base_url("ajaxs/user/filters.php"); ?>?action=toggle', {
-        filter_id: id,
-        is_active: active ? 1 : 0
-    }, function(res) {
-        if (!res.success) {
-            tmToast('error', res.message || '<?= __("filter_save_fail"); ?>');
+    $.ajax({
+        url: '<?= base_url("ajaxs/user/filters.php"); ?>?action=toggle',
+        method: 'POST', data: { filter_id: id, is_active: active ? 1 : 0 }, dataType: 'json',
+        success: function(res) {
+            if (!res.success) {
+                tmToast('error', res.message || <?= json_encode(__("filter_save_fail")); ?>);
+                location.reload();
+            }
+        },
+        error: function(xhr) {
+            var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : <?= json_encode(__("filter_save_fail")); ?>;
+            tmToast('error', msg);
             location.reload();
         }
-    }, 'json');
+    });
 }
 
 function deleteFilter(id) {
-    tmConfirm('<?= __("delete_filter"); ?>', '<?= __("delete_filter_desc"); ?>', function() {
-        $.post('<?= base_url("ajaxs/user/filters.php"); ?>?action=delete', {
-            filter_id: id
-        }, function(res) {
-            if (res.success) {
-                tmToast('success', '<?= __("filter_deleted"); ?>');
-                setTimeout(function() { location.reload(); }, 800);
-            } else {
-                tmToast('error', res.message || '<?= __("filter_delete_fail"); ?>');
+    tmConfirm(<?= json_encode(__("delete_filter")); ?>, <?= json_encode(__("delete_filter_desc")); ?>, function() {
+        $.ajax({
+            url: '<?= base_url("ajaxs/user/filters.php"); ?>?action=delete',
+            method: 'POST', data: { filter_id: id }, dataType: 'json',
+            success: function(res) {
+                if (res.success) {
+                    tmToast('success', <?= json_encode(__("filter_deleted")); ?>);
+                    setTimeout(function() { location.reload(); }, 800);
+                } else {
+                    tmToast('error', res.message || <?= json_encode(__("filter_delete_fail")); ?>);
+                }
+            },
+            error: function(xhr) {
+                var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : <?= json_encode(__("filter_delete_fail")); ?>;
+                tmToast('error', msg);
             }
-        }, 'json');
+        });
     });
 }
 </script>
