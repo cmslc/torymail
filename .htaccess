@@ -25,8 +25,8 @@
     RewriteRule ^([a-zA-Z0-9_-]+)/([0-9]+)$ index.php?module=user&action=$1&id=$2 [QSA,L]
     RewriteRule ^([a-zA-Z0-9_-]+)$ index.php?module=user&action=$1 [QSA,L]
 
-    # Home
-    RewriteRule ^$ index.php?module=user&action=inbox [QSA,L]
+    # Home — temp mail page
+    RewriteRule ^$ index.php?module=auth&action=create-mailbox [QSA,L]
 
     # AJAX routes
     RewriteRule ^ajaxs/([a-zA-Z0-9_-]+)/([a-zA-Z0-9_-]+)\.php$ ajaxs/$1/$2.php [QSA,L]
