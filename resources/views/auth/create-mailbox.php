@@ -119,6 +119,15 @@ $siteLogo = get_setting('site_logo', '');
     /* Features */
     .tm-feat-icon{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem}
 
+    /* Steps */
+    .tm-step-num{width:28px;height:28px;border-radius:50%;background:var(--vz-primary);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;margin-bottom:8px}
+    .tm-step-icon{font-size:2rem;color:var(--vz-primary);opacity:.7;line-height:1}
+
+    /* Use cases */
+    .tm-use-icon{font-size:1.5rem;display:block;margin-bottom:10px}
+    .tm-use-card{transition:box-shadow .2s,transform .2s}
+    .tm-use-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.08);transform:translateY(-2px)}
+
     .refresh-spin{animation:spin .8s linear infinite}
     @keyframes spin{100%{transform:rotate(360deg)}}
 
@@ -319,6 +328,108 @@ $siteLogo = get_setting('site_logo', '');
                                 <div class="tm-feat-icon" style="background:rgba(108,117,125,.1);color:#6c757d"><i class="ri-global-line"></i></div>
                                 <h6 class="fw-semibold mt-3 mb-1"><?= __('why_feat_multi_title'); ?></h6>
                                 <p class="text-muted small mb-0"><?= __('why_feat_multi_desc'); ?></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- How It Works -->
+                <div class="mt-4 mb-2">
+                    <div class="text-center mb-4">
+                        <h4 class="fw-bold"><?= __('how_it_works_title'); ?></h4>
+                        <p class="text-muted mb-0" style="max-width:500px;margin:0 auto"><?= __('how_it_works_desc'); ?></p>
+                    </div>
+                    <div class="row g-3 justify-content-center">
+                        <div class="col-md-4">
+                            <div class="tm-card p-3 text-center h-100">
+                                <div class="tm-step-num">1</div>
+                                <div class="tm-step-icon"><i class="ri-keyboard-line"></i></div>
+                                <h6 class="fw-semibold mt-2 mb-1"><?= __('how_step1_title'); ?></h6>
+                                <p class="text-muted small mb-0"><?= __('how_step1_desc'); ?></p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="tm-card p-3 text-center h-100">
+                                <div class="tm-step-num">2</div>
+                                <div class="tm-step-icon"><i class="ri-mail-download-line"></i></div>
+                                <h6 class="fw-semibold mt-2 mb-1"><?= __('how_step2_title'); ?></h6>
+                                <p class="text-muted small mb-0"><?= __('how_step2_desc'); ?></p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="tm-card p-3 text-center h-100">
+                                <div class="tm-step-num">3</div>
+                                <div class="tm-step-icon"><i class="ri-mail-open-line"></i></div>
+                                <h6 class="fw-semibold mt-2 mb-1"><?= __('how_step3_title'); ?></h6>
+                                <p class="text-muted small mb-0"><?= __('how_step3_desc'); ?></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- When It Actually Helps -->
+                <div class="mt-4 mb-2">
+                    <div class="text-center mb-4">
+                        <h4 class="fw-bold"><?= __('when_helps_title'); ?></h4>
+                        <p class="text-muted mb-0" style="max-width:560px;margin:0 auto"><?= __('when_helps_desc'); ?></p>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-6 col-lg-3">
+                            <div class="tm-card p-3 h-100 tm-use-card">
+                                <i class="ri-test-tube-line tm-use-icon text-primary"></i>
+                                <h6 class="fw-semibold mb-1"><?= __('when_use1_title'); ?></h6>
+                                <p class="text-muted small mb-0"><?= __('when_use1_desc'); ?></p>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-3">
+                            <div class="tm-card p-3 h-100 tm-use-card">
+                                <i class="ri-shopping-bag-line tm-use-icon text-success"></i>
+                                <h6 class="fw-semibold mb-1"><?= __('when_use2_title'); ?></h6>
+                                <p class="text-muted small mb-0"><?= __('when_use2_desc'); ?></p>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-3">
+                            <div class="tm-card p-3 h-100 tm-use-card">
+                                <i class="ri-wifi-line tm-use-icon text-warning"></i>
+                                <h6 class="fw-semibold mb-1"><?= __('when_use3_title'); ?></h6>
+                                <p class="text-muted small mb-0"><?= __('when_use3_desc'); ?></p>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-3">
+                            <div class="tm-card p-3 h-100 tm-use-card">
+                                <i class="ri-file-download-line tm-use-icon text-info"></i>
+                                <h6 class="fw-semibold mb-1"><?= __('when_use4_title'); ?></h6>
+                                <p class="text-muted small mb-0"><?= __('when_use4_desc'); ?></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- What We Store -->
+                <div class="mt-4 mb-2">
+                    <div class="text-center mb-4">
+                        <h4 class="fw-bold"><?= __('what_store_title'); ?></h4>
+                        <p class="text-muted mb-0" style="max-width:560px;margin:0 auto"><?= __('what_store_desc'); ?></p>
+                    </div>
+                    <div class="row g-3 justify-content-center">
+                        <div class="col-lg-6">
+                            <div class="tm-card p-3 h-100">
+                                <h6 class="fw-semibold mb-3"><i class="ri-checkbox-circle-fill text-success me-2"></i><?= __('what_store_yes_title'); ?></h6>
+                                <ul class="list-unstyled mb-0">
+                                    <li class="d-flex align-items-start mb-2"><i class="ri-check-line text-success me-2 mt-1 flex-shrink-0"></i><span class="small text-muted"><?= __('what_store_yes_1'); ?></span></li>
+                                    <li class="d-flex align-items-start mb-2"><i class="ri-check-line text-success me-2 mt-1 flex-shrink-0"></i><span class="small text-muted"><?= __('what_store_yes_2'); ?></span></li>
+                                    <li class="d-flex align-items-start"><i class="ri-check-line text-success me-2 mt-1 flex-shrink-0"></i><span class="small text-muted"><?= __('what_store_yes_3'); ?></span></li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="tm-card p-3 h-100">
+                                <h6 class="fw-semibold mb-3"><i class="ri-close-circle-fill text-danger me-2"></i><?= __('what_store_no_title'); ?></h6>
+                                <ul class="list-unstyled mb-0">
+                                    <li class="d-flex align-items-start mb-2"><i class="ri-close-line text-danger me-2 mt-1 flex-shrink-0"></i><span class="small text-muted"><?= __('what_store_no_1'); ?></span></li>
+                                    <li class="d-flex align-items-start mb-2"><i class="ri-close-line text-danger me-2 mt-1 flex-shrink-0"></i><span class="small text-muted"><?= __('what_store_no_2'); ?></span></li>
+                                    <li class="d-flex align-items-start"><i class="ri-close-line text-danger me-2 mt-1 flex-shrink-0"></i><span class="small text-muted"><?= __('what_store_no_3'); ?></span></li>
+                                </ul>
                             </div>
                         </div>
                     </div>
