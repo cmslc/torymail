@@ -116,6 +116,9 @@ $siteLogo = get_setting('site_logo', '');
     .tm-ph-dots span:nth-child(2){animation-delay:.2s}
     .tm-ph-dots span:nth-child(3){animation-delay:.4s}
     @keyframes dotPulse{0%,80%,100%{opacity:.3;transform:scale(1)}40%{opacity:1;transform:scale(1.4)}}
+    /* Features */
+    .tm-feat-icon{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem}
+
     .refresh-spin{animation:spin .8s linear infinite}
     @keyframes spin{100%{transform:rotate(360deg)}}
 
@@ -268,6 +271,59 @@ $siteLogo = get_setting('site_logo', '');
                         </div>
                     </div>
                 </div>
+
+                <!-- Why Choose Section -->
+                <div class="mt-4 mb-2">
+                    <div class="text-center mb-4">
+                        <h4 class="fw-bold"><?= __('why_choose_title'); ?></h4>
+                        <p class="text-muted mb-0" style="max-width:560px;margin:0 auto"><?= __('why_choose_desc'); ?></p>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-6 col-lg-4">
+                            <div class="tm-card p-3 h-100">
+                                <div class="tm-feat-icon" style="background:rgba(var(--vz-primary-rgb),.1);color:var(--vz-primary)"><i class="ri-shield-check-line"></i></div>
+                                <h6 class="fw-semibold mt-3 mb-1"><?= __('why_feat_privacy_title'); ?></h6>
+                                <p class="text-muted small mb-0"><?= __('why_feat_privacy_desc'); ?></p>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-4">
+                            <div class="tm-card p-3 h-100">
+                                <div class="tm-feat-icon" style="background:rgba(var(--vz-success-rgb),.1);color:var(--vz-success)"><i class="ri-flashlight-line"></i></div>
+                                <h6 class="fw-semibold mt-3 mb-1"><?= __('why_feat_instant_title'); ?></h6>
+                                <p class="text-muted small mb-0"><?= __('why_feat_instant_desc'); ?></p>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-4">
+                            <div class="tm-card p-3 h-100">
+                                <div class="tm-feat-icon" style="background:rgba(var(--vz-warning-rgb),.1);color:var(--vz-warning)"><i class="ri-spam-2-line"></i></div>
+                                <h6 class="fw-semibold mt-3 mb-1"><?= __('why_feat_spam_title'); ?></h6>
+                                <p class="text-muted small mb-0"><?= __('why_feat_spam_desc'); ?></p>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-4">
+                            <div class="tm-card p-3 h-100">
+                                <div class="tm-feat-icon" style="background:rgba(var(--vz-info-rgb),.1);color:var(--vz-info)"><i class="ri-user-unfollow-line"></i></div>
+                                <h6 class="fw-semibold mt-3 mb-1"><?= __('why_feat_noreg_title'); ?></h6>
+                                <p class="text-muted small mb-0"><?= __('why_feat_noreg_desc'); ?></p>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-4">
+                            <div class="tm-card p-3 h-100">
+                                <div class="tm-feat-icon" style="background:rgba(var(--vz-danger-rgb),.1);color:var(--vz-danger)"><i class="ri-money-dollar-circle-line"></i></div>
+                                <h6 class="fw-semibold mt-3 mb-1"><?= __('why_feat_free_title'); ?></h6>
+                                <p class="text-muted small mb-0"><?= __('why_feat_free_desc'); ?></p>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-4">
+                            <div class="tm-card p-3 h-100">
+                                <div class="tm-feat-icon" style="background:rgba(108,117,125,.1);color:#6c757d"><i class="ri-global-line"></i></div>
+                                <h6 class="fw-semibold mt-3 mb-1"><?= __('why_feat_multi_title'); ?></h6>
+                                <p class="text-muted small mb-0"><?= __('why_feat_multi_desc'); ?></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
         <footer class="footer"><div class="container-fluid"><div class="row"><div class="col-sm-6"><script>document.write(new Date().getFullYear())</script> &copy; <?=htmlspecialchars($__siteName);?></div><div class="col-sm-6"><div class="text-sm-end d-none d-sm-block"><?=__('footer_system');?></div></div></div></div></footer>
