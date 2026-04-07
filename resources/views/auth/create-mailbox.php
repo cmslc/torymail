@@ -161,9 +161,9 @@ $siteLogo = get_setting('site_logo', '');
                         <div class="px-3 py-2">
                             <div class="d-flex align-items-center">
                                 <i class="ri-mail-check-line text-success me-2 fs-16"></i>
-                                <span class="text-truncate small" id="sidebar-email-text" style="color: var(--vz-sidebar-menu-item-color);"></span>
+                                <span class="text-truncate small fw-semibold" id="sidebar-email-text" style="color: #fff;"></span>
                             </div>
-                            <button class="btn btn-sm btn-soft-light w-100 mt-2" onclick="copyEmail()">
+                            <button class="btn btn-sm btn-light w-100 mt-2" onclick="copyEmail()">
                                 <i class="ri-file-copy-line me-1"></i> <?= __('temp_mail_copy'); ?>
                             </button>
                         </div>
