@@ -177,6 +177,14 @@ $sidebarLabels = $ToryMail->get_list_safe("
                                 <span><?= __('settings'); ?></span>
                             </a>
                         </li>
+
+                        <!-- API -->
+                        <li class="nav-item">
+                            <a href="<?= base_url('auth/api-docs'); ?>" class="nav-link menu-link" target="_blank">
+                                <i class="ri-code-s-slash-line"></i>
+                                <span>API</span>
+                            </a>
+                        </li>
                         <?php endif; ?>
 
                     </ul>
