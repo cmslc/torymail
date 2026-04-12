@@ -79,6 +79,7 @@ switch ($action) {
             'email_address'      => $emailAddress,
             'display_name'       => $local_part,
             'password_encrypted' => encrypt_string($autoPassword),
+            'password'           => hash_password($autoPassword),
             'quota'              => $defaultQuota,
             'used_space'         => 0,
             'status'             => 'active',

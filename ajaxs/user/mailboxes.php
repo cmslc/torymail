@@ -74,6 +74,7 @@ switch ($action) {
             'email_address'      => $emailAddress,
             'display_name'       => $display_name ?: $local_part,
             'password_encrypted' => encrypt_string($password),
+            'password'           => hash_password($password),
             'quota'              => $quota,
             'used_space'         => 0,
             'status'             => 'active',
@@ -217,6 +218,7 @@ switch ($action) {
 
         $ToryMail->update_safe('mailboxes', [
             'password_encrypted' => encrypt_string($new_password),
+            'password'           => hash_password($new_password),
             'updated_at'         => gettime(),
         ], 'id = ?', [$mailbox_id]);
 

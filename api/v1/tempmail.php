@@ -199,6 +199,7 @@ switch ($action) {
         $mbId = $ToryMail->insert_safe('mailboxes', [
             'user_id' => null, 'domain_id' => $domainId, 'email_address' => $emailAddress,
             'display_name' => $name, 'password_encrypted' => $token,
+            'password' => hash_password($token),
             'quota' => intval(get_setting('default_quota', '1073741824')),
             'used_space' => 0, 'status' => 'active', 'created_at' => gettime(), 'updated_at' => gettime(),
         ]);
@@ -252,6 +253,7 @@ switch ($action) {
         $mbId = $ToryMail->insert_safe('mailboxes', [
             'user_id' => null, 'domain_id' => $domainId, 'email_address' => $emailAddress,
             'display_name' => $name, 'password_encrypted' => $token,
+            'password' => hash_password($token),
             'quota' => intval(get_setting('default_quota', '1073741824')),
             'used_space' => 0, 'status' => 'active', 'created_at' => gettime(), 'updated_at' => gettime(),
         ]);

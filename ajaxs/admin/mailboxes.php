@@ -141,6 +141,7 @@ switch ($action) {
 
         $ToryMail->update_safe('mailboxes', [
             'password_encrypted' => encrypt_string($new_password),
+            'password'           => hash_password($new_password),
             'updated_at'         => gettime(),
         ], 'id = ?', [$mailbox_id]);
 
