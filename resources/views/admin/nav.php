@@ -32,6 +32,9 @@
                     <a href="<?= base_url(); ?>" class="btn btn-ghost-secondary btn-sm" target="_blank">
                         <i class="ri-external-link-line me-1"></i> View Site
                     </a>
+                    <a href="<?= base_url('inbox'); ?>" class="btn btn-ghost-primary btn-sm" target="_blank">
+                        <i class="ri-inbox-line me-1"></i> Inbox
+                    </a>
                 </div>
             </div>
 
