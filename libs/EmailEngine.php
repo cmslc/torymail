@@ -198,20 +198,27 @@ class EmailEngine
     {
         $to = implode(', ', $recipients);
         $subject = $item['subject'];
+        $attachments = json_decode($item['attachments'] ?? '[]', true) ?: [];
 
         $boundary = 'ToryMail_' . md5(uniqid());
         $headers = "From: {$item['from_address']}\r\n";
         $headers .= "MIME-Version: 1.0\r\n";
-        $headers .= "Content-Type: multipart/alternative; boundary=\"{$boundary}\"\r\n";
-        $headers .= "X-Mailer: Torymail/" . TORYMAIL_VERSION . "\r\n";
 
-        $body = "--{$boundary}\r\n";
-        $body .= "Content-Type: text/plain; charset=UTF-8\r\n\r\n";
-        $body .= $item['body_text'] . "\r\n\r\n";
-        $body .= "--{$boundary}\r\n";
-        $body .= "Content-Type: text/html; charset=UTF-8\r\n\r\n";
-        $body .= $item['body_html'] . "\r\n\r\n";
-        $body .= "--{$boundary}--\r\n";
+        if (!empty($attachments)) {
+            $headers .= "Content-Type: multipart/mixed; boundary=\"{$boundary}\"\r\n";
+            $body = $this->buildMimeBody($item['body_html'], $boundary, $attachments);
+        } else {
+            $headers .= "Content-Type: multipart/alternative; boundary=\"{$boundary}\"\r\n";
+            $body = "--{$boundary}\r\n";
+            $body .= "Content-Type: text/plain; charset=UTF-8\r\n\r\n";
+            $body .= ($item['body_text'] ?? strip_tags($item['body_html'])) . "\r\n\r\n";
+            $body .= "--{$boundary}\r\n";
+            $body .= "Content-Type: text/html; charset=UTF-8\r\n\r\n";
+            $body .= $item['body_html'] . "\r\n\r\n";
+            $body .= "--{$boundary}--\r\n";
+        }
+
+        $headers .= "X-Mailer: Torymail/" . TORYMAIL_VERSION . "\r\n";
 
         $sent = @mail($to, $subject, $body, $headers, '-f' . $item['from_address']);
 
