@@ -105,6 +105,32 @@ class EmailEngine
             'created_at' => gettime(),
         ]);
 
+        // Store attachments for sent email
+        if (!empty($attachments) && $email_id) {
+            $attStorageDir = __DIR__ . '/../storage/attachments/' . date('Y/m');
+            if (!is_dir($attStorageDir)) mkdir($attStorageDir, 0755, true);
+            foreach ($attachments as $att) {
+                $origPath = $att['path'] ?? '';
+                $origName = $att['filename'] ?? $att['name'] ?? 'attachment';
+                $mime = $att['mime_type'] ?? $att['mime'] ?? 'application/octet-stream';
+                $storedName = 'att_' . uniqid() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '_', $origName);
+                $storagePath = 'storage/attachments/' . date('Y/m/') . $storedName;
+                $fullStoragePath = __DIR__ . '/../' . $storagePath;
+                if (file_exists($origPath)) {
+                    copy($origPath, $fullStoragePath);
+                    $this->db->insert_safe('email_attachments', [
+                        'email_id' => $email_id,
+                        'filename' => $storedName,
+                        'original_filename' => $origName,
+                        'mime_type' => $mime,
+                        'size' => filesize($origPath),
+                        'storage_path' => $storagePath,
+                        'created_at' => gettime(),
+                    ]);
+                }
+            }
+        }
+
         // Update mailbox storage
         $this->db->increment_safe('mailboxes', 'used_space', strlen($body_html), 'id = ?', [$mailbox['id']]);
 
