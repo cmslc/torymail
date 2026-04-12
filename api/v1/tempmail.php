@@ -329,7 +329,7 @@ switch ($action) {
 
         if (!$email['is_read']) $ToryMail->update_safe('emails', ['is_read' => 1], 'id = ?', [$emailId]);
 
-        $attachments = $ToryMail->get_list_safe("SELECT id, original_filename, mime_type, size FROM email_attachments WHERE email_id = ?", [$emailId]);
+        $attachments = $ToryMail->get_list_safe("SELECT id, original_filename, mime_type, size, storage_path FROM email_attachments WHERE email_id = ?", [$emailId]);
 
         api_success(['email' => format_email_full($email, $attachments)]);
         break;
@@ -489,7 +489,7 @@ switch ($action) {
             $email = $ToryMail->get_row_safe("SELECT * FROM emails WHERE id = ? AND mailbox_id = ?", [$subId, $mailbox['id']]);
             if (!$email) api_error('Email not found', 404);
             if (!$email['is_read']) $ToryMail->update_safe('emails', ['is_read' => 1], 'id = ?', [$subId]);
-            $attachments = $ToryMail->get_list_safe("SELECT id, original_filename, mime_type, size FROM email_attachments WHERE email_id = ?", [$subId]);
+            $attachments = $ToryMail->get_list_safe("SELECT id, original_filename, mime_type, size, storage_path FROM email_attachments WHERE email_id = ?", [$subId]);
             api_success(['email' => format_email_full($email, $attachments)]);
 
         } else {
