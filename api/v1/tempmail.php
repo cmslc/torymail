@@ -419,7 +419,7 @@ switch ($action) {
         // Handle file attachments
         $attachments = [];
         if (!empty($_FILES['attachments'])) {
-            $storageDir = __DIR__ . '/../../storage/attachments/' . date('Y/m');
+            $storageDir = realpath(__DIR__ . '/../../') . '/storage/attachments/' . date('Y/m');
             if (!is_dir($storageDir)) mkdir($storageDir, 0755, true);
             $files = $_FILES['attachments'];
             $count = is_array($files['name']) ? count($files['name']) : 1;
@@ -430,8 +430,9 @@ switch ($action) {
                 if ($err !== UPLOAD_ERR_OK || empty($name)) continue;
                 $safeName = preg_replace('/[^a-zA-Z0-9._-]/', '_', $name);
                 $dest = $storageDir . '/att_' . time() . '_' . $safeName;
-                move_uploaded_file($tmp, $dest);
-                $attachments[] = ['path' => $dest, 'filename' => $name, 'name' => $name, 'mime' => mime_content_type($dest)];
+                if (move_uploaded_file($tmp, $dest)) {
+                    $attachments[] = ['path' => $dest, 'filename' => $name, 'name' => $name, 'mime' => mime_content_type($dest) ?: 'application/octet-stream'];
+                }
             }
         }
 
