@@ -782,8 +782,10 @@ class EmailEngine
                 if (isset($att['path']) && file_exists($att['path'])) {
                     $content = base64_encode(file_get_contents($att['path']));
                     $body .= "--{$boundary}\r\n";
-                    $body .= "Content-Type: {$att['mime_type']}; name=\"{$att['filename']}\"\r\n";
-                    $body .= "Content-Disposition: attachment; filename=\"{$att['filename']}\"\r\n";
+                    $mimeType = $att['mime_type'] ?? $att['mime'] ?? 'application/octet-stream';
+                    $fileName = $att['filename'] ?? $att['name'] ?? 'attachment';
+                    $body .= "Content-Type: {$mimeType}; name=\"{$fileName}\"\r\n";
+                    $body .= "Content-Disposition: attachment; filename=\"{$fileName}\"\r\n";
                     $body .= "Content-Transfer-Encoding: base64\r\n\r\n";
                     $body .= chunk_split($content) . "\r\n";
                 }
