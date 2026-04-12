@@ -10,9 +10,12 @@
  *   GET    /api/v1/read/{email}/{id}           — Read email by address + id
  *   DELETE /api/v1/delete/{email}/{id}         — Delete email by address + id
  *
- * ── Token Auth (optional, for programmatic use) ──
+ * ── Token Auth (for programmatic use) ──
  *   GET    /api/v1/inbox?token=xxx             — List inbox by token
  *   GET    /api/v1/read/{id}?token=xxx         — Read email by token + id
+ *   POST   /api/v1/send?token=xxx              — Send email from mailbox
+ *   GET    /api/v1/mailbox/inbox?token=xxx     — Alias for inbox
+ *   GET    /api/v1/mailbox/read/{id}?token=xxx — Alias for read
  *   DELETE /api/v1/delete/{id}?token=xxx       — Delete email by token + id
  */
 
@@ -373,6 +376,102 @@ switch ($action) {
             'email_count'=> $emailCount,
             'created_at' => $mb ? $mb['created_at'] : null,
         ]);
+        break;
+
+    // ═══════════════════════════════════════════════════════
+    // POST /api/v1/send — Send email from mailbox (token required)
+    // ═══════════════════════════════════════════════════════
+    case 'send':
+        if ($method !== 'POST') api_error('Method not allowed', 405);
+
+        $mailbox = resolve_mailbox($ToryMail);
+
+        $input = json_decode(file_get_contents('php://input'), true) ?: $_POST;
+        $to = $input['to'] ?? '';
+        $subject = trim($input['subject'] ?? '');
+        $body = trim($input['body'] ?? $input['body_html'] ?? '');
+        $cc = $input['cc'] ?? [];
+        $bcc = $input['bcc'] ?? [];
+        $reply_to = trim($input['reply_to'] ?? '');
+        $priority = $input['priority'] ?? 'normal';
+
+        if (empty($to)) api_error('Parameter "to" is required (recipient email)');
+        if (empty($subject)) api_error('Parameter "subject" is required');
+        if (empty($body)) api_error('Parameter "body" is required (HTML or plain text)');
+
+        // Normalize to array
+        if (is_string($to)) $to = array_map('trim', explode(',', $to));
+        if (is_string($cc)) $cc = $cc ? array_map('trim', explode(',', $cc)) : [];
+        if (is_string($bcc)) $bcc = $bcc ? array_map('trim', explode(',', $bcc)) : [];
+
+        // Validate recipients
+        foreach ($to as $addr) {
+            if (!filter_var($addr, FILTER_VALIDATE_EMAIL)) api_error('Invalid recipient: ' . $addr);
+        }
+
+        // Rate limit sending
+        rate_limit('api_send_' . $mailbox['id'], 20, 3600);
+
+        // Load EmailEngine
+        require_once __DIR__ . '/../../libs/EmailEngine.php';
+        $engine = new EmailEngine($ToryMail, $settings);
+
+        $result = $engine->send($mailbox['email_address'], $to, $subject, $body, [
+            'cc' => $cc,
+            'bcc' => $bcc,
+            'reply_to' => $reply_to,
+            'priority' => $priority,
+        ]);
+
+        if (!$result['success']) {
+            api_error($result['error'] ?? 'Failed to send email', 500);
+        }
+
+        api_success([
+            'message'    => 'Email queued for delivery',
+            'from'       => $mailbox['email_address'],
+            'to'         => $to,
+            'subject'    => $subject,
+            'email_id'   => $result['email_id'] ?? null,
+            'queue_id'   => $result['queue_id'] ?? null,
+            'message_id' => $result['message_id'] ?? null,
+        ]);
+        break;
+
+    // ═══════════════════════════════════════════════════════
+    // GET /api/v1/mailbox/inbox — Alias for inbox (token auth)
+    // GET /api/v1/mailbox/read/{id} — Alias for read (token auth)
+    // ═══════════════════════════════════════════════════════
+    case 'mailbox':
+        if ($method !== 'GET') api_error('Method not allowed', 405);
+
+        $subAction = $param1;
+        $subId = intval($param2);
+
+        if ($subAction === 'inbox') {
+            $mailbox = resolve_mailbox($ToryMail);
+            $emails = $ToryMail->get_list_safe(
+                "SELECT id, from_address, from_name, subject, is_read, has_attachments, received_at, created_at
+                 FROM emails WHERE mailbox_id = ? AND folder = 'inbox' ORDER BY created_at DESC LIMIT 50",
+                [$mailbox['id']]
+            );
+            api_success([
+                'email'  => $mailbox['email_address'],
+                'count'  => count($emails ?: []),
+                'emails' => array_map('format_email_item', $emails ?: []),
+            ]);
+
+        } elseif ($subAction === 'read' && $subId > 0) {
+            $mailbox = resolve_mailbox($ToryMail);
+            $email = $ToryMail->get_row_safe("SELECT * FROM emails WHERE id = ? AND mailbox_id = ?", [$subId, $mailbox['id']]);
+            if (!$email) api_error('Email not found', 404);
+            if (!$email['is_read']) $ToryMail->update_safe('emails', ['is_read' => 1], 'id = ?', [$subId]);
+            $attachments = $ToryMail->get_list_safe("SELECT id, original_filename, mime_type, size FROM email_attachments WHERE email_id = ?", [$subId]);
+            api_success(['email' => format_email_full($email, $attachments)]);
+
+        } else {
+            api_error('Use /mailbox/inbox or /mailbox/read/{id}', 400);
+        }
         break;
 
     // ═══════════════════════════════════════════════════════

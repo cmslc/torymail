@@ -84,6 +84,8 @@ $baseApi = base_url('api/v1');
                     <li class="nav-item"><a href="#ep-inbox" class="nav-link menu-link"><i class="ri-inbox-line"></i><span>Get Inbox</span></a></li>
                     <li class="nav-item"><a href="#ep-read" class="nav-link menu-link"><i class="ri-mail-open-line"></i><span>Read Email</span></a></li>
                     <li class="nav-item"><a href="#ep-delete" class="nav-link menu-link"><i class="ri-delete-bin-line"></i><span>Delete Email</span></a></li>
+                    <li class="nav-item"><a href="#ep-send" class="nav-link menu-link"><i class="ri-send-plane-line"></i><span>Send Email</span></a></li>
+                    <li class="nav-item"><a href="#ep-mailbox" class="nav-link menu-link"><i class="ri-mail-settings-line"></i><span>Mailbox Aliases</span></a></li>
                     <li class="menu-title"><span>Navigation</span></li>
                     <li class="nav-item"><a href="<?=base_url();?>" class="nav-link menu-link"><i class="ri-home-line"></i><span>Home</span></a></li>
                     <li class="nav-item"><a href="<?=base_url('auth/login');?>" class="nav-link menu-link"><i class="ri-login-box-line"></i><span>Login</span></a></li>
@@ -342,6 +344,84 @@ curl -X DELETE <?= htmlspecialchars($baseApi) ?>/delete/42 \
   <span class="k">"success"</span>: <span class="n">true</span>,
   <span class="k">"message"</span>: <span class="s">"Email deleted"</span>
 }</pre>
+                            </div>
+                        </div>
+
+                        <!-- EP: Send -->
+                        <div id="ep-send" class="api-card">
+                            <div class="api-card-head">
+                                <span class="api-method post">POST</span>
+                                <span class="api-path">/api/v1/send</span>
+                                <span class="badge bg-warning-subtle text-warning ms-auto">Token Required</span>
+                            </div>
+                            <div class="api-card-body">
+                                <p>Send an email from your temporary mailbox. The email is queued and delivered via SMTP.</p>
+                                <h6 class="fw-semibold small text-uppercase text-muted mb-2">Parameters</h6>
+                                <div class="table-responsive">
+                                    <table class="table table-sm api-table">
+                                        <thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+                                        <tbody>
+                                            <tr><td><code>to</code></td><td>string|array</td><td><span class="badge bg-danger-subtle text-danger api-badge">required</span></td><td>Recipient(s). Comma-separated string or array</td></tr>
+                                            <tr><td><code>subject</code></td><td>string</td><td><span class="badge bg-danger-subtle text-danger api-badge">required</span></td><td>Email subject</td></tr>
+                                            <tr><td><code>body</code></td><td>string</td><td><span class="badge bg-danger-subtle text-danger api-badge">required</span></td><td>Email body (HTML or plain text)</td></tr>
+                                            <tr><td><code>cc</code></td><td>string|array</td><td><span class="badge bg-secondary-subtle text-secondary api-badge">optional</span></td><td>CC recipients</td></tr>
+                                            <tr><td><code>bcc</code></td><td>string|array</td><td><span class="badge bg-secondary-subtle text-secondary api-badge">optional</span></td><td>BCC recipients</td></tr>
+                                            <tr><td><code>reply_to</code></td><td>string</td><td><span class="badge bg-secondary-subtle text-secondary api-badge">optional</span></td><td>Reply-to address</td></tr>
+                                            <tr><td><code>priority</code></td><td>string</td><td><span class="badge bg-secondary-subtle text-secondary api-badge">optional</span></td><td>normal, high, or low</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <h6 class="fw-semibold small text-uppercase text-muted mt-3 mb-2">Example</h6>
+                                <pre class="api-code">curl -X POST <?= htmlspecialchars($baseApi) ?>/send \
+  -H <span class="s">"Authorization: Bearer your-token"</span> \
+  -H <span class="s">"Content-Type: application/json"</span> \
+  -d <span class="s">'{
+    "to": "someone@gmail.com",
+    "subject": "Hello from API",
+    "body": "&lt;h1&gt;Hi!&lt;/h1&gt;&lt;p&gt;Sent via API.&lt;/p&gt;"
+  }'</span></pre>
+                                <h6 class="fw-semibold small text-uppercase text-muted mt-3 mb-2">Response</h6>
+                                <pre class="api-code">{
+  <span class="k">"success"</span>: <span class="n">true</span>,
+  <span class="k">"message"</span>: <span class="s">"Email queued for delivery"</span>,
+  <span class="k">"from"</span>: <span class="s">"john@example.com"</span>,
+  <span class="k">"to"</span>: [<span class="s">"someone@gmail.com"</span>],
+  <span class="k">"subject"</span>: <span class="s">"Hello from API"</span>,
+  <span class="k">"email_id"</span>: <span class="n">123</span>,
+  <span class="k">"queue_id"</span>: <span class="n">45</span>,
+  <span class="k">"message_id"</span>: <span class="s">"&lt;tm-abc123@example.com&gt;"</span>
+}</pre>
+                                <div class="alert alert-info small mt-3 mb-0"><i class="ri-information-line me-1"></i>Rate limit: 20 emails per hour per mailbox.</div>
+                            </div>
+                        </div>
+
+                        <!-- EP: Mailbox Aliases -->
+                        <div id="ep-mailbox" class="api-card">
+                            <div class="api-card-head">
+                                <span class="api-method get">GET</span>
+                                <span class="api-path">/api/v1/mailbox/{inbox|read}</span>
+                                <span class="badge bg-warning-subtle text-warning ms-auto">Token Required</span>
+                            </div>
+                            <div class="api-card-body">
+                                <p>Convenience aliases for <code>/inbox</code> and <code>/read</code> endpoints using token auth only.</p>
+                                <h6 class="fw-semibold small text-uppercase text-muted mb-2">Endpoints</h6>
+                                <div class="table-responsive">
+                                    <table class="table table-sm api-table">
+                                        <thead><tr><th>Alias</th><th>Same as</th><th>Description</th></tr></thead>
+                                        <tbody>
+                                            <tr><td><code>GET /api/v1/mailbox/inbox</code></td><td><code>/inbox?token=</code></td><td>List inbox emails</td></tr>
+                                            <tr><td><code>GET /api/v1/mailbox/read/{id}</code></td><td><code>/read/{id}?token=</code></td><td>Read specific email</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <h6 class="fw-semibold small text-uppercase text-muted mt-3 mb-2">Example</h6>
+                                <pre class="api-code"><span class="c"># Get inbox</span>
+curl <?= htmlspecialchars($baseApi) ?>/mailbox/inbox \
+  -H <span class="s">"Authorization: Bearer your-token"</span>
+
+<span class="c"># Read email #42</span>
+curl <?= htmlspecialchars($baseApi) ?>/mailbox/read/42 \
+  -H <span class="s">"Authorization: Bearer your-token"</span></pre>
                             </div>
                         </div>
 
