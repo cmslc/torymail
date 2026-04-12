@@ -287,6 +287,28 @@ switch ($action) {
         success_response('Forwarding settings updated');
         break;
 
+    // -------------------------------------------------------
+    // GET API TOKEN
+    // -------------------------------------------------------
+    case 'get_api_token':
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') error_response('Invalid request method', 405);
+        csrf_verify();
+
+        $mailbox_id = intval($_POST['mailbox_id'] ?? 0);
+        if ($mailbox_id <= 0) error_response('Invalid mailbox ID');
+
+        $mailbox = $ToryMail->get_row_safe(
+            "SELECT * FROM mailboxes WHERE id = ? AND user_id = ?",
+            [$mailbox_id, $getUser['id']]
+        );
+        if (!$mailbox) error_response('Mailbox not found or access denied', 403);
+
+        // The password_encrypted field is used as API token
+        $token = $mailbox['password_encrypted'];
+
+        success_response('OK', ['token' => $token, 'email' => $mailbox['email_address']]);
+        break;
+
     default:
         error_response('Invalid action', 400);
         break;

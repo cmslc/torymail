@@ -124,6 +124,9 @@ $statusColors = [
                         <td class="text-muted fs-12"><?= format_date($mb['created_at'], 'M j, Y'); ?></td>
                         <td>
                             <div class="d-flex gap-1">
+                                <button class="btn btn-soft-info btn-sm" onclick="showApiToken(<?= $mb['id']; ?>, '<?= htmlspecialchars($mb['email_address']); ?>')" title="API Token">
+                                    <i class="ri-key-line"></i>
+                                </button>
                                 <button class="btn btn-soft-primary btn-sm" onclick="editMailbox(<?= htmlspecialchars(json_encode($mb)); ?>)" title="<?= __('edit'); ?>">
                                     <i class="ri-pencil-line"></i>
                                 </button>
@@ -310,6 +313,70 @@ function deleteMailbox(id, email) {
         });
     });
 }
+
+function showApiToken(id, email) {
+    $('#apiTokenEmail').text(email);
+    $('#apiTokenValue').val('Loading...');
+    $('#apiTokenModal').modal('show');
+
+    $.ajax({
+        url: '<?= base_url("ajaxs/user/mailboxes.php"); ?>?action=get_api_token',
+        method: 'POST',
+        data: { mailbox_id: id },
+        dataType: 'json',
+        success: function(res) {
+            if (res.success) {
+                $('#apiTokenValue').val(res.token);
+            } else {
+                $('#apiTokenValue').val('Error: ' + res.message);
+            }
+        },
+        error: function() {
+            $('#apiTokenValue').val('Error loading token');
+        }
+    });
+}
+
+function copyApiToken() {
+    var input = document.getElementById('apiTokenValue');
+    input.select();
+    navigator.clipboard.writeText(input.value).then(function() {
+        var btn = $('#btnCopyToken');
+        btn.html('<i class="ri-check-line me-1"></i>Copied!').removeClass('btn-primary').addClass('btn-success');
+        setTimeout(function() { btn.html('<i class="ri-file-copy-line me-1"></i>Copy').removeClass('btn-success').addClass('btn-primary'); }, 1500);
+    });
+}
 </script>
+
+<!-- API Token Modal -->
+<div class="modal fade" id="apiTokenModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="ri-key-line me-2 text-warning"></i>API Token</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label text-muted small text-uppercase">Mailbox</label>
+                    <div class="fw-semibold" id="apiTokenEmail"></div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted small text-uppercase">API Token</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control font-monospace" id="apiTokenValue" readonly>
+                        <button class="btn btn-primary" onclick="copyApiToken()" id="btnCopyToken"><i class="ri-file-copy-line me-1"></i>Copy</button>
+                    </div>
+                </div>
+                <div class="alert alert-info small mb-0">
+                    <i class="ri-information-line me-1"></i>
+                    Use this token with the API:<br>
+                    <code class="d-block mt-1">Authorization: Bearer &lt;token&gt;</code>
+                    <a href="<?= base_url('auth/api-docs'); ?>" target="_blank" class="d-block mt-2"><i class="ri-external-link-line me-1"></i>API Documentation</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 <?php require_once __DIR__ . '/footer.php'; ?>
