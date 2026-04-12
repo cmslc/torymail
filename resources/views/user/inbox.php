@@ -37,7 +37,7 @@ $hasMailboxes = $ToryMail->get_value_safe(
     [$getUser['id']]
 );
 if (!$hasMailboxes && empty($_SESSION['mailbox_id'])): ?>
-<div class="alert alert-primary alert-dismissible fade show d-flex align-items-center gap-3 mb-3" role="alert">
+<div class="alert alert-warning alert-dismissible fade show d-flex align-items-center gap-3 mb-3 mt-1" role="alert" style="border-radius:10px;border-left:4px solid var(--vz-primary)">
     <div class="avatar-sm flex-shrink-0">
         <div class="avatar-title bg-primary rounded-circle fs-20"><i class="ri-mail-add-line"></i></div>
     </div>
