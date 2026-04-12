@@ -71,7 +71,7 @@ function get_api_token() {
 function get_mailbox_by_token($db, $token) {
     if (empty($token)) return null;
     return $db->get_row_safe(
-        "SELECT * FROM mailboxes WHERE password_encrypted = ? AND status = 'active' AND user_id IS NULL",
+        "SELECT * FROM mailboxes WHERE password_encrypted = ? AND status = 'active'",
         [$token]
     );
 }
