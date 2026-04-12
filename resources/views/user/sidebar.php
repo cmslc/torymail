@@ -122,19 +122,19 @@ $sidebarLabels = $ToryMail->get_list_safe("
                         <?php if (!$isMailboxLogin): ?>
                         <li class="menu-title"><span><?= __('management'); ?></span></li>
 
-                        <!-- Domains -->
-                        <li class="nav-item">
-                            <a href="<?= base_url('domains'); ?>" class="nav-link menu-link <?= tm_active(['domains']); ?>">
-                                <i class="ri-global-line"></i>
-                                <span><?= __('domains'); ?></span>
-                            </a>
-                        </li>
-
                         <!-- Mailboxes -->
                         <li class="nav-item">
                             <a href="<?= base_url('mailboxes'); ?>" class="nav-link menu-link <?= tm_active(['mailboxes']); ?>">
                                 <i class="ri-mail-settings-line"></i>
                                 <span><?= __('mailboxes'); ?></span>
+                            </a>
+                        </li>
+
+                        <!-- Domains -->
+                        <li class="nav-item">
+                            <a href="<?= base_url('domains'); ?>" class="nav-link menu-link <?= tm_active(['domains']); ?>">
+                                <i class="ri-global-line"></i>
+                                <span><?= __('domains'); ?></span>
                             </a>
                         </li>
 
