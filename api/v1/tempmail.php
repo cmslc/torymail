@@ -419,7 +419,7 @@ switch ($action) {
         // Handle file attachments
         $attachments = [];
         if (!empty($_FILES['attachments'])) {
-            $storageDir = __DIR__ . '/../../storage/tmp';
+            $storageDir = __DIR__ . '/../../storage/attachments/' . date('Y/m');
             if (!is_dir($storageDir)) mkdir($storageDir, 0755, true);
             $files = $_FILES['attachments'];
             $count = is_array($files['name']) ? count($files['name']) : 1;
@@ -428,9 +428,10 @@ switch ($action) {
                 $tmp = is_array($files['tmp_name']) ? $files['tmp_name'][$i] : $files['tmp_name'];
                 $err = is_array($files['error']) ? $files['error'][$i] : $files['error'];
                 if ($err !== UPLOAD_ERR_OK || empty($name)) continue;
-                $dest = $storageDir . '/' . uniqid('att_') . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '_', $name);
+                $safeName = preg_replace('/[^a-zA-Z0-9._-]/', '_', $name);
+                $dest = $storageDir . '/att_' . time() . '_' . $safeName;
                 move_uploaded_file($tmp, $dest);
-                $attachments[] = ['path' => $dest, 'name' => $name, 'mime' => mime_content_type($dest)];
+                $attachments[] = ['path' => $dest, 'filename' => $name, 'name' => $name, 'mime' => mime_content_type($dest)];
             }
         }
 
@@ -441,9 +442,6 @@ switch ($action) {
             'priority' => $priority,
             'attachments' => $attachments,
         ]);
-
-        // Cleanup temp files
-        foreach ($attachments as $att) { if (file_exists($att['path'])) @unlink($att['path']); }
 
         if (!$result['success']) {
             api_error($result['error'] ?? 'Failed to send email', 500);
