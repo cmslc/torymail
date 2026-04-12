@@ -500,12 +500,26 @@ function generateQR(email){
     $('#qr-code').html(qr.createImgTag(4,8));
 }
 
-// Random email — call API
+// Random email — call API directly (bypass form validation)
 function generateRandom(){
-    $.ajax({url:B+'/ajaxs/public/mailboxes.php?action=create',method:'POST',
-        data:{local_part:randName(),domain_id:$('#domain_id').val(),_csrf_token:$('meta[name="csrf-token"]').attr('content')},
+    var name=randName(), domId=$('#domain_id').val(), token=$('meta[name="csrf-token"]').attr('content');
+    $('#local_part').val(name);
+    $.ajax({
+        url:B+'/ajaxs/public/mailboxes.php?action=create',
+        method:'POST',
+        data:'local_part='+encodeURIComponent(name)+'&domain_id='+encodeURIComponent(domId)+'&_csrf_token='+encodeURIComponent(token),
         dataType:'json',
-        success:function(r){if(r.status==='success'){$('#local_part').val(r.email_address.split('@')[0]);activateMailbox(r.email_address);}else{$('#alert-box').html('<div class="alert alert-danger small mb-2">'+r.message+'</div>')}}
+        success:function(r){
+            if(r.status==='success'){
+                $('#local_part').val(r.email_address.split('@')[0]);
+                activateMailbox(r.email_address);
+            }else{
+                $('#alert-box').html('<div class="alert alert-danger alert-dismissible fade show small mb-2">'+r.message+'<button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert"></button></div>');
+            }
+        },
+        error:function(x){
+            console.log('Random generate failed:', x.responseText);
+        }
     });
 }
 function randName(){var c='abcdefghijklmnopqrstuvwxyz',r='';for(var i=0;i<5;i++)r+=c[Math.floor(Math.random()*c.length)];return r+Math.floor(1000+Math.random()*9000);}
