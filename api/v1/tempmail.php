@@ -416,12 +416,34 @@ switch ($action) {
         require_once __DIR__ . '/../../libs/EmailEngine.php';
         $engine = new EmailEngine($ToryMail, $settings);
 
+        // Handle file attachments
+        $attachments = [];
+        if (!empty($_FILES['attachments'])) {
+            $storageDir = __DIR__ . '/../../storage/tmp';
+            if (!is_dir($storageDir)) mkdir($storageDir, 0755, true);
+            $files = $_FILES['attachments'];
+            $count = is_array($files['name']) ? count($files['name']) : 1;
+            for ($i = 0; $i < $count; $i++) {
+                $name = is_array($files['name']) ? $files['name'][$i] : $files['name'];
+                $tmp = is_array($files['tmp_name']) ? $files['tmp_name'][$i] : $files['tmp_name'];
+                $err = is_array($files['error']) ? $files['error'][$i] : $files['error'];
+                if ($err !== UPLOAD_ERR_OK || empty($name)) continue;
+                $dest = $storageDir . '/' . uniqid('att_') . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '_', $name);
+                move_uploaded_file($tmp, $dest);
+                $attachments[] = ['path' => $dest, 'name' => $name, 'mime' => mime_content_type($dest)];
+            }
+        }
+
         $result = $engine->send($mailbox['email_address'], $to, $subject, $body, [
             'cc' => $cc,
             'bcc' => $bcc,
             'reply_to' => $reply_to,
             'priority' => $priority,
+            'attachments' => $attachments,
         ]);
+
+        // Cleanup temp files
+        foreach ($attachments as $att) { if (file_exists($att['path'])) @unlink($att['path']); }
 
         if (!$result['success']) {
             api_error($result['error'] ?? 'Failed to send email', 500);
