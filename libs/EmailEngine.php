@@ -296,6 +296,9 @@ class EmailEngine
         $to_list = json_decode($item['to_addresses'], true) ?: [];
         $cc_list = json_decode($item['cc_addresses'], true) ?: [];
 
+        $attachments = json_decode($item['attachments'] ?? '[]', true) ?: [];
+        $boundary = 'ToryMail_' . md5(uniqid(time()));
+
         $data = "From: {$item['from_address']}\r\n";
         $data .= "To: " . implode(', ', $to_list) . "\r\n";
         if (!empty($cc_list)) {
@@ -303,10 +306,17 @@ class EmailEngine
         }
         $data .= "Subject: {$item['subject']}\r\n";
         $data .= "MIME-Version: 1.0\r\n";
-        $data .= "Content-Type: text/html; charset=UTF-8\r\n";
         $data .= "X-Mailer: Torymail/" . TORYMAIL_VERSION . "\r\n";
-        $data .= "\r\n";
-        $data .= $item['body_html'] . "\r\n";
+
+        if (!empty($attachments)) {
+            $data .= "Content-Type: multipart/mixed; boundary=\"{$boundary}\"\r\n";
+            $data .= "\r\n";
+            $data .= $this->buildMimeBody($item['body_html'], $boundary, $attachments) . "\r\n";
+        } else {
+            $data .= "Content-Type: text/html; charset=UTF-8\r\n";
+            $data .= "\r\n";
+            $data .= $item['body_html'] . "\r\n";
+        }
         $data .= ".\r\n";
 
         $this->smtpWrite($conn, $data);
