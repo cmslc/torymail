@@ -95,8 +95,6 @@ $sidebarLabels = $ToryMail->get_list_safe("
                             </a>
                         </li>
 
-                        <li class="menu-title"><span><?= __('mailbox'); ?></span></li>
-
                         <!-- Inbox -->
                         <li class="nav-item">
                             <a href="<?= base_url('inbox'); ?>" class="nav-link menu-link <?= tm_folder_active('inbox'); ?>">
@@ -105,60 +103,6 @@ $sidebarLabels = $ToryMail->get_list_safe("
                                 <?php if ($unreadInbox > 0): ?>
                                 <span class="badge badge-center rounded-pill bg-danger ms-auto"><?= $unreadInbox; ?></span>
                                 <?php endif; ?>
-                            </a>
-                        </li>
-
-                        <!-- Starred -->
-                        <li class="nav-item">
-                            <a href="<?= base_url('inbox?folder=starred'); ?>" class="nav-link menu-link <?= tm_folder_active('starred'); ?>">
-                                <i class="ri-star-line"></i>
-                                <span><?= __('starred'); ?></span>
-                            </a>
-                        </li>
-
-                        <!-- Sent -->
-                        <li class="nav-item">
-                            <a href="<?= base_url('inbox?folder=sent'); ?>" class="nav-link menu-link <?= tm_folder_active('sent'); ?>">
-                                <i class="ri-send-plane-line"></i>
-                                <span><?= __('sent'); ?></span>
-                            </a>
-                        </li>
-
-                        <!-- Drafts -->
-                        <li class="nav-item">
-                            <a href="<?= base_url('inbox?folder=drafts'); ?>" class="nav-link menu-link <?= tm_folder_active('drafts'); ?>">
-                                <i class="ri-draft-line"></i>
-                                <span><?= __('drafts'); ?></span>
-                                <?php if ($draftCount > 0): ?>
-                                <span class="badge badge-center rounded-pill bg-secondary ms-auto"><?= $draftCount; ?></span>
-                                <?php endif; ?>
-                            </a>
-                        </li>
-
-                        <!-- Spam -->
-                        <li class="nav-item">
-                            <a href="<?= base_url('inbox?folder=spam'); ?>" class="nav-link menu-link <?= tm_folder_active('spam'); ?>">
-                                <i class="ri-spam-2-line"></i>
-                                <span><?= __('spam'); ?></span>
-                                <?php if ($unreadSpam > 0): ?>
-                                <span class="badge badge-center rounded-pill bg-warning ms-auto"><?= $unreadSpam; ?></span>
-                                <?php endif; ?>
-                            </a>
-                        </li>
-
-                        <!-- Trash -->
-                        <li class="nav-item">
-                            <a href="<?= base_url('inbox?folder=trash'); ?>" class="nav-link menu-link <?= tm_folder_active('trash'); ?>">
-                                <i class="ri-delete-bin-line"></i>
-                                <span><?= __('trash'); ?></span>
-                            </a>
-                        </li>
-
-                        <!-- Archive -->
-                        <li class="nav-item">
-                            <a href="<?= base_url('inbox?folder=archive'); ?>" class="nav-link menu-link <?= tm_folder_active('archive'); ?>">
-                                <i class="ri-archive-line"></i>
-                                <span><?= __('archive'); ?></span>
                             </a>
                         </li>
 
