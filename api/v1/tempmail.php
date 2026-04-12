@@ -121,11 +121,13 @@ function format_email_full($e, $attachments) {
         'is_read'         => true,
         'has_attachments' => (bool)$e['has_attachments'],
         'attachments'     => array_map(function($a) {
+            $baseUrl = ($_ENV['APP_URL'] ?? 'https://getcodemail.com');
             return [
-                'id'       => (int)$a['id'],
-                'filename' => $a['original_filename'],
-                'mime'     => $a['mime_type'],
-                'size'     => (int)$a['size'],
+                'id'           => (int)$a['id'],
+                'filename'     => $a['original_filename'],
+                'mime'         => $a['mime_type'],
+                'size'         => (int)$a['size'],
+                'download_url' => rtrim($baseUrl, '/') . '/' . ($a['storage_path'] ?? ''),
             ];
         }, $attachments ?: []),
         'received_at'     => $e['received_at'],
