@@ -31,6 +31,27 @@ $body['footer'] = '';
 require_once __DIR__ . '/header.php';
 require_once __DIR__ . '/sidebar.php';
 
+// Check if user has any mailboxes — show setup prompt if not
+$hasMailboxes = $ToryMail->get_value_safe(
+    "SELECT COUNT(*) FROM mailboxes WHERE user_id = ?",
+    [$getUser['id']]
+);
+if (!$hasMailboxes && empty($_SESSION['mailbox_id'])): ?>
+<div class="alert alert-primary alert-dismissible fade show d-flex align-items-center gap-3 mb-3" role="alert">
+    <div class="avatar-sm flex-shrink-0">
+        <div class="avatar-title bg-primary rounded-circle fs-20"><i class="ri-mail-add-line"></i></div>
+    </div>
+    <div class="flex-grow-1">
+        <h6 class="mb-1"><?= __('welcome_setup_title'); ?></h6>
+        <p class="mb-0 small"><?= __('welcome_setup_desc'); ?></p>
+    </div>
+    <a href="<?= base_url('mailboxes'); ?>" class="btn btn-primary btn-sm flex-shrink-0">
+        <i class="ri-add-line me-1"></i><?= __('welcome_setup_btn'); ?>
+    </a>
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+<?php endif;
+
 // Valid folders
 $validFolders = ['inbox', 'starred', 'sent', 'drafts', 'spam', 'trash', 'archive'];
 if (!in_array($folder, $validFolders)) {
