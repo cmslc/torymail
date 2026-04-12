@@ -36,21 +36,7 @@ $hasMailboxes = $ToryMail->get_value_safe(
     "SELECT COUNT(*) FROM mailboxes WHERE user_id = ?",
     [$getUser['id']]
 );
-if (!$hasMailboxes && empty($_SESSION['mailbox_id'])): ?>
-<div class="alert alert-warning alert-dismissible fade show d-flex align-items-center gap-3 mb-3 mt-1" role="alert" style="border-radius:10px;border-left:4px solid var(--vz-primary)">
-    <div class="avatar-sm flex-shrink-0">
-        <div class="avatar-title bg-primary rounded-circle fs-20"><i class="ri-mail-add-line"></i></div>
-    </div>
-    <div class="flex-grow-1">
-        <h6 class="mb-1"><?= __('welcome_setup_title'); ?></h6>
-        <p class="mb-0 small"><?= __('welcome_setup_desc'); ?></p>
-    </div>
-    <a href="<?= base_url('mailboxes'); ?>" class="btn btn-primary btn-sm flex-shrink-0">
-        <i class="ri-add-line me-1"></i><?= __('welcome_setup_btn'); ?>
-    </a>
-    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-</div>
-<?php endif;
+// (welcome banner rendered after breadcrumb below)
 
 // Valid folders
 $validFolders = ['inbox', 'starred', 'sent', 'drafts', 'spam', 'trash', 'archive'];
@@ -152,6 +138,22 @@ $folderIcons = [
         </div>
     </div>
 </div>
+
+<?php if (!$hasMailboxes && empty($_SESSION['mailbox_id'])): ?>
+<div class="alert alert-warning alert-dismissible fade show d-flex align-items-center gap-3 mb-3" role="alert" style="border-radius:10px;border-left:4px solid var(--vz-primary)">
+    <div class="avatar-sm flex-shrink-0">
+        <div class="avatar-title bg-primary rounded-circle fs-20"><i class="ri-mail-add-line"></i></div>
+    </div>
+    <div class="flex-grow-1">
+        <h6 class="mb-1"><?= __('welcome_setup_title'); ?></h6>
+        <p class="mb-0 small"><?= __('welcome_setup_desc'); ?></p>
+    </div>
+    <a href="<?= base_url('mailboxes'); ?>" class="btn btn-primary btn-sm flex-shrink-0">
+        <i class="ri-add-line me-1"></i><?= __('welcome_setup_btn'); ?>
+    </a>
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+<?php endif; ?>
 
 <div class="card">
     <div class="card-header border-bottom-dashed">
