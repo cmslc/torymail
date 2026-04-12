@@ -80,7 +80,7 @@ function get_mailbox_by_email($db, $email) {
     if (empty($email)) return null;
     return $db->get_row_safe(
         "SELECT m.* FROM mailboxes m JOIN domains d ON m.domain_id = d.id
-         WHERE m.email_address = ? AND m.status = 'active' AND d.is_shared = 1",
+         WHERE m.email_address = ? AND m.status = 'active'",
         [$email]
     );
 }
